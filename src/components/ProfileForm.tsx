@@ -26,19 +26,6 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
       </div>
 
       <div>
-        <label htmlFor="phone" className="mb-1 block text-sm font-medium">
-          Phone <span className="text-muted">(optional)</span>
-        </label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          defaultValue={profile.phone ?? ""}
-          className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
-        />
-      </div>
-
-      <div>
         <p className="mb-2 block text-sm font-medium">What you play / sing</p>
         <InstrumentPicker selected={profile.instruments} />
       </div>

@@ -20,14 +20,13 @@ export async function updateProfile(
   if (!user) redirect("/login");
 
   const fullName = String(formData.get("full_name") ?? "").trim();
-  const phone = String(formData.get("phone") ?? "").trim();
   const instruments = formData.getAll("instruments").map(String);
 
   if (!fullName) return { error: "Please enter your name." };
 
   const { error } = await supabase
     .from("profiles")
-    .update({ full_name: fullName, phone: phone || null, instruments })
+    .update({ full_name: fullName, instruments })
     .eq("id", user.id);
 
   if (error) return { error: error.message };

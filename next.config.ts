@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   // cross-origin requests to dev-only assets by default, which prevents
   // client JS from hydrating when you open the app via the machine's LAN IP
   // (so taps like the YouTube play button do nothing). Add your LAN subnet.
-  allowedDevOrigins: ["192.168.10.56", "192.168.10.*"],
+  allowedDevOrigins: ["192.168.10.56", "192.168.10.*", "worship.jibie.duckdns.org."],
 };
 
 export default nextConfig;

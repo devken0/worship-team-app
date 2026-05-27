@@ -15,7 +15,7 @@ export default async function MembersPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("id, full_name, role, instruments, phone")
+    .select("id, full_name, role, instruments")
     .order("full_name");
   const members = (data ?? []) as Profile[];
 

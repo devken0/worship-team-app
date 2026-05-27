@@ -19,7 +19,6 @@ export async function completeOnboarding(
 
   const fullName = String(formData.get("full_name") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const phone = String(formData.get("phone") ?? "").trim();
   const instruments = formData.getAll("instruments").map(String);
 
   if (!fullName) return { error: "Please enter your name." };
@@ -32,7 +31,7 @@ export async function completeOnboarding(
 
   const { error: profileError } = await supabase
     .from("profiles")
-    .update({ full_name: fullName, phone: phone || null, instruments })
+    .update({ full_name: fullName, instruments })
     .eq("id", user.id);
   if (profileError) return { error: profileError.message };
 

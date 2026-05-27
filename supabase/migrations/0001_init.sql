@@ -21,7 +21,6 @@ create table public.profiles (
   full_name   text not null default '',
   role        user_role not null default 'member',
   instruments text[] not null default '{}',
-  phone       text,
   created_at  timestamptz not null default now()
 );
 

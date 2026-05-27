@@ -88,7 +88,6 @@ export interface Profile {
   full_name: string;
   role: UserRole;
   instruments: string[];
-  phone: string | null;
 }
 
 export interface Service {
