@@ -75,15 +75,46 @@ invite the rest of the team, and **Manage → + New** to post the first Sunday.
 ## Notes & limits
 
 - **Recordings storage** is on Supabase's free tier (~1 GB ≈ ~6 months of
-  worship at audio-only quality). The recordings list has a delete action so the
-  team can clear old files. Upgrade the Supabase plan if you need more.
+  worship at audio-only quality). The recordings list has a delete action, and
+  in-app recordings older than 90 days are removed automatically — see
+  [Storage cleanup](#storage-cleanup). Upgrade the Supabase plan if you need
+  more, or paste Google Drive / YouTube links instead (those cost nothing).
 - **iOS recording**: works on iOS 14.3+. On unsupported/old phones, the
   recordings screen falls back to pasting a Google Drive / YouTube link.
 - **The pastor** doesn't need an account — he keeps sending YouTube links
   however he likes, and the music director pastes them into each song.
 
+## Storage cleanup
+
+To stay within Supabase's free tier, in-app recordings are temporary: those
+older than **90 days** are deleted (file + row), and orphaned files left by
+failed uploads or abandoned chord-photo picks are swept from both buckets.
+External-link recordings cost nothing and are never auto-deleted.
+
+The work lives in `src/lib/cleanup.ts` and is exposed two ways:
+
+- **Manual** — admins can press **Run cleanup now** under **Manage →
+  Maintenance** at any time. No scheduler needed.
+- **Scheduled** — the protected endpoint `POST /api/cleanup` runs everything.
+  Set a `CLEANUP_SECRET` env var and call it with
+  `Authorization: Bearer <CLEANUP_SECRET>`. It returns a JSON summary; an
+  unauthenticated call gets `401`.
+
+**Schedule it for free (Vercel Cron):** add a `vercel.json` with
+
+```json
+{ "crons": [{ "path": "/api/cleanup", "schedule": "0 3 * * 0" }] }
+```
+
+and set an env var named `CRON_SECRET` to the **same value** as
+`CLEANUP_SECRET` — Vercel injects `Authorization: Bearer <CRON_SECRET>` on
+scheduled calls, which the endpoint checks. Alternatives: a GitHub Actions cron
+or a free service like cron-job.org hitting the same URL with the header.
+
 ## Deploy
 
 Deploy to [Vercel](https://vercel.com) (free): import the repo, add the same
-four environment variables, and set `NEXT_PUBLIC_SITE_URL` to the production URL.
-Remember to add the production URL to Supabase's redirect URLs (step 4).
+environment variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+`SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SITE_URL`, `CLEANUP_SECRET`), and set
+`NEXT_PUBLIC_SITE_URL` to the production URL. Remember to add the production URL
+to Supabase's redirect URLs (step 4).

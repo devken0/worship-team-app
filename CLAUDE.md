@@ -19,7 +19,7 @@ There is no test suite. Type errors surface via `npm run build` (tsconfig has `n
 
 ## Environment
 
-Copy `.env.example` → `.env.local`. Four vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (server-only secret), `NEXT_PUBLIC_SITE_URL`. Database schema, RLS, triggers, and storage buckets all live in a single file: `supabase/migrations/0001_init.sql` — run it in the Supabase SQL editor. Full setup (first admin, invite email template) is in `README.md`.
+Copy `.env.example` → `.env.local`. Five vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (server-only secret), `NEXT_PUBLIC_SITE_URL`, and `CLEANUP_SECRET` (Bearer token gating the `/api/cleanup` storage-cleanup endpoint). Database schema, RLS, triggers, and storage buckets all live in a single file: `supabase/migrations/0001_init.sql` — run it in the Supabase SQL editor. Full setup (first admin, invite email template) is in `README.md`.
 
 ## Architecture
 

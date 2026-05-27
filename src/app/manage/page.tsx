@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader, Card, SectionTitle, PrimaryLink } from "@/components/ui";
 import { formatServiceDate } from "@/lib/format";
+import CleanupButton from "@/components/CleanupButton";
+import { RECORDING_RETENTION_DAYS } from "@/lib/cleanup";
 import type { Service } from "@/lib/domain";
 
 export default async function ManagePage() {
@@ -62,6 +64,23 @@ export default async function ManagePage() {
             ))}
           </div>
         )}
+
+        <SectionTitle>Maintenance</SectionTitle>
+        <Card className="space-y-2">
+          <p className="text-sm text-muted">
+            Clears in-app recordings older than {RECORDING_RETENTION_DAYS} days
+            plus any orphaned files, to keep storage within the free tier. Run
+            it now to reclaim space immediately.
+          </p>
+          <CleanupButton />
+          <p className="rounded-lg bg-background px-3 py-2 text-xs text-muted">
+            <span className="font-semibold">TODO — automate this:</span> cleanup
+            is manual for now. Once the app is deployed (e.g. Vercel), set it to
+            run weekly on its own so nobody has to remember. Steps are in the
+            README under “Storage cleanup” (add <code>vercel.json</code> + a{" "}
+            <code>CLEANUP_SECRET</code>).
+          </p>
+        </Card>
       </Page>
     </>
   );

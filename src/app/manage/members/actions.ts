@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { isAdmin } from "@/lib/auth";
+import { isAdmin, getCurrentUser } from "@/lib/auth";
 
 export interface InviteState {
   error?: string;
@@ -61,4 +61,51 @@ export async function setMemberRole(formData: FormData) {
     .eq("id", memberId);
 
   revalidatePath("/manage/members");
+}
+
+export interface RemoveResult {
+  error?: string;
+  removed?: boolean;
+}
+
+/**
+ * Remove a member: deletes the auth user, and the profile row drops via the
+ * `on delete cascade` from auth.users. Their services/songs/recordings rows
+ * survive with a null creator (every other FK to profiles is `set null`); any
+ * recording files they left are reclaimed by the storage cleanup sweep.
+ */
+export async function removeMember(
+  _prev: RemoveResult,
+  formData: FormData,
+): Promise<RemoveResult> {
+  if (!(await isAdmin())) return { error: "Only admins can remove members." };
+  const memberId = String(formData.get("member_id") ?? "");
+  if (!memberId) return { error: "Missing member." };
+
+  const me = await getCurrentUser();
+  if (me?.id === memberId)
+    return { error: "You can't remove your own account." };
+
+  const admin = createAdminClient();
+
+  // Never delete the last remaining admin.
+  const { data: target } = await admin
+    .from("profiles")
+    .select("role")
+    .eq("id", memberId)
+    .maybeSingle();
+  if (target?.role === "admin") {
+    const { count } = await admin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin");
+    if ((count ?? 0) <= 1)
+      return { error: "Can't remove the last admin. Promote someone first." };
+  }
+
+  const { error } = await admin.auth.admin.deleteUser(memberId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/manage/members");
+  return { removed: true };
 }
