@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "./Logo";
 
 /** Sticky top header for each screen, with an optional right-side action. */
 export function PageHeader({
@@ -11,13 +12,16 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-md items-center justify-between gap-3 px-4 py-3">
-        <div className="min-w-0">
-          <h1 className="truncate text-lg font-semibold">{title}</h1>
-          {subtitle && (
-            <p className="truncate text-sm text-muted">{subtitle}</p>
-          )}
+        <div className="flex min-w-0 items-center gap-2.5">
+          <Logo size={28} className="shrink-0" />
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-semibold">{title}</h1>
+            {subtitle && (
+              <p className="truncate text-sm text-muted">{subtitle}</p>
+            )}
+          </div>
         </div>
         {action}
       </div>

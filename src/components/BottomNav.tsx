@@ -71,23 +71,34 @@ export default function BottomNav({ isAdmin }: { isAdmin: boolean }) {
             <li key={item.href} className="flex-1">
               <Link
                 href={item.href}
-                className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors ${
-                  active ? "text-primary" : "text-muted"
-                }`}
+                aria-current={active ? "page" : undefined}
+                className="flex flex-col items-center gap-1 py-2 text-[11px] font-medium"
               >
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                <span
+                  className={`flex items-center rounded-full px-4 py-1 transition-colors ${
+                    active ? "bg-brand-soft text-primary" : "text-muted"
+                  }`}
                 >
-                  {item.icon}
-                </svg>
-                {item.label}
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {item.icon}
+                  </svg>
+                </span>
+                <span
+                  className={`transition-colors ${
+                    active ? "text-foreground" : "text-muted"
+                  }`}
+                >
+                  {item.label}
+                </span>
               </Link>
             </li>
           );
