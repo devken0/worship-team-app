@@ -19,7 +19,6 @@ export async function inviteMember(
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();
-  const fullName = String(formData.get("full_name") ?? "").trim();
   const makeAdmin = formData.get("make_admin") === "on";
 
   if (!email) return { error: "Enter an email address." };
@@ -28,19 +27,16 @@ export async function inviteMember(
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: fullName },
     redirectTo: `${siteUrl}/auth/confirm?next=/welcome`,
   });
   if (error) return { error: error.message };
 
-  // Apply name + role to the profile the trigger just created.
+  // The invitee sets their own name at /welcome; here we just apply the role
+  // to the profile the trigger just created.
   if (data.user) {
     await admin
       .from("profiles")
-      .update({
-        full_name: fullName,
-        role: makeAdmin ? "admin" : "member",
-      })
+      .update({ role: makeAdmin ? "admin" : "member" })
       .eq("id", data.user.id);
   }
 

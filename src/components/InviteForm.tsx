@@ -11,17 +11,6 @@ export default function InviteForm() {
   return (
     <form action={formAction} className="space-y-3">
       <div>
-        <label htmlFor="inv_name" className="mb-1 block text-sm font-medium">
-          Name
-        </label>
-        <input
-          id="inv_name"
-          name="full_name"
-          placeholder="Juan Dela Cruz"
-          className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
-        />
-      </div>
-      <div>
         <label htmlFor="inv_email" className="mb-1 block text-sm font-medium">
           Email
         </label>

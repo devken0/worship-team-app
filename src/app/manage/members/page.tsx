@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Page, PageHeader, Card, SectionTitle } from "@/components/ui";
 import InviteForm from "@/components/InviteForm";
 import RemoveMemberButton from "@/components/RemoveMemberButton";
@@ -19,6 +19,14 @@ export default async function MembersPage() {
     .order("full_name");
   const members = (data ?? []) as Profile[];
 
+  // Emails live in auth.users, not profiles. Fetch them so admins can still
+  // identify people who haven't finished onboarding (and so have no name yet).
+  const admin = createAdminClient();
+  const { data: authData } = await admin.auth.admin.listUsers({
+    perPage: 1000,
+  });
+  const emailById = new Map(authData.users.map((u) => [u.id, u.email ?? ""]));
+
   return (
     <>
       <PageHeader title="Members" subtitle="Invite people and set roles" />
@@ -34,36 +42,43 @@ export default async function MembersPage() {
 
         <SectionTitle>Team ({members.length})</SectionTitle>
         <div className="space-y-2">
-          {members.map((m) => (
-            <Card key={m.id} className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate font-medium">
-                  {m.full_name || "(no name yet)"}
-                  {m.id === user.id && (
-                    <span className="ml-1 text-xs text-muted">(you)</span>
-                  )}
-                </p>
-                {m.instruments.length > 0 && (
-                  <p className="truncate text-xs text-muted">
-                    {m.instruments.join(", ")}
+          {members.map((m) => {
+            const email = emailById.get(m.id) ?? "";
+            const label = m.full_name || email || "(no name yet)";
+            return (
+              <Card
+                key={m.id}
+                className="flex items-center justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium">
+                    {label}
+                    {m.id === user.id && (
+                      <span className="ml-1 text-xs text-muted">(you)</span>
+                    )}
                   </p>
-                )}
-              </div>
-              <div className="flex shrink-0 items-center gap-1">
-                <MemberRoleButton
-                  memberId={m.id}
-                  name={m.full_name || "this member"}
-                  role={m.role}
-                  isSelf={m.id === user.id}
-                />
-                <RemoveMemberButton
-                  memberId={m.id}
-                  name={m.full_name || "this member"}
-                  disabled={m.id === user.id}
-                />
-              </div>
-            </Card>
-          ))}
+                  {m.instruments.length > 0 && (
+                    <p className="truncate text-xs text-muted">
+                      {m.instruments.join(", ")}
+                    </p>
+                  )}
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <MemberRoleButton
+                    memberId={m.id}
+                    name={m.full_name || email || "this member"}
+                    role={m.role}
+                    isSelf={m.id === user.id}
+                  />
+                  <RemoveMemberButton
+                    memberId={m.id}
+                    name={m.full_name || email || "this member"}
+                    disabled={m.id === user.id}
+                  />
+                </div>
+              </Card>
+            );
+          })}
         </div>
       </Page>
     </>
