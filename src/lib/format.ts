@@ -70,6 +70,17 @@ export function manilaInputToISO(value: string): string | null {
   return new Date(`${value}:00+08:00`).toISOString();
 }
 
+/**
+ * Resolve a chord-photo storage path (stored in `songs.chords_image_url`) to a
+ * public URL. The `chords` bucket is public, so this is a pure string build —
+ * no async signing needed. Returns null when there is no photo.
+ */
+export function chordsImageUrl(path: string | null): string | null {
+  if (!path) return null;
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return `${base}/storage/v1/object/public/chords/${path}`;
+}
+
 /** Extract a YouTube video ID from common URL shapes. Returns null if none. */
 export function youTubeId(url: string | null): string | null {
   if (!url) return null;

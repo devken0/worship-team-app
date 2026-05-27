@@ -117,7 +117,10 @@ export interface Song {
   song_leader_id: string | null;
   youtube_url: string | null;
   chords_text: string | null;
+  /** Storage path of the chord-chart photo in the public `chords` bucket. */
   chords_image_url: string | null;
+  /** External link to published chords (clickable). */
+  chords_url: string | null;
 }
 
 export interface Recording {

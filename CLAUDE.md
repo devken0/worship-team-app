@@ -43,4 +43,4 @@ A mobile-first PWA for a church worship team: weekly Sunday services, role/song 
 - The save pattern for services is **delete-then-reinsert** child rows (assignments, songs) rather than diffing — see `saveService` in `src/app/manage/service/actions.ts`.
 - All dates render in **Asia/Manila** regardless of device timezone — always go through the helpers in `src/lib/format.ts` (`formatServiceDate`, `todayInManila`, `manilaInputToISO`, etc.), never raw `toLocaleString`.
 - Path alias `@/*` → `src/*`.
-- Two storage buckets: `recordings` (private, served via signed URLs) and `chords` (public read, admin write).
+- Two storage buckets: `recordings` (private, served via signed URLs) and `chords` (public read, admin write). A song's chord photo is uploaded to `chords` from the admin service form; `songs.chords_image_url` stores the **path** (resolve to a public URL via `chordsImageUrl()` in `src/lib/format.ts`), and `songs.chords_url` is an optional external chord link. Both ride the delete-then-reinsert song save; replaced/removed photos are cleaned from the bucket in `saveService`/`deleteService`.

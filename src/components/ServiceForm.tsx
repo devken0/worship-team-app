@@ -10,7 +10,12 @@ import {
   type AssignmentRole,
   type SongCategory,
 } from "@/lib/domain";
-import { isoToManilaInput, manilaInputToISO } from "@/lib/format";
+import {
+  chordsImageUrl,
+  isoToManilaInput,
+  manilaInputToISO,
+} from "@/lib/format";
+import { createClient } from "@/lib/supabase/client";
 import { saveService, type SongInput } from "@/app/manage/service/actions";
 
 export interface MemberOption {
@@ -41,6 +46,8 @@ function emptySong(category: SongCategory): SongInput {
     song_leader_id: null,
     youtube_url: "",
     chords_text: "",
+    chords_image_url: null,
+    chords_url: "",
   };
 }
 
@@ -71,6 +78,7 @@ export default function ServiceForm({
       ? initial.songs
       : [emptySong("welcoming"), emptySong("praise"), emptySong("worship")],
   );
+  const [uploading, setUploading] = useState<Record<number, boolean>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -100,6 +108,26 @@ export default function ServiceForm({
     setSongs((prev) =>
       prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)),
     );
+  }
+
+  async function uploadChordPhoto(i: number, file: File) {
+    // Uploads immediately on pick; saveService cleans up photos that are
+    // replaced/removed before saving. A form abandoned after an upload (never
+    // saved) leaves an orphan in the bucket — accepted as negligible here.
+    setError(null);
+    setUploading((prev) => ({ ...prev, [i]: true }));
+    const supabase = createClient();
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("chords")
+      .upload(path, file, { contentType: file.type, upsert: false });
+    setUploading((prev) => ({ ...prev, [i]: false }));
+    if (upErr) {
+      setError(`Photo upload failed: ${upErr.message}`);
+      return;
+    }
+    updateSong(i, { chords_image_url: path });
   }
 
   function submit() {
@@ -315,6 +343,50 @@ export default function ServiceForm({
                 placeholder="Chords (optional) — paste the chord chart here"
                 rows={3}
                 className={`${inputClass} font-mono text-sm`}
+              />
+              <div>
+                <label className="mb-1 block text-xs text-muted">
+                  Chord photo
+                </label>
+                {song.chords_image_url ? (
+                  <div className="flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={chordsImageUrl(song.chords_image_url) ?? ""}
+                      alt="Chord chart"
+                      className="h-20 w-20 rounded-lg border border-border object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => updateSong(i, { chords_image_url: null })}
+                      className="text-sm font-medium text-red-600"
+                    >
+                      Remove photo
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    disabled={uploading[i]}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadChordPhoto(i, file);
+                      e.target.value = "";
+                    }}
+                    className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground disabled:opacity-60"
+                  />
+                )}
+                {uploading[i] && (
+                  <p className="mt-1 text-xs text-muted">Uploading photo…</p>
+                )}
+              </div>
+              <input
+                value={song.chords_url}
+                onChange={(e) => updateSong(i, { chords_url: e.target.value })}
+                placeholder="Chords link (e.g. published chords URL)"
+                className={inputClass}
               />
             </div>
           ))}

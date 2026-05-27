@@ -9,6 +9,10 @@ export interface SongCardData {
   category: SongCategory;
   youtube_url: string | null;
   chords_text: string | null;
+  /** Resolved public URL of the chord-chart photo, or null. */
+  chordsImageUrl: string | null;
+  /** External link to published chords, or null. */
+  chordsUrl: string | null;
   leaderName: string | null;
 }
 
@@ -17,6 +21,63 @@ const categoryColor: Record<SongCategory, string> = {
   praise: "bg-sky-100 text-sky-800",
   worship: "bg-violet-100 text-violet-800",
 };
+
+// Lightweight inline icons (no icon dependency); inherit color via currentColor.
+const iconClass = "h-4 w-4 shrink-0";
+
+function ChartIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      className={iconClass}
+      aria-hidden="true"
+    >
+      <line x1="4" y1="7" x2="20" y2="7" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="17" x2="14" y2="17" />
+    </svg>
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={iconClass}
+      aria-hidden="true"
+    >
+      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+      <circle cx="12" cy="13" r="3" />
+    </svg>
+  );
+}
+
+function LinkIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={iconClass}
+      aria-hidden="true"
+    >
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  );
+}
 
 export default function SongCard({ song }: { song: SongCardData }) {
   const [playing, setPlaying] = useState(false);
@@ -83,21 +144,65 @@ export default function SongCard({ song }: { song: SongCardData }) {
         </a>
       )}
 
-      {song.chords_text && (
+      {(song.chords_text || song.chordsImageUrl || song.chordsUrl) && (
         <div className="border-t border-border">
-          <button
-            type="button"
-            onClick={() => setShowChords((v) => !v)}
-            className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium"
-          >
-            <span>Chords</span>
-            <span className="text-muted">{showChords ? "Hide" : "Show"}</span>
-          </button>
-          {showChords && (
-            <pre className="overflow-x-auto whitespace-pre-wrap break-words bg-background px-4 py-3 font-mono text-sm leading-relaxed">
-              {song.chords_text}
-            </pre>
-          )}
+          <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted">
+            Chords
+          </p>
+          <div className="divide-y divide-border">
+            {song.chords_text && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowChords((v) => !v)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium"
+                >
+                  <ChartIcon />
+                  <span>Chord chart</span>
+                  <span className="ml-auto text-muted">
+                    {showChords ? "Hide" : "Show"}
+                  </span>
+                </button>
+                {showChords && (
+                  <pre className="overflow-x-auto whitespace-pre-wrap break-words bg-background px-4 py-3 font-mono text-sm leading-relaxed">
+                    {song.chords_text}
+                  </pre>
+                )}
+              </div>
+            )}
+
+            {song.chordsImageUrl && (
+              <a
+                href={song.chordsImageUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary"
+              >
+                <CameraIcon />
+                <span>Chord photo</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={song.chordsImageUrl}
+                  alt={`Chord chart for ${song.title}`}
+                  className="ml-auto h-12 w-12 rounded-lg border border-border object-cover"
+                />
+                <span className="text-muted">↗</span>
+              </a>
+            )}
+
+            {song.chordsUrl && (
+              <a
+                href={song.chordsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary"
+              >
+                <LinkIcon />
+                <span>Chord link</span>
+                <span className="ml-auto text-muted">↗</span>
+              </a>
+            )}
+          </div>
         </div>
       )}
     </div>

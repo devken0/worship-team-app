@@ -12,6 +12,10 @@ export interface SongInput {
   song_leader_id: string | null;
   youtube_url: string;
   chords_text: string;
+  /** Storage path of the chord-chart photo in the `chords` bucket, or null. */
+  chords_image_url: string | null;
+  /** External link to published chords. */
+  chords_url: string;
 }
 
 export interface ServicePayload {
@@ -99,8 +103,10 @@ export async function saveService(payload: ServicePayload): Promise<void> {
     if (error) throw new Error(error.message);
   }
 
-  // Replace songs: clear then re-insert in order.
-  await supabase.from("songs").delete().eq("service_id", serviceId);
+  // Replace songs: clear then re-insert in order. The two chord fields ride
+  // the song row like chords_text. First, delete any chord photos whose paths
+  // are no longer referenced (photo removed or replaced), so the public
+  // `chords` bucket doesn't accumulate orphans.
   const songRows = payload.songs
     .filter((s) => s.title.trim())
     .map((s, i) => ({
@@ -111,7 +117,25 @@ export async function saveService(payload: ServicePayload): Promise<void> {
       song_leader_id: s.song_leader_id || null,
       youtube_url: s.youtube_url.trim() || null,
       chords_text: s.chords_text.trim() || null,
+      chords_image_url: s.chords_image_url || null,
+      chords_url: s.chords_url.trim() || null,
     }));
+
+  const keptPaths = new Set(
+    songRows.map((r) => r.chords_image_url).filter(Boolean) as string[],
+  );
+  const { data: existingSongs } = await supabase
+    .from("songs")
+    .select("chords_image_url")
+    .eq("service_id", serviceId);
+  const removedPaths = (existingSongs ?? [])
+    .map((s) => s.chords_image_url as string | null)
+    .filter((p): p is string => !!p && !keptPaths.has(p));
+  if (removedPaths.length > 0) {
+    await supabase.storage.from("chords").remove(removedPaths);
+  }
+
+  await supabase.from("songs").delete().eq("service_id", serviceId);
   if (songRows.length > 0) {
     const { error } = await supabase.from("songs").insert(songRows);
     if (error) throw new Error(error.message);
@@ -129,6 +153,18 @@ export async function deleteService(formData: FormData) {
   const id = String(formData.get("service_id") ?? "");
   if (!id) return;
   const supabase = await createClient();
+  // Remove chord photos for this service's songs before the cascade delete,
+  // so they don't orphan in the public `chords` bucket.
+  const { data: songs } = await supabase
+    .from("songs")
+    .select("chords_image_url")
+    .eq("service_id", id);
+  const paths = (songs ?? [])
+    .map((s) => s.chords_image_url as string | null)
+    .filter((p): p is string => !!p);
+  if (paths.length > 0) {
+    await supabase.storage.from("chords").remove(paths);
+  }
   await supabase.from("services").delete().eq("id", id);
   revalidatePath("/");
   revalidatePath("/schedule");

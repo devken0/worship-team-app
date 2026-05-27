@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card, ColorChip, SectionTitle } from "@/components/ui";
 import AssignmentsList from "@/components/AssignmentsList";
 import SongCard from "@/components/SongCard";
-import { formatRehearsal } from "@/lib/format";
+import { chordsImageUrl, formatRehearsal } from "@/lib/format";
 import type { ServiceDetail } from "@/lib/services";
 
 export default function ServiceDetailView({
@@ -68,6 +68,8 @@ export default function ServiceDetailView({
                 category: s.category,
                 youtube_url: s.youtube_url,
                 chords_text: s.chords_text,
+                chordsImageUrl: chordsImageUrl(s.chords_image_url),
+                chordsUrl: s.chords_url,
                 leaderName: s.song_leader_id
                   ? (names[s.song_leader_id] ?? null)
                   : null,

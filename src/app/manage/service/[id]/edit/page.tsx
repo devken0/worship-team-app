@@ -61,6 +61,8 @@ export default async function EditServicePage({
       song_leader_id: s.song_leader_id,
       youtube_url: s.youtube_url ?? "",
       chords_text: s.chords_text ?? "",
+      chords_image_url: s.chords_image_url,
+      chords_url: s.chords_url ?? "",
     })),
   };
 
