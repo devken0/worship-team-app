@@ -135,6 +135,22 @@ alter table public.assignments enable row level security;
 alter table public.songs       enable row level security;
 alter table public.recordings  enable row level security;
 
+-- API role privileges: the Supabase API roles need base table access before
+-- RLS can take effect. RLS (the policies below) still governs *which rows*
+-- anon/authenticated may touch; service_role bypasses RLS entirely.
+grant usage on schema public to anon, authenticated, service_role;
+grant select, insert, update, delete on all tables in schema public
+  to anon, authenticated, service_role;
+grant usage, select on all sequences in schema public
+  to anon, authenticated, service_role;
+grant execute on all functions in schema public
+  to anon, authenticated, service_role;
+alter default privileges in schema public
+  grant select, insert, update, delete on tables
+  to anon, authenticated, service_role;
+alter default privileges in schema public
+  grant usage, select on sequences to anon, authenticated, service_role;
+
 -- profiles: everyone signed in can read the team directory; you can edit
 -- your own profile; admins can do anything.
 create policy profiles_select on public.profiles
