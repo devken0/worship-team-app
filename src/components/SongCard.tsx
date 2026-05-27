@@ -6,7 +6,8 @@ import { SONG_CATEGORY_LABELS, type SongCategory } from "@/lib/domain";
 
 export interface SongCardData {
   title: string;
-  category: SongCategory;
+  /** Category chip; omit (null) for song-book entries without a default. */
+  category: SongCategory | null;
   youtube_url: string | null;
   chords_text: string | null;
   /** Resolved public URL of the chord-chart photo, or null. */
@@ -87,11 +88,13 @@ export default function SongCard({ song }: { song: SongCardData }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <div className="p-4">
-        <span
-          className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${categoryColor[song.category]}`}
-        >
-          {SONG_CATEGORY_LABELS[song.category]}
-        </span>
+        {song.category && (
+          <span
+            className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${categoryColor[song.category]}`}
+          >
+            {SONG_CATEGORY_LABELS[song.category]}
+          </span>
+        )}
         <h3 className="mt-1.5 text-base font-semibold leading-tight">
           {song.title}
         </h3>

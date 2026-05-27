@@ -7,6 +7,7 @@ import ServiceForm, {
   type ServiceFormInitial,
 } from "@/components/ServiceForm";
 import { deleteService } from "@/app/manage/service/actions";
+import { listLibrarySongs } from "@/lib/library";
 import type { Assignment, Service, Song, AssignmentRole } from "@/lib/domain";
 
 export default async function EditServicePage({
@@ -20,17 +21,19 @@ export default async function EditServicePage({
   if (user.profile?.role !== "admin") redirect("/");
 
   const supabase = await createClient();
-  const [{ data: service }, { data: members }, { data: assignments }, { data: songs }] =
-    await Promise.all([
-      supabase.from("services").select("*").eq("id", id).single(),
-      supabase.from("profiles").select("id, full_name").order("full_name"),
-      supabase.from("assignments").select("*").eq("service_id", id),
-      supabase
-        .from("songs")
-        .select("*")
-        .eq("service_id", id)
-        .order("position"),
-    ]);
+  const [
+    { data: service },
+    { data: members },
+    { data: assignments },
+    { data: songs },
+    librarySongs,
+  ] = await Promise.all([
+    supabase.from("services").select("*").eq("id", id).single(),
+    supabase.from("profiles").select("id, full_name").order("full_name"),
+    supabase.from("assignments").select("*").eq("service_id", id),
+    supabase.from("songs").select("*").eq("service_id", id).order("position"),
+    listLibrarySongs(),
+  ]);
 
   if (!service) notFound();
   const svc = service as Service;
@@ -63,6 +66,7 @@ export default async function EditServicePage({
       chords_text: s.chords_text ?? "",
       chords_image_url: s.chords_image_url,
       chords_url: s.chords_url ?? "",
+      library_song_id: s.library_song_id,
     })),
   };
 
@@ -72,6 +76,7 @@ export default async function EditServicePage({
       <Page>
         <ServiceForm
           members={(members ?? []) as MemberOption[]}
+          librarySongs={librarySongs}
           initial={initial}
         />
 

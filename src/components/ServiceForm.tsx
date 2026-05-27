@@ -9,6 +9,7 @@ import {
   WEAR_COLORS,
   type AssignmentRole,
   type SongCategory,
+  type LibrarySong,
 } from "@/lib/domain";
 import {
   chordsImageUrl,
@@ -48,14 +49,31 @@ function emptySong(category: SongCategory): SongInput {
     chords_text: "",
     chords_image_url: null,
     chords_url: "",
+    library_song_id: null,
+  };
+}
+
+/** Build a per-service song as a snapshot copy of a song-book entry. */
+function songFromLibrary(lib: LibrarySong): SongInput {
+  return {
+    title: lib.title,
+    category: lib.default_category ?? "praise",
+    song_leader_id: null,
+    youtube_url: lib.youtube_url ?? "",
+    chords_text: lib.chords_text ?? "",
+    chords_image_url: lib.chords_image_url,
+    chords_url: lib.chords_url ?? "",
+    library_song_id: lib.id,
   };
 }
 
 export default function ServiceForm({
   members,
+  librarySongs,
   initial,
 }: {
   members: MemberOption[];
+  librarySongs: LibrarySong[];
   initial?: ServiceFormInitial;
 }) {
   const [date, setDate] = useState(initial?.service_date ?? "");
@@ -390,12 +408,30 @@ export default function ServiceForm({
               />
             </div>
           ))}
+          {librarySongs.length > 0 && (
+            <select
+              value=""
+              onChange={(e) => {
+                const lib = librarySongs.find((l) => l.id === e.target.value);
+                if (lib) setSongs((prev) => [...prev, songFromLibrary(lib)]);
+                e.target.value = "";
+              }}
+              className={inputClass}
+            >
+              <option value="">+ Add from Song Book…</option>
+              {librarySongs.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.title}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             type="button"
             onClick={() => setSongs((prev) => [...prev, emptySong("praise")])}
             className="w-full rounded-xl border border-dashed border-border py-3 text-sm font-medium text-primary"
           >
-            + Add song
+            + Add blank song
           </button>
         </div>
       </section>

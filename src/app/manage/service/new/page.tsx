@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader } from "@/components/ui";
 import ServiceForm, { type MemberOption } from "@/components/ServiceForm";
+import { listLibrarySongs } from "@/lib/library";
 
 export default async function NewServicePage() {
   const user = await getCurrentUser();
@@ -10,17 +11,17 @@ export default async function NewServicePage() {
   if (user.profile?.role !== "admin") redirect("/");
 
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("profiles")
-    .select("id, full_name")
-    .order("full_name");
+  const [{ data }, librarySongs] = await Promise.all([
+    supabase.from("profiles").select("id, full_name").order("full_name"),
+    listLibrarySongs(),
+  ]);
   const members = (data ?? []) as MemberOption[];
 
   return (
     <>
       <PageHeader title="New schedule" subtitle="Set up a Sunday service" />
       <Page>
-        <ServiceForm members={members} />
+        <ServiceForm members={members} librarySongs={librarySongs} />
       </Page>
     </>
   );

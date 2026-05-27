@@ -26,13 +26,22 @@ export default async function ManagePage() {
         action={<PrimaryLink href="/manage/service/new">+ New</PrimaryLink>}
       />
       <Page>
-        <Link
-          href="/manage/members"
-          className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm"
-        >
-          Members &amp; invitations
-          <span className="text-muted">›</span>
-        </Link>
+        <div className="space-y-2">
+          <Link
+            href="/manage/members"
+            className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm"
+          >
+            Members &amp; invitations
+            <span className="text-muted">›</span>
+          </Link>
+          <Link
+            href="/manage/songs"
+            className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm"
+          >
+            Song book
+            <span className="text-muted">›</span>
+          </Link>
+        </div>
 
         <SectionTitle>Schedules</SectionTitle>
         {services.length === 0 ? (

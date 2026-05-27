@@ -121,6 +121,25 @@ export interface Song {
   chords_image_url: string | null;
   /** External link to published chords (clickable). */
   chords_url: string | null;
+  /** Song-book entry this song was copied from, or null for a one-off. */
+  library_song_id: string | null;
+}
+
+/** A reusable song in the team's song book (library), kept canonical. */
+export interface LibrarySong {
+  id: string;
+  title: string;
+  /** Optional default category, used as the picker's initial pick. */
+  default_category: SongCategory | null;
+  youtube_url: string | null;
+  chords_text: string | null;
+  /** Storage path of the chord-chart photo in the public `chords` bucket. */
+  chords_image_url: string | null;
+  /** External link to published chords. */
+  chords_url: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Recording {
