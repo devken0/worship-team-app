@@ -1,0 +1,17 @@
+{
+  "name": "Worship Team",
+  "short_name": "Worship",
+  "description": "Schedules, assignments, songs, and recordings for our worship team.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

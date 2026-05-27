@@ -1,0 +1,88 @@
+import { redirect, notFound } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import { Page, PageHeader } from "@/components/ui";
+import ServiceForm, {
+  type MemberOption,
+  type ServiceFormInitial,
+} from "@/components/ServiceForm";
+import { deleteService } from "@/app/manage/service/actions";
+import type { Assignment, Service, Song, AssignmentRole } from "@/lib/domain";
+
+export default async function EditServicePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (user.profile?.role !== "admin") redirect("/");
+
+  const supabase = await createClient();
+  const [{ data: service }, { data: members }, { data: assignments }, { data: songs }] =
+    await Promise.all([
+      supabase.from("services").select("*").eq("id", id).single(),
+      supabase.from("profiles").select("id, full_name").order("full_name"),
+      supabase.from("assignments").select("*").eq("service_id", id),
+      supabase
+        .from("songs")
+        .select("*")
+        .eq("service_id", id)
+        .order("position"),
+    ]);
+
+  if (!service) notFound();
+  const svc = service as Service;
+
+  const singleRoles: Partial<Record<AssignmentRole, string | null>> = {};
+  const backupSingers: string[] = [];
+  for (const a of (assignments ?? []) as Assignment[]) {
+    if (a.role_type === "backup_singer") {
+      if (a.member_id) backupSingers.push(a.member_id);
+    } else {
+      singleRoles[a.role_type] = a.member_id;
+    }
+  }
+
+  const initial: ServiceFormInitial = {
+    id: svc.id,
+    service_date: svc.service_date,
+    rehearsal_at: svc.rehearsal_at,
+    rehearsal_location: svc.rehearsal_location,
+    wear_color_label: svc.wear_color_label,
+    wear_color_hex: svc.wear_color_hex,
+    notes: svc.notes,
+    singleRoles,
+    backupSingers,
+    songs: ((songs ?? []) as Song[]).map((s) => ({
+      title: s.title,
+      category: s.category,
+      song_leader_id: s.song_leader_id,
+      youtube_url: s.youtube_url ?? "",
+      chords_text: s.chords_text ?? "",
+    })),
+  };
+
+  return (
+    <>
+      <PageHeader title="Edit schedule" />
+      <Page>
+        <ServiceForm
+          members={(members ?? []) as MemberOption[]}
+          initial={initial}
+        />
+
+        <form action={deleteService} className="mt-8">
+          <input type="hidden" name="service_id" value={svc.id} />
+          <button
+            type="submit"
+            className="w-full rounded-xl border border-red-200 bg-card px-4 py-3 text-sm font-semibold text-red-600 active:opacity-90"
+          >
+            Delete this schedule
+          </button>
+        </form>
+      </Page>
+    </>
+  );
+}

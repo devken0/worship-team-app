@@ -1,0 +1,362 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import {
+  SINGLE_ROLES,
+  ROLE_LABELS,
+  SONG_CATEGORIES,
+  SONG_CATEGORY_LABELS,
+  WEAR_COLORS,
+  type AssignmentRole,
+  type SongCategory,
+} from "@/lib/domain";
+import { isoToManilaInput, manilaInputToISO } from "@/lib/format";
+import { saveService, type SongInput } from "@/app/manage/service/actions";
+
+export interface MemberOption {
+  id: string;
+  full_name: string;
+}
+
+export interface ServiceFormInitial {
+  id?: string;
+  service_date: string;
+  rehearsal_at: string | null;
+  rehearsal_location: string | null;
+  wear_color_label: string | null;
+  wear_color_hex: string | null;
+  notes: string | null;
+  singleRoles: Partial<Record<AssignmentRole, string | null>>;
+  backupSingers: string[];
+  songs: SongInput[];
+}
+
+const inputClass =
+  "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-base outline-none focus:border-primary";
+
+function emptySong(category: SongCategory): SongInput {
+  return {
+    title: "",
+    category,
+    song_leader_id: null,
+    youtube_url: "",
+    chords_text: "",
+  };
+}
+
+export default function ServiceForm({
+  members,
+  initial,
+}: {
+  members: MemberOption[];
+  initial?: ServiceFormInitial;
+}) {
+  const [date, setDate] = useState(initial?.service_date ?? "");
+  const [rehearsal, setRehearsal] = useState(
+    isoToManilaInput(initial?.rehearsal_at ?? null),
+  );
+  const [location, setLocation] = useState(initial?.rehearsal_location ?? "");
+  const [colorLabel, setColorLabel] = useState(
+    initial?.wear_color_label ?? "",
+  );
+  const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [singleRoles, setSingleRoles] = useState<
+    Partial<Record<AssignmentRole, string | null>>
+  >(initial?.singleRoles ?? {});
+  const [backups, setBackups] = useState<string[]>(
+    initial?.backupSingers?.length ? initial.backupSingers : [""],
+  );
+  const [songs, setSongs] = useState<SongInput[]>(
+    initial?.songs?.length
+      ? initial.songs
+      : [emptySong("welcoming"), emptySong("praise"), emptySong("worship")],
+  );
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function memberSelect(
+    value: string | null,
+    onChange: (v: string | null) => void,
+    id?: string,
+  ) {
+    return (
+      <select
+        id={id}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value || null)}
+        className={inputClass}
+      >
+        <option value="">— Unassigned —</option>
+        {members.map((m) => (
+          <option key={m.id} value={m.id}>
+            {m.full_name || "(no name)"}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  function updateSong(i: number, patch: Partial<SongInput>) {
+    setSongs((prev) =>
+      prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)),
+    );
+  }
+
+  function submit() {
+    setError(null);
+    if (!date) {
+      setError("Please pick the Sunday service date.");
+      return;
+    }
+    const hex =
+      WEAR_COLORS.find((c) => c.label === colorLabel)?.hex ?? "";
+    startTransition(async () => {
+      try {
+        await saveService({
+          id: initial?.id,
+          service_date: date,
+          rehearsal_at: manilaInputToISO(rehearsal),
+          rehearsal_location: location,
+          wear_color_label: colorLabel,
+          wear_color_hex: hex,
+          notes,
+          singleRoles,
+          backupSingers: backups.filter(Boolean),
+          songs,
+        });
+      } catch (e) {
+        // redirect() throws a special error we must let through.
+        if (
+          e &&
+          typeof e === "object" &&
+          "digest" in e &&
+          String((e as { digest?: string }).digest).startsWith("NEXT_REDIRECT")
+        ) {
+          throw e;
+        }
+        setError(e instanceof Error ? e.message : "Could not save.");
+      }
+    });
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Service basics */}
+      <section className="space-y-3">
+        <div>
+          <label htmlFor="date" className="mb-1 block text-sm font-medium">
+            Sunday service date
+          </label>
+          <input
+            id="date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label htmlFor="reh" className="mb-1 block text-sm font-medium">
+            Rehearsal date &amp; time
+          </label>
+          <input
+            id="reh"
+            type="datetime-local"
+            value={rehearsal}
+            onChange={(e) => setRehearsal(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label htmlFor="loc" className="mb-1 block text-sm font-medium">
+            Rehearsal location
+          </label>
+          <input
+            id="loc"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="e.g. Church sanctuary"
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label htmlFor="color" className="mb-1 block text-sm font-medium">
+            Color to wear
+          </label>
+          <select
+            id="color"
+            value={colorLabel}
+            onChange={(e) => setColorLabel(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">— None —</option>
+            {WEAR_COLORS.map((c) => (
+              <option key={c.label} value={c.label}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </section>
+
+      {/* Band & service roles */}
+      <section>
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+          Assignments
+        </h2>
+        <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+          {SINGLE_ROLES.map((role) => (
+            <div key={role}>
+              <label className="mb-1 block text-sm font-medium">
+                {ROLE_LABELS[role]}
+              </label>
+              {memberSelect(singleRoles[role] ?? null, (v) =>
+                setSingleRoles((prev) => ({ ...prev, [role]: v })),
+              )}
+            </div>
+          ))}
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              Backup Singers
+            </label>
+            <div className="space-y-2">
+              {backups.map((b, i) => (
+                <div key={i} className="flex gap-2">
+                  {memberSelect(b || null, (v) =>
+                    setBackups((prev) =>
+                      prev.map((x, idx) => (idx === i ? (v ?? "") : x)),
+                    ),
+                  )}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setBackups((prev) => prev.filter((_, idx) => idx !== i))
+                    }
+                    className="shrink-0 rounded-xl border border-border px-3 text-muted"
+                    aria-label="Remove backup singer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setBackups((prev) => [...prev, ""])}
+                className="text-sm font-medium text-primary"
+              >
+                + Add backup singer
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Songs */}
+      <section>
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+          Songs
+        </h2>
+        <div className="space-y-3">
+          {songs.map((song, i) => (
+            <div
+              key={i}
+              className="space-y-3 rounded-2xl border border-border bg-card p-4"
+            >
+              <div className="flex items-center justify-between">
+                <select
+                  value={song.category}
+                  onChange={(e) =>
+                    updateSong(i, {
+                      category: e.target.value as SongCategory,
+                    })
+                  }
+                  className="rounded-lg border border-border bg-background px-2 py-1 text-sm font-medium"
+                >
+                  {SONG_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {SONG_CATEGORY_LABELS[c]}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSongs((prev) => prev.filter((_, idx) => idx !== i))
+                  }
+                  className="text-sm text-muted"
+                >
+                  Remove
+                </button>
+              </div>
+              <input
+                value={song.title}
+                onChange={(e) => updateSong(i, { title: e.target.value })}
+                placeholder="Song title"
+                className={inputClass}
+              />
+              <div>
+                <label className="mb-1 block text-xs text-muted">
+                  Song leader
+                </label>
+                {memberSelect(song.song_leader_id, (v) =>
+                  updateSong(i, { song_leader_id: v }),
+                )}
+              </div>
+              <input
+                value={song.youtube_url}
+                onChange={(e) => updateSong(i, { youtube_url: e.target.value })}
+                placeholder="YouTube link (paste from the pastor)"
+                className={inputClass}
+              />
+              <textarea
+                value={song.chords_text}
+                onChange={(e) => updateSong(i, { chords_text: e.target.value })}
+                placeholder="Chords (optional) — paste the chord chart here"
+                rows={3}
+                className={`${inputClass} font-mono text-sm`}
+              />
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setSongs((prev) => [...prev, emptySong("praise")])}
+            className="w-full rounded-xl border border-dashed border-border py-3 text-sm font-medium text-primary"
+          >
+            + Add song
+          </button>
+        </div>
+      </section>
+
+      {/* Notes */}
+      <section>
+        <label htmlFor="notes" className="mb-1 block text-sm font-medium">
+          Notes for the team
+        </label>
+        <textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={3}
+          placeholder="Anything else (call time, reminders, etc.)"
+          className={inputClass}
+        />
+      </section>
+
+      {error && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+
+      <button
+        type="button"
+        onClick={submit}
+        disabled={pending}
+        className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 disabled:opacity-60"
+      >
+        {pending ? "Saving…" : initial?.id ? "Save changes" : "Create schedule"}
+      </button>
+    </div>
+  );
+}

@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Worship Team App
 
-## Getting Started
+A simple, mobile-first web app for our church worship team — replacing the Facebook Messenger group chat for weekly schedules, role assignments, songs (YouTube + chords), what color to wear, and Sunday recordings.
 
-First, run the development server:
+Built with **Next.js 16** (App Router) and **Supabase** (Postgres + Auth + Storage).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Features
+
+- **This Sunday** dashboard — your assignment, rehearsal time, color to wear, and songs at a glance.
+- **Schedule** — upcoming and past services.
+- **Service detail** — band roles (pianist, bassist, drummer, rhythm/lead guitar), song leaders per song (welcoming/praise/worship), backup singers, note-taker, bible sharer, color, and each song with a YouTube player + chords.
+- **Manage** (admins only) — create/edit a Sunday, assign roles, add songs + paste the pastor's YouTube links + chords, and invite members.
+- **Recordings** — record the worship in the browser and upload, or paste a Google Drive / YouTube link. Listen back per service.
+- **Invite-only** — the music director invites members by email; new members set their password and profile via the link.
+- Installable as a phone app ("Add to Home Screen").
+
+---
+
+## Setup
+
+### 1. Create a Supabase project
+At [supabase.com](https://supabase.com), create a free project. Then from **Project Settings → API**, copy:
+- Project URL
+- `anon` public key
+- `service_role` key (secret)
+
+### 2. Configure environment
+Copy `.env.example` to `.env.local` and fill in:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Create the database
+In the Supabase dashboard → **SQL Editor**, paste and run the contents of
+[`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
+This creates all tables, security rules, the new-user trigger, and the
+`recordings` (private) and `chords` (public) storage buckets.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Point invite emails at the app
+So invitation links work with this app's login flow, edit the invite email
+template in **Authentication → Email Templates → Invite user** and set the
+link to:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/welcome
+```
 
-## Learn More
+Also add your site URL(s) under **Authentication → URL Configuration →
+Redirect URLs** (e.g. `http://localhost:3000/**` and your production URL).
 
-To learn more about Next.js, take a look at the following resources:
+### 5. Create the first admin
+Invitations come from inside the app, but the very first admin must be made by
+hand:
+1. **Authentication → Users → Add user** — create your account (set a password).
+2. **SQL Editor** — make it an admin:
+   ```sql
+   update public.profiles set role = 'admin', full_name = 'Your Name'
+   where id = (select id from auth.users where email = 'you@email.com');
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 6. Run it
+```bash
+npm install
+npm run dev
+```
+Open http://localhost:3000, sign in as the admin, then **Manage → Members** to
+invite the rest of the team, and **Manage → + New** to post the first Sunday.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Notes & limits
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Recordings storage** is on Supabase's free tier (~1 GB ≈ ~6 months of
+  worship at audio-only quality). The recordings list has a delete action so the
+  team can clear old files. Upgrade the Supabase plan if you need more.
+- **iOS recording**: works on iOS 14.3+. On unsupported/old phones, the
+  recordings screen falls back to pasting a Google Drive / YouTube link.
+- **The pastor** doesn't need an account — he keeps sending YouTube links
+  however he likes, and the music director pastes them into each song.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy
+
+Deploy to [Vercel](https://vercel.com) (free): import the repo, add the same
+four environment variables, and set `NEXT_PUBLIC_SITE_URL` to the production URL.
+Remember to add the production URL to Supabase's redirect URLs (step 4).
