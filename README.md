@@ -40,14 +40,23 @@ In the Supabase dashboard → **SQL Editor**, paste and run the contents of
 This creates all tables, security rules, the new-user trigger, and the
 `recordings` (private) and `chords` (public) storage buckets.
 
-### 4. Point invite emails at the app
-So invitation links work with this app's login flow, edit the invite email
-template in **Authentication → Email Templates → Invite user** and set the
-link to:
+### 4. Set up the invite email
+In **Authentication → Email Templates → Invite user**:
 
-```
-{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/welcome
-```
+1. Set the **subject** to something like `You're invited to join the Worship Team`.
+2. Replace the **message body** with the contents of
+   [`supabase/templates/invite.html`](supabase/templates/invite.html) — a
+   branded, mobile-friendly invite. Its link is already wired to this app's
+   login flow:
+
+   ```
+   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/welcome
+   ```
+
+   (The template is the source of truth in this repo; edits here must be pasted
+   back into the dashboard — Supabase doesn't sync hosted email templates from
+   files. The header logo loads from `{{ .SiteURL }}/logo.png`, so it only shows
+   once `NEXT_PUBLIC_SITE_URL` points at a public host.)
 
 Also add your site URL(s) under **Authentication → URL Configuration →
 Redirect URLs** (e.g. `http://localhost:3000/**` and your production URL).

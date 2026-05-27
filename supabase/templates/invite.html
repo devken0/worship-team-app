@@ -1,0 +1,102 @@
+<!--
+  Supabase "Invite user" email template.
+
+  Where it goes: Authentication → Email Templates → Invite user.
+  Suggested subject line (set in the field above the body):
+      You're invited to join the Worship Team
+
+  Keep the button/link query string EXACTLY as written below
+  (token_hash / type=invite / next=/welcome) — src/app/auth/confirm/route.ts
+  depends on it. The logo only renders once {{ .SiteURL }} points at a public
+  host; the text wordmark is the fallback when an email client blocks images.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light only" />
+    <meta name="supported-color-schemes" content="light only" />
+    <title>You're invited to join the Worship Team</title>
+    <style>
+      /* Phone tweak — most styling is inline for client compatibility. */
+      @media only screen and (max-width: 600px) {
+        .card { padding: 28px 22px !important; }
+        .wrap { padding: 20px 12px !important; }
+      }
+    </style>
+  </head>
+  <body style="margin:0; padding:0; background-color:#faf8f4; -webkit-text-size-adjust:100%;">
+    <!-- Preheader: shown in inbox preview, hidden in the body. -->
+    <div style="display:none; max-height:0; overflow:hidden; opacity:0; color:#faf8f4; font-size:1px; line-height:1px;">
+      You've been invited to the church worship team app — set up your account to get started.
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#faf8f4;">
+      <tr>
+        <td align="center" class="wrap" style="padding:32px 16px;">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:100%;">
+
+            <!-- Header / brand -->
+            <tr>
+              <td align="center" style="padding:8px 0 20px;">
+                <img src="{{ .SiteURL }}/logo.png" width="56" height="56" alt="Worship Team"
+                     style="display:block; border:0; outline:none; text-decoration:none; width:56px; height:auto; margin:0 auto 10px;" />
+                <div style="font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:18px; font-weight:700; letter-spacing:-0.01em; color:#d9620a;">
+                  Worship Team
+                </div>
+              </td>
+            </tr>
+
+            <!-- Card -->
+            <tr>
+              <td class="card" style="background-color:#ffffff; border:1px solid #ece6dd; border-radius:18px; padding:36px 34px;">
+                <h1 style="margin:0 0 12px; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:23px; line-height:1.25; font-weight:700; letter-spacing:-0.015em; color:#1c1a17;">
+                  You're invited 🎶
+                </h1>
+                <p style="margin:0 0 16px; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:16px; line-height:1.55; color:#1c1a17;">
+                  You've been invited to join the worship team app — where we keep our Sunday
+                  schedules, role assignments, songs, and recordings all in one place.
+                </p>
+                <p style="margin:0 0 28px; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:16px; line-height:1.55; color:#857c6e;">
+                  Tap the button below to set up your account.
+                </p>
+
+                <!-- Bulletproof button -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
+                  <tr>
+                    <td align="center" bgcolor="#d9620a" style="border-radius:9999px;">
+                      <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/welcome"
+                         style="display:inline-block; padding:14px 32px; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:16px; font-weight:600; line-height:1; color:#ffffff; text-decoration:none; border-radius:9999px;">
+                        Accept invitation
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin:0 0 8px; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:13px; line-height:1.5; color:#857c6e;">
+                  If the button doesn't work, copy and paste this link into your browser:
+                </p>
+                <p style="margin:0; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:13px; line-height:1.5; word-break:break-all;">
+                  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/welcome"
+                     style="color:#d9620a; text-decoration:underline;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/welcome</a>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="padding:22px 10px 8px;">
+                <p style="margin:0; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:12px; line-height:1.5; color:#857c6e; text-align:center;">
+                  This invitation link expires after a while for your security. Weren't expecting
+                  this? You can safely ignore this email.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
