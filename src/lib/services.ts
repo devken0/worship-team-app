@@ -1,13 +1,21 @@
 import { createClient } from "@/lib/supabase/server";
 import { todayInManila } from "@/lib/format";
-import type { Assignment, Service, Song } from "@/lib/domain";
+import type { Assignment, Evaluation, Service, Song } from "@/lib/domain";
 
 export interface ServiceDetail {
   service: Service;
   assignments: Assignment[];
   songs: Song[];
+  evaluation: Evaluation | null;
   /** member id → full name, for resolving assignment/leader names. */
   names: Record<string, string>;
+}
+
+/** The member id assigned the note_taker role for a service, if any. */
+export function noteTakerId(assignments: Assignment[]): string | null {
+  return (
+    assignments.find((a) => a.role_type === "note_taker")?.member_id ?? null
+  );
 }
 
 async function buildNames(): Promise<Record<string, string>> {
@@ -24,19 +32,26 @@ export async function getServiceDetail(
   id: string,
 ): Promise<ServiceDetail | null> {
   const supabase = await createClient();
-  const [{ data: service }, { data: assignments }, { data: songs }, names] =
-    await Promise.all([
-      supabase.from("services").select("*").eq("id", id).single(),
-      supabase.from("assignments").select("*").eq("service_id", id),
-      supabase.from("songs").select("*").eq("service_id", id).order("position"),
-      buildNames(),
-    ]);
+  const [
+    { data: service },
+    { data: assignments },
+    { data: songs },
+    { data: evaluation },
+    names,
+  ] = await Promise.all([
+    supabase.from("services").select("*").eq("id", id).single(),
+    supabase.from("assignments").select("*").eq("service_id", id),
+    supabase.from("songs").select("*").eq("service_id", id).order("position"),
+    supabase.from("evaluations").select("*").eq("service_id", id).maybeSingle(),
+    buildNames(),
+  ]);
 
   if (!service) return null;
   return {
     service: service as Service,
     assignments: (assignments ?? []) as Assignment[],
     songs: (songs ?? []) as Song[],
+    evaluation: (evaluation as Evaluation) ?? null,
     names,
   };
 }

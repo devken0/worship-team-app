@@ -12,7 +12,7 @@ export default function ServiceDetailView({
   detail: ServiceDetail;
   currentUserId?: string;
 }) {
-  const { service, assignments, songs, names } = detail;
+  const { service, assignments, songs, evaluation, names } = detail;
   const rehearsal = formatRehearsal(service.rehearsal_at);
 
   return (
@@ -75,6 +75,30 @@ export default function ServiceDetailView({
             />
           ))}
         </div>
+      )}
+
+      <SectionTitle>Evaluation</SectionTitle>
+      {evaluation ? (
+        <Link
+          href={`/schedule/${service.id}/evaluation`}
+          className="block rounded-2xl border border-border bg-card p-4 shadow-sm"
+        >
+          <div className="flex items-center justify-between font-medium">
+            Meeting minutes
+            <span className="text-muted">›</span>
+          </div>
+          <p className="mt-1 line-clamp-2 text-sm text-muted">
+            {evaluation.comments.trim() || "Tap to view the minutes."}
+          </p>
+        </Link>
+      ) : (
+        <Link
+          href={`/schedule/${service.id}/evaluation`}
+          className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm"
+        >
+          Evaluation minutes
+          <span className="text-muted">›</span>
+        </Link>
       )}
 
       <SectionTitle>Recording</SectionTitle>

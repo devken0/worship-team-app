@@ -130,3 +130,33 @@ export interface Recording {
   created_by: string | null;
   created_at: string;
 }
+
+/** Evaluation meeting minutes for a service (one row per service). */
+export interface Evaluation {
+  id: string;
+  service_id: string;
+  comments: string;
+  recommendations: string;
+  action_items: string;
+  problems: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** The four free-text sections of the minutes, in template order. */
+export type EvaluationSectionKey =
+  | "comments"
+  | "recommendations"
+  | "action_items"
+  | "problems";
+
+export const EVALUATION_SECTIONS: {
+  key: EvaluationSectionKey;
+  label: string;
+}[] = [
+  { key: "comments", label: "Comments (Positive & Negative)" },
+  { key: "recommendations", label: "Recommendations and Suggestions" },
+  { key: "action_items", label: "Assignment/s if applicable" },
+  { key: "problems", label: "Problems to be solved" },
+];
