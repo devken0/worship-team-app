@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader, Card, SectionTitle, PrimaryLink } from "@/components/ui";
+import { PlusIcon } from "@/components/icons";
 import { formatServiceDate } from "@/lib/format";
 import CleanupButton from "@/components/CleanupButton";
 import { RECORDING_RETENTION_DAYS } from "@/lib/cleanup";
@@ -25,20 +26,25 @@ export default async function ManagePage() {
     <>
       <PageHeader
         title="Manage"
-        action={<PrimaryLink href="/manage/service/new">+ New</PrimaryLink>}
+        action={
+          <PrimaryLink href="/manage/service/new">
+            <PlusIcon size={16} />
+            New
+          </PrimaryLink>
+        }
       />
       <Page>
         <div className="space-y-2">
           <Link
             href="/manage/members"
-            className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm"
+            className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition active:scale-[0.98]"
           >
             Members &amp; invitations
             <span className="text-muted">›</span>
           </Link>
           <Link
             href="/manage/songs"
-            className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm"
+            className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition active:scale-[0.98]"
           >
             Song book
             <span className="text-muted">›</span>
@@ -53,7 +59,11 @@ export default async function ManagePage() {
         ) : (
           <div className="space-y-2">
             {services.map((s) => (
-              <Link key={s.id} href={`/manage/service/${s.id}/edit`}>
+              <Link
+                key={s.id}
+                href={`/manage/service/${s.id}/edit`}
+                className="block transition active:scale-[0.98]"
+              >
                 <Card className="flex items-center justify-between">
                   <span className="font-medium">
                     {formatServiceDate(s.service_date)}

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getCurrentOrNextService } from "@/lib/services";
 import { Page, PageHeader, Card, EmptyState } from "@/components/ui";
+import { CalendarIcon } from "@/components/icons";
 import ServiceDetailView from "@/components/ServiceDetailView";
 import { formatServiceDate, todayInManila } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/domain";
@@ -20,8 +21,9 @@ export default async function HomePage() {
         <PageHeader title={`Hi, ${firstName} 👋`} subtitle="This Sunday" />
         <Page>
           <EmptyState
+            icon={<CalendarIcon size={24} />}
             title="No schedule posted yet"
-            hint="Check back when the music director sets up the next Sunday."
+            hint="Check back when an admin sets up the next Sunday."
           />
         </Page>
       </>

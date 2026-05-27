@@ -13,11 +13,11 @@ export function PageHeader({
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
-      <div className="mx-auto flex max-w-md items-center justify-between gap-3 px-4 py-3">
-        <div className="flex min-w-0 items-center gap-2.5">
+      <div className="mx-auto flex max-w-md items-start justify-between gap-3 px-4 py-3">
+        <div className="flex min-w-0 items-start gap-2.5">
           <Logo size={28} className="shrink-0" />
           <div className="min-w-0">
-            <h1 className="truncate text-lg font-semibold">{title}</h1>
+            <h1 className="truncate text-lg font-semibold leading-7">{title}</h1>
             {subtitle && (
               <p className="truncate text-sm text-muted">{subtitle}</p>
             )}
@@ -87,7 +87,7 @@ export function PrimaryLink({
   return (
     <Link
       href={href}
-      className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm active:opacity-90"
+      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
     >
       {children}
     </Link>
@@ -97,12 +97,19 @@ export function PrimaryLink({
 export function EmptyState({
   title,
   hint,
+  icon,
 }: {
   title: string;
   hint?: string;
+  icon?: React.ReactNode;
 }) {
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center">
+      {icon && (
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-primary">
+          {icon}
+        </div>
+      )}
       <p className="font-medium">{title}</p>
       {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
     </div>

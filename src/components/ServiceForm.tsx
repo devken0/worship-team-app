@@ -335,12 +335,21 @@ export default function ServiceForm({
                   Remove
                 </button>
               </div>
-              <input
-                value={song.title}
-                onChange={(e) => updateSong(i, { title: e.target.value })}
-                placeholder="Song title"
-                className={inputClass}
-              />
+              <div>
+                <label
+                  htmlFor={`song-${i}-title`}
+                  className="mb-1 block text-xs text-muted"
+                >
+                  Song title
+                </label>
+                <input
+                  id={`song-${i}-title`}
+                  value={song.title}
+                  onChange={(e) => updateSong(i, { title: e.target.value })}
+                  placeholder="e.g. 10,000 Reasons"
+                  className={inputClass}
+                />
+              </div>
               <div>
                 <label className="mb-1 block text-xs text-muted">
                   Song leader
@@ -349,19 +358,41 @@ export default function ServiceForm({
                   updateSong(i, { song_leader_id: v }),
                 )}
               </div>
-              <input
-                value={song.youtube_url}
-                onChange={(e) => updateSong(i, { youtube_url: e.target.value })}
-                placeholder="YouTube link (paste from the pastor)"
-                className={inputClass}
-              />
-              <textarea
-                value={song.chords_text}
-                onChange={(e) => updateSong(i, { chords_text: e.target.value })}
-                placeholder="Chords (optional) — paste the chord chart here"
-                rows={3}
-                className={`${inputClass} font-mono text-sm`}
-              />
+              <div>
+                <label
+                  htmlFor={`song-${i}-youtube`}
+                  className="mb-1 block text-xs text-muted"
+                >
+                  YouTube link
+                </label>
+                <input
+                  id={`song-${i}-youtube`}
+                  value={song.youtube_url}
+                  onChange={(e) =>
+                    updateSong(i, { youtube_url: e.target.value })
+                  }
+                  placeholder="Paste from the pastor"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor={`song-${i}-chords`}
+                  className="mb-1 block text-xs text-muted"
+                >
+                  Chords
+                </label>
+                <textarea
+                  id={`song-${i}-chords`}
+                  value={song.chords_text}
+                  onChange={(e) =>
+                    updateSong(i, { chords_text: e.target.value })
+                  }
+                  placeholder="Paste the chord chart here (optional)"
+                  rows={3}
+                  className={`${inputClass} font-mono text-sm`}
+                />
+              </div>
               <div>
                 <label className="mb-1 block text-xs text-muted">
                   Chord photo
@@ -400,12 +431,23 @@ export default function ServiceForm({
                   <p className="mt-1 text-xs text-muted">Uploading photo…</p>
                 )}
               </div>
-              <input
-                value={song.chords_url}
-                onChange={(e) => updateSong(i, { chords_url: e.target.value })}
-                placeholder="Chords link (e.g. published chords URL)"
-                className={inputClass}
-              />
+              <div>
+                <label
+                  htmlFor={`song-${i}-chords-url`}
+                  className="mb-1 block text-xs text-muted"
+                >
+                  Chords link
+                </label>
+                <input
+                  id={`song-${i}-chords-url`}
+                  value={song.chords_url}
+                  onChange={(e) =>
+                    updateSong(i, { chords_url: e.target.value })
+                  }
+                  placeholder="e.g. published chords URL"
+                  className={inputClass}
+                />
+              </div>
             </div>
           ))}
           {librarySongs.length > 0 && (
@@ -461,7 +503,7 @@ export default function ServiceForm({
         type="button"
         onClick={submit}
         disabled={pending}
-        className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 disabled:opacity-60"
+        className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60"
       >
         {pending ? "Saving…" : initial?.id ? "Save changes" : "Create schedule"}
       </button>

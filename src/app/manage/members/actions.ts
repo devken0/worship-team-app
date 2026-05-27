@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { isAdmin, getCurrentUser } from "@/lib/auth";
+import type { UserRole } from "@/lib/domain";
 
 export interface InviteState {
   error?: string;
@@ -47,20 +48,23 @@ export async function inviteMember(
   return { invited: email };
 }
 
-export async function setMemberRole(formData: FormData) {
-  if (!(await isAdmin())) return;
-  const memberId = String(formData.get("member_id") ?? "");
-  const role = String(formData.get("role") ?? "member");
-  if (!memberId) return;
+export async function setMemberRole(
+  memberId: string,
+  role: UserRole,
+): Promise<{ error?: string }> {
+  if (!(await isAdmin())) return { error: "Only admins can change roles." };
+  if (!memberId) return { error: "Missing member." };
 
   // Use the regular (RLS-enforced) client; admins are allowed to update profiles.
   const supabase = await createClient();
-  await supabase
+  const { error } = await supabase
     .from("profiles")
     .update({ role: role === "admin" ? "admin" : "member" })
     .eq("id", memberId);
+  if (error) return { error: error.message };
 
   revalidatePath("/manage/members");
+  return {};
 }
 
 export interface RemoveResult {

@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getServiceDetail, noteTakerId } from "@/lib/services";
 import { Page, PageHeader, Card, EmptyState } from "@/components/ui";
+import { NoteIcon } from "@/components/icons";
 import EvaluationForm from "@/components/EvaluationForm";
 import { formatServiceDate } from "@/lib/format";
 import { EVALUATION_SECTIONS } from "@/lib/domain";
@@ -71,6 +72,7 @@ export default async function EvaluationPage({
           </div>
         ) : (
           <EmptyState
+            icon={<NoteIcon size={24} />}
             title="No minutes yet"
             hint="Only the assigned note-taker or an admin can add these."
           />

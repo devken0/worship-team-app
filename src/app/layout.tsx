@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { getCurrentUser } from "@/lib/auth";
 import BottomNav from "@/components/BottomNav";
+import ToastProvider from "@/components/ToastProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,10 +42,12 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <div className={`flex-1 ${signedIn ? "has-bottom-nav" : ""}`}>
-          {children}
-        </div>
-        {signedIn && <BottomNav isAdmin={isAdmin} />}
+        <ToastProvider>
+          <div className={`flex-1 ${signedIn ? "has-bottom-nav" : ""}`}>
+            {children}
+          </div>
+          {signedIn && <BottomNav isAdmin={isAdmin} />}
+        </ToastProvider>
       </body>
     </html>
   );

@@ -6,6 +6,7 @@ import LibrarySongForm, {
 } from "@/components/LibrarySongForm";
 import { getLibrarySong } from "@/lib/library";
 import { deleteLibrarySong } from "@/app/manage/songs/actions";
+import DeleteButton from "@/components/DeleteButton";
 
 export default async function EditLibrarySongPage({
   params,
@@ -36,15 +37,15 @@ export default async function EditLibrarySongPage({
       <Page>
         <LibrarySongForm initial={initial} />
 
-        <form action={deleteLibrarySong} className="mt-8">
-          <input type="hidden" name="song_id" value={song.id} />
-          <button
-            type="submit"
-            className="w-full rounded-xl border border-red-200 bg-card px-4 py-3 text-sm font-semibold text-red-600 active:opacity-90"
-          >
-            Delete this song
-          </button>
-        </form>
+        <div className="mt-8">
+          <DeleteButton
+            action={deleteLibrarySong}
+            fields={{ song_id: song.id }}
+            label="Delete this song"
+            confirmTitle="Delete this song?"
+            confirmMessage="This removes the song from the library. Schedules that already used it keep their copy. This can't be undone."
+          />
+        </div>
       </Page>
     </>
   );

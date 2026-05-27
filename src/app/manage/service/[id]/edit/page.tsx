@@ -7,6 +7,7 @@ import ServiceForm, {
   type ServiceFormInitial,
 } from "@/components/ServiceForm";
 import { deleteService } from "@/app/manage/service/actions";
+import DeleteButton from "@/components/DeleteButton";
 import { listLibrarySongs } from "@/lib/library";
 import type { Assignment, Service, Song, AssignmentRole } from "@/lib/domain";
 
@@ -80,15 +81,15 @@ export default async function EditServicePage({
           initial={initial}
         />
 
-        <form action={deleteService} className="mt-8">
-          <input type="hidden" name="service_id" value={svc.id} />
-          <button
-            type="submit"
-            className="w-full rounded-xl border border-red-200 bg-card px-4 py-3 text-sm font-semibold text-red-600 active:opacity-90"
-          >
-            Delete this schedule
-          </button>
-        </form>
+        <div className="mt-8">
+          <DeleteButton
+            action={deleteService}
+            fields={{ service_id: svc.id }}
+            label="Delete this schedule"
+            confirmTitle="Delete this schedule?"
+            confirmMessage="This removes the service and all its assignments, songs, and chord photos. This can't be undone."
+          />
+        </div>
       </Page>
     </>
   );

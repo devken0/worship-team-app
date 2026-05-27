@@ -18,7 +18,7 @@ export default function InviteForm() {
           id="inv_name"
           name="full_name"
           placeholder="Juan Dela Cruz"
-          className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary"
+          className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
         />
       </div>
       <div>
@@ -31,7 +31,7 @@ export default function InviteForm() {
           type="email"
           required
           placeholder="member@email.com"
-          className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary"
+          className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
         />
       </div>
       <label className="flex items-center gap-2 text-sm">
@@ -53,7 +53,7 @@ export default function InviteForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 disabled:opacity-60"
+        className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60"
       >
         {pending ? "Sending…" : "Send invitation"}
       </button>

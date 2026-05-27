@@ -72,10 +72,10 @@ export default function BottomNav({ isAdmin }: { isAdmin: boolean }) {
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className="flex flex-col items-center gap-1 py-2 text-[11px] font-medium"
+                className="flex flex-col items-center gap-1 py-2 text-[11px] font-medium transition active:opacity-60"
               >
                 <span
-                  className={`flex items-center rounded-full px-4 py-1 transition-colors ${
+                  className={`flex items-center rounded-full px-4 py-1 transition active:scale-90 ${
                     active ? "bg-brand-soft text-primary" : "text-muted"
                   }`}
                 >

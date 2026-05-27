@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Page, PageHeader, Card, SectionTitle } from "@/components/ui";
+import { ShieldIcon, LogOutIcon } from "@/components/icons";
 import ProfileForm from "@/components/ProfileForm";
 import { signOut } from "./actions";
 
@@ -14,8 +15,9 @@ export default async function ProfilePage() {
       <PageHeader title="Profile" subtitle={user.email ?? undefined} />
       <Page>
         {user.profile.role === "admin" && (
-          <p className="mb-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            Music Director / Admin
+          <p className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            <ShieldIcon size={14} />
+            Admin
           </p>
         )}
 
@@ -27,8 +29,9 @@ export default async function ProfilePage() {
         <form action={signOut}>
           <button
             type="submit"
-            className="w-full rounded-xl border border-border bg-card px-4 py-3 text-base font-semibold text-red-600 active:opacity-90"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-base font-semibold text-red-600 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
+            <LogOutIcon size={18} />
             Sign out
           </button>
         </form>

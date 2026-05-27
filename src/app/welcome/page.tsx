@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Logo from "@/components/Logo";
 import InstrumentPicker from "@/components/InstrumentPicker";
+import PasswordInput from "@/components/PasswordInput";
 import { completeOnboarding, type OnboardingState } from "./actions";
 
 const initial: OnboardingState = {};
@@ -30,24 +31,18 @@ export default function WelcomePage() {
             id="full_name"
             name="full_name"
             required
-            className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary"
+            className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
           />
         </div>
 
-        <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium">
-            Create a password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={6}
-            className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary"
-          />
-        </div>
+        <PasswordInput
+          id="password"
+          name="password"
+          label="Create a password"
+          autoComplete="new-password"
+          required
+          minLength={6}
+        />
 
         <div>
           <label htmlFor="phone" className="mb-1 block text-sm font-medium">
@@ -57,7 +52,7 @@ export default function WelcomePage() {
             id="phone"
             name="phone"
             type="tel"
-            className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary"
+            className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
           />
         </div>
 
@@ -78,7 +73,7 @@ export default function WelcomePage() {
         <button
           type="submit"
           disabled={pending}
-          className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 disabled:opacity-60"
+          className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60"
         >
           {pending ? "Saving…" : "Finish setup"}
         </button>

@@ -1,5 +1,6 @@
 import { deleteRecording } from "@/app/recordings/actions";
 import { formatDuration } from "@/lib/format";
+import DeleteButton from "@/components/DeleteButton";
 
 export interface RecordingView {
   id: string;
@@ -23,15 +24,14 @@ export default function RecordingItem({ rec }: { rec: RecordingView }) {
           ) : null}
         </div>
         {rec.canDelete && (
-          <form action={deleteRecording}>
-            <input type="hidden" name="recording_id" value={rec.id} />
-            <button
-              type="submit"
-              className="shrink-0 text-xs font-medium text-red-600"
-            >
-              Delete
-            </button>
-          </form>
+          <DeleteButton
+            action={deleteRecording}
+            fields={{ recording_id: rec.id }}
+            label="Delete"
+            confirmTitle="Delete this recording?"
+            confirmMessage={`"${rec.title}" will be permanently removed. This can't be undone.`}
+            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          />
         )}
       </div>
 

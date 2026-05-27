@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
-import { removeMember, type RemoveResult } from "@/app/manage/members/actions";
-
-const initial: RemoveResult = {};
+import { useState, useTransition } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import { useToast } from "@/components/ToastProvider";
+import { removeMember } from "@/app/manage/members/actions";
 
 export default function RemoveMemberButton({
   memberId,
@@ -14,30 +14,46 @@ export default function RemoveMemberButton({
   name: string;
   disabled?: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(removeMember, initial);
+  const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const toast = useToast();
+
+  function confirm() {
+    startTransition(async () => {
+      const fd = new FormData();
+      fd.set("member_id", memberId);
+      const res = await removeMember({}, fd);
+      if (res?.error) {
+        toast(res.error, "error");
+      } else {
+        toast(`${name} was removed.`);
+      }
+      setOpen(false);
+    });
+  }
 
   return (
-    <form
-      action={formAction}
-      onSubmit={(e) => {
-        if (
-          !confirm(
-            `Remove ${name}? This permanently deletes their account. Their past assignments and recordings stay but lose the name.`,
-          )
-        ) {
-          e.preventDefault();
-        }
-      }}
-    >
-      <input type="hidden" name="member_id" value={memberId} />
+    <>
       <button
-        type="submit"
+        type="button"
+        onClick={() => setOpen(true)}
         disabled={disabled || pending}
-        title={state.error ?? "Remove this member"}
-        className="rounded-full px-3 py-1.5 text-xs font-semibold text-red-600 disabled:opacity-40"
+        title="Remove this member"
+        className="rounded-full px-3 py-2 text-xs font-semibold text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-40"
       >
         {pending ? "Removing…" : "Remove"}
       </button>
-    </form>
+
+      <ConfirmDialog
+        open={open}
+        title={`Remove ${name}?`}
+        description="This permanently deletes their account. Their past assignments and recordings stay but lose the name."
+        confirmLabel="Remove"
+        tone="danger"
+        pending={pending}
+        onConfirm={confirm}
+        onCancel={() => setOpen(false)}
+      />
+    </>
   );
 }

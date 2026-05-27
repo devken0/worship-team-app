@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, ColorChip, SectionTitle } from "@/components/ui";
+import { ClockIcon, MapPinIcon, ShirtIcon, NoteIcon } from "@/components/icons";
 import AssignmentsList from "@/components/AssignmentsList";
 import SongCard from "@/components/SongCard";
 import { chordsImageUrl, formatRehearsal } from "@/lib/format";
@@ -20,16 +21,21 @@ export default function ServiceDetailView({
       <Card>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
+              <ClockIcon size={14} />
               Rehearsal
             </p>
             <p className="mt-0.5 font-medium">{rehearsal ?? "To be announced"}</p>
             {service.rehearsal_location && (
-              <p className="text-sm text-muted">{service.rehearsal_location}</p>
+              <p className="flex items-center gap-1.5 text-sm text-muted">
+                <MapPinIcon size={14} />
+                {service.rehearsal_location}
+              </p>
             )}
           </div>
           <div className="text-right">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            <p className="flex items-center justify-end gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
+              <ShirtIcon size={14} />
               Wear
             </p>
             <div className="mt-1">
@@ -44,6 +50,10 @@ export default function ServiceDetailView({
 
       {service.notes && (
         <Card className="bg-amber-50">
+          <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
+            <NoteIcon size={14} />
+            Notes
+          </p>
           <p className="text-sm whitespace-pre-wrap">{service.notes}</p>
         </Card>
       )}
@@ -83,7 +93,7 @@ export default function ServiceDetailView({
       {evaluation ? (
         <Link
           href={`/schedule/${service.id}/evaluation`}
-          className="block rounded-2xl border border-border bg-card p-4 shadow-sm"
+          className="block rounded-2xl border border-border bg-card p-4 shadow-sm transition active:scale-[0.98]"
         >
           <div className="flex items-center justify-between font-medium">
             Meeting minutes
@@ -96,7 +106,7 @@ export default function ServiceDetailView({
       ) : (
         <Link
           href={`/schedule/${service.id}/evaluation`}
-          className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm"
+          className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition active:scale-[0.98]"
         >
           Evaluation minutes
           <span className="text-muted">›</span>

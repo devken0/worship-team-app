@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader, Card, EmptyState } from "@/components/ui";
+import { MicIcon } from "@/components/icons";
 import { formatServiceDate } from "@/lib/format";
 import type { Service } from "@/lib/domain";
 
@@ -32,6 +33,7 @@ export default async function RecordingsIndexPage() {
       <Page>
         {list.length === 0 ? (
           <EmptyState
+            icon={<MicIcon size={24} />}
             title="No services yet"
             hint="Recordings are organized by Sunday service."
           />
@@ -40,7 +42,11 @@ export default async function RecordingsIndexPage() {
             {list.map((s) => {
               const n = counts.get(s.id) ?? 0;
               return (
-                <Link key={s.id} href={`/recordings/${s.id}`}>
+                <Link
+                  key={s.id}
+                  href={`/recordings/${s.id}`}
+                  className="block transition active:scale-[0.98]"
+                >
                   <Card className="flex items-center justify-between gap-3">
                     <span className="font-medium">
                       {formatServiceDate(s.service_date)}

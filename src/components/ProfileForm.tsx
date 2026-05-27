@@ -21,7 +21,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
           name="full_name"
           defaultValue={profile.full_name}
           required
-          className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary"
+          className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
         />
       </div>
 
@@ -34,7 +34,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
           name="phone"
           type="tel"
           defaultValue={profile.phone ?? ""}
-          className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary"
+          className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
         />
       </div>
 
@@ -57,7 +57,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 disabled:opacity-60"
+        className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60"
       >
         {pending ? "Saving…" : "Save changes"}
       </button>

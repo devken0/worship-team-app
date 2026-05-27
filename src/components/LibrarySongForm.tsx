@@ -132,20 +132,32 @@ export default function LibrarySongForm({
         </select>
       </div>
 
-      <input
-        value={youtube}
-        onChange={(e) => setYoutube(e.target.value)}
-        placeholder="YouTube link"
-        className={inputClass}
-      />
+      <div>
+        <label htmlFor="youtube" className="mb-1 block text-sm font-medium">
+          YouTube link <span className="text-muted">(optional)</span>
+        </label>
+        <input
+          id="youtube"
+          value={youtube}
+          onChange={(e) => setYoutube(e.target.value)}
+          placeholder="https://youtube.com/watch?v=…"
+          className={inputClass}
+        />
+      </div>
 
-      <textarea
-        value={chordsText}
-        onChange={(e) => setChordsText(e.target.value)}
-        placeholder="Chords (optional) — paste the chord chart here"
-        rows={3}
-        className={`${inputClass} font-mono text-sm`}
-      />
+      <div>
+        <label htmlFor="chords_text" className="mb-1 block text-sm font-medium">
+          Chords <span className="text-muted">(optional)</span>
+        </label>
+        <textarea
+          id="chords_text"
+          value={chordsText}
+          onChange={(e) => setChordsText(e.target.value)}
+          placeholder="Paste the chord chart here"
+          rows={3}
+          className={`${inputClass} font-mono text-sm`}
+        />
+      </div>
 
       <div>
         <label className="mb-1 block text-xs text-muted">Chord photo</label>
@@ -182,12 +194,18 @@ export default function LibrarySongForm({
         {uploading && <p className="mt-1 text-xs text-muted">Uploading photo…</p>}
       </div>
 
-      <input
-        value={chordsUrl}
-        onChange={(e) => setChordsUrl(e.target.value)}
-        placeholder="Chords link (e.g. published chords URL)"
-        className={inputClass}
-      />
+      <div>
+        <label htmlFor="chords_url" className="mb-1 block text-sm font-medium">
+          Chords link <span className="text-muted">(optional)</span>
+        </label>
+        <input
+          id="chords_url"
+          value={chordsUrl}
+          onChange={(e) => setChordsUrl(e.target.value)}
+          placeholder="e.g. published chords URL"
+          className={inputClass}
+        />
+      </div>
 
       {error && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">

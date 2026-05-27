@@ -9,6 +9,7 @@ import {
   PrimaryLink,
   EmptyState,
 } from "@/components/ui";
+import { PlusIcon, MusicIcon } from "@/components/icons";
 import { listLibrarySongs } from "@/lib/library";
 import { SONG_CATEGORY_LABELS } from "@/lib/domain";
 
@@ -24,19 +25,29 @@ export default async function ManageSongsPage() {
       <PageHeader
         title="Song Book"
         subtitle="Reusable songs for scheduling"
-        action={<PrimaryLink href="/manage/songs/new">+ New</PrimaryLink>}
+        action={
+          <PrimaryLink href="/manage/songs/new">
+            <PlusIcon size={16} />
+            New
+          </PrimaryLink>
+        }
       />
       <Page>
         <SectionTitle>Songs ({songs.length})</SectionTitle>
         {songs.length === 0 ? (
           <EmptyState
+            icon={<MusicIcon size={24} />}
             title="No songs yet"
             hint="Tap “+ New” to add the first song to the book."
           />
         ) : (
           <div className="space-y-2">
             {songs.map((s) => (
-              <Link key={s.id} href={`/manage/songs/${s.id}/edit`}>
+              <Link
+                key={s.id}
+                href={`/manage/songs/${s.id}/edit`}
+                className="block transition active:scale-[0.98]"
+              >
                 <Card className="flex items-center justify-between gap-3">
                   <span className="min-w-0">
                     <span className="block truncate font-medium">

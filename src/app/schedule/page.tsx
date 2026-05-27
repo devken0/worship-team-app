@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader, Card, EmptyState, PrimaryLink } from "@/components/ui";
 import { ColorChip } from "@/components/ui";
+import { PlusIcon, CalendarIcon } from "@/components/icons";
 import { formatServiceDate, todayInManila } from "@/lib/format";
 import type { Service } from "@/lib/domain";
 
@@ -28,7 +29,11 @@ export default async function SchedulePage() {
   const past = services.filter((s) => s.service_date < today);
 
   const ServiceRow = ({ s }: { s: Service }) => (
-    <Link key={s.id} href={`/schedule/${s.id}`}>
+    <Link
+      key={s.id}
+      href={`/schedule/${s.id}`}
+      className="block transition active:scale-[0.98]"
+    >
       <Card className="flex items-center justify-between gap-3">
         <span className="font-medium">{formatServiceDate(s.service_date)}</span>
         <ColorChip label={s.wear_color_label} hex={s.wear_color_hex} />
@@ -42,14 +47,17 @@ export default async function SchedulePage() {
         title="Schedule"
         action={
           isAdmin ? (
-            <PrimaryLink href="/manage/service/new">+ New</PrimaryLink>
+            <PrimaryLink href="/manage/service/new">
+              <PlusIcon size={16} />
+              New
+            </PrimaryLink>
           ) : undefined
         }
       />
       <Page>
         <Link
           href="/songbook"
-          className="mb-4 flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm"
+          className="mb-4 flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition active:scale-[0.98]"
         >
           <span className="flex items-center gap-2">
             <svg
@@ -73,11 +81,12 @@ export default async function SchedulePage() {
         </Link>
         {services.length === 0 ? (
           <EmptyState
+            icon={<CalendarIcon size={24} />}
             title="No schedules yet"
             hint={
               isAdmin
                 ? "Tap “+ New” to create the first Sunday."
-                : "The music director hasn't posted a schedule yet."
+                : "An admin hasn't posted a schedule yet."
             }
           />
         ) : (

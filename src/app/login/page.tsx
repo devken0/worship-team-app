@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Logo from "@/components/Logo";
+import PasswordInput from "@/components/PasswordInput";
 import { login, type AuthState } from "./actions";
 
 const initial: AuthState = {};
@@ -30,22 +31,16 @@ export default function LoginPage() {
             type="email"
             autoComplete="email"
             required
-            className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary"
+            className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
           />
         </div>
-        <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium">
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary"
-          />
-        </div>
+        <PasswordInput
+          id="password"
+          name="password"
+          label="Password"
+          autoComplete="current-password"
+          required
+        />
 
         {state.error && (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -56,14 +51,14 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={pending}
-          className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 disabled:opacity-60"
+          className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60"
         >
           {pending ? "Signing in…" : "Sign in"}
         </button>
       </form>
 
       <p className="mt-6 text-center text-xs text-muted">
-        New members are invited by the music director. Check your email for an
+        New members are invited by an admin. Check your email for an
         invitation link.
       </p>
     </main>

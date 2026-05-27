@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader, SectionTitle, EmptyState } from "@/components/ui";
+import { MicIcon } from "@/components/icons";
 import Recorder from "@/components/Recorder";
 import RecordingItem, { type RecordingView } from "@/components/RecordingItem";
 import { formatServiceDate } from "@/lib/format";
@@ -68,6 +69,7 @@ export default async function ServiceRecordingsPage({
         <SectionTitle>Saved recordings ({views.length})</SectionTitle>
         {views.length === 0 ? (
           <EmptyState
+            icon={<MicIcon size={24} />}
             title="No recordings yet"
             hint="Record the worship above, or add a link."
           />
