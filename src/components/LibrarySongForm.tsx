@@ -6,12 +6,31 @@ import {
   SONG_CATEGORY_LABELS,
   type SongCategory,
 } from "@/lib/domain";
-import { chordsImageUrl } from "@/lib/format";
+import { chordsImageUrl, formatServiceDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   saveLibrarySong,
   type LibrarySongPayload,
 } from "@/app/manage/songs/actions";
+
+/** A service that links to this song, for the "apply edit to services" list. */
+export interface LinkedServiceOption {
+  service_id: string;
+  service_date: string;
+}
+
+/** Propagatable fields and their labels, for the "changes to apply" summary. */
+const PROPAGATED_FIELD_LABELS: Record<string, string> = {
+  title: "title",
+  author: "author",
+  song_key: "key",
+  bpm: "BPM",
+  youtube_url: "YouTube link",
+  chords_text: "chords",
+  chords_image_url: "chord photo",
+  chords_url: "chords link",
+};
 
 export interface LibrarySongFormInitial {
   id?: string;
@@ -32,10 +51,16 @@ const inputClass =
 export default function LibrarySongForm({
   initial,
   authors = [],
+  linkedServices = [],
+  today,
 }: {
   initial?: LibrarySongFormInitial;
   /** Existing authors for the autocomplete suggestions. */
   authors?: string[];
+  /** Services whose songs link to this entry — offered for edit propagation. */
+  linkedServices?: LinkedServiceOption[];
+  /** Today in Manila (YYYY-MM-DD), to split upcoming vs past services. */
+  today?: string;
 }) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [category, setCategory] = useState<SongCategory | "">(
@@ -55,6 +80,56 @@ export default function LibrarySongForm({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const isUpcoming = (s: LinkedServiceOption) =>
+    !today || s.service_date >= today;
+  const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(
+    () => new Set(linkedServices.filter(isUpcoming).map((s) => s.service_id)),
+  );
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  function toggleService(id: string) {
+    setSelectedServiceIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  // Fields changed vs the saved entry — drives the "changes to apply" summary
+  // (display only; the server recomputes the diff authoritatively on save).
+  const changedFieldLabels: string[] = (() => {
+    if (!initial) return [];
+    const trimmedBpm = bpm.trim();
+    const current: Record<string, string | number | null> = {
+      title: title.trim() || null,
+      author: author.trim() || null,
+      song_key: songKey.trim() || null,
+      bpm: trimmedBpm ? Number(trimmedBpm) : null,
+      youtube_url: youtube.trim() || null,
+      chords_text: chordsText.trim() || null,
+      chords_image_url: chordsImage || null,
+      chords_url: chordsUrl.trim() || null,
+    };
+    const saved: Record<string, string | number | null> = {
+      title: initial.title?.trim() || null,
+      author: initial.author?.trim() || null,
+      song_key: initial.song_key?.trim() || null,
+      bpm: initial.bpm ?? null,
+      youtube_url: initial.youtube_url?.trim() || null,
+      chords_text: initial.chords_text?.trim() || null,
+      chords_image_url: initial.chords_image_url || null,
+      chords_url: initial.chords_url?.trim() || null,
+    };
+    return Object.keys(current)
+      .filter((k) => current[k] !== saved[k])
+      .map((k) => PROPAGATED_FIELD_LABELS[k]);
+  })();
+
+  const selectedPastCount = linkedServices.filter(
+    (s) => selectedServiceIds.has(s.service_id) && !isUpcoming(s),
+  ).length;
 
   async function uploadChordPhoto(file: File) {
     // Uploads immediately on pick; saveLibrarySong cleans up photos that are
@@ -76,18 +151,18 @@ export default function LibrarySongForm({
     setChordsImage(path);
   }
 
-  function submit() {
+  function buildPayload(): LibrarySongPayload | null {
     setError(null);
     if (!title.trim()) {
       setError("Please enter a song title.");
-      return;
+      return null;
     }
     const trimmedBpm = bpm.trim();
     if (trimmedBpm && !(Number(trimmedBpm) > 0)) {
       setError("BPM must be a positive number.");
-      return;
+      return null;
     }
-    const payload: LibrarySongPayload = {
+    return {
       id: initial?.id,
       title,
       default_category: category || null,
@@ -98,7 +173,11 @@ export default function LibrarySongForm({
       chords_text: chordsText,
       chords_image_url: chordsImage,
       chords_url: chordsUrl,
+      applyToServiceIds: [...selectedServiceIds],
     };
+  }
+
+  function runSave(payload: LibrarySongPayload) {
     startTransition(async () => {
       try {
         await saveLibrarySong(payload);
@@ -115,6 +194,17 @@ export default function LibrarySongForm({
         setError(e instanceof Error ? e.message : "Could not save.");
       }
     });
+  }
+
+  function submit() {
+    const payload = buildPayload();
+    if (!payload) return;
+    // Rewriting a past service changes the record of what was played — confirm.
+    if (selectedPastCount > 0) {
+      setConfirmOpen(true);
+      return;
+    }
+    runSave(payload);
   }
 
   return (
@@ -277,6 +367,78 @@ export default function LibrarySongForm({
         />
       </div>
 
+      {initial?.id && linkedServices.length > 0 && (
+        <div className="rounded-xl border border-border p-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">
+              Used in {linkedServices.length} service
+              {linkedServices.length === 1 ? "" : "s"}
+            </p>
+            <div className="flex gap-3 text-xs">
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedServiceIds(
+                    new Set(
+                      linkedServices.filter(isUpcoming).map((s) => s.service_id),
+                    ),
+                  )
+                }
+                className="text-primary"
+              >
+                Upcoming
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedServiceIds(
+                    new Set(linkedServices.map((s) => s.service_id)),
+                  )
+                }
+                className="text-primary"
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedServiceIds(new Set())}
+                className="text-muted"
+              >
+                None
+              </button>
+            </div>
+          </div>
+          <p className="mt-1 text-xs text-muted">
+            {changedFieldLabels.length > 0
+              ? `Checked services will get your changes to: ${changedFieldLabels.join(", ")}.`
+              : "Edit a field above to push it to the checked services."}
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {linkedServices.map((s) => {
+              const past = !isUpcoming(s);
+              return (
+                <li key={s.service_id}>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={selectedServiceIds.has(s.service_id)}
+                      onChange={() => toggleService(s.service_id)}
+                      className="h-4 w-4 rounded border-border"
+                    />
+                    <span>{formatServiceDate(s.service_date)}</span>
+                    <span
+                      className={`text-xs ${past ? "text-muted" : "text-primary"}`}
+                    >
+                      {past ? "Past" : "Upcoming"}
+                    </span>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
       {error && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
@@ -291,6 +453,25 @@ export default function LibrarySongForm({
       >
         {pending ? "Saving…" : initial?.id ? "Save changes" : "Add to song book"}
       </button>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        tone="danger"
+        title="Apply to past services?"
+        description={`This applies your changes to ${selectedServiceIds.size} service${
+          selectedServiceIds.size === 1 ? "" : "s"
+        }, including ${selectedPastCount} past one${
+          selectedPastCount === 1 ? "" : "s"
+        } that record what you already played.`}
+        confirmLabel="Apply changes"
+        pending={pending}
+        onConfirm={() => {
+          const payload = buildPayload();
+          setConfirmOpen(false);
+          if (payload) runSave(payload);
+        }}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

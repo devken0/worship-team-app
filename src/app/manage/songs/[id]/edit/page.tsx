@@ -4,8 +4,13 @@ import { Page, PageHeader } from "@/components/ui";
 import LibrarySongForm, {
   type LibrarySongFormInitial,
 } from "@/components/LibrarySongForm";
-import { getLibrarySong, listSongAuthors } from "@/lib/library";
+import {
+  getLibrarySong,
+  listSongAuthors,
+  listServicesForLibrarySong,
+} from "@/lib/library";
 import { deleteLibrarySong } from "@/app/manage/songs/actions";
+import { todayInManila } from "@/lib/format";
 import DeleteButton from "@/components/DeleteButton";
 
 export default async function EditLibrarySongPage({
@@ -18,9 +23,10 @@ export default async function EditLibrarySongPage({
   if (!user) redirect("/login");
   if (user.profile?.role !== "admin") redirect("/");
 
-  const [song, authors] = await Promise.all([
+  const [song, authors, linkedServices] = await Promise.all([
     getLibrarySong(id),
     listSongAuthors(),
+    listServicesForLibrarySong(id),
   ]);
   if (!song) notFound();
 
@@ -41,7 +47,12 @@ export default async function EditLibrarySongPage({
     <>
       <PageHeader title="Edit song" />
       <Page>
-        <LibrarySongForm initial={initial} authors={authors} />
+        <LibrarySongForm
+          initial={initial}
+          authors={authors}
+          linkedServices={linkedServices}
+          today={todayInManila()}
+        />
 
         <div className="mt-8">
           <DeleteButton

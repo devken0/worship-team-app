@@ -22,6 +22,11 @@ export interface LibrarySongPayload {
   chords_image_url: string | null;
   /** External link to published chords. */
   chords_url: string;
+  /**
+   * Service ids whose linked songs should receive this edit (only the fields
+   * that actually changed). Empty/omitted = book-only edit, services untouched.
+   */
+  applyToServiceIds?: string[];
 }
 
 /**
@@ -54,6 +59,75 @@ async function removeChordPhotoIfUnused(
   }
 }
 
+/**
+ * Song fields shared between a song-book entry and a per-service `songs` row,
+ * eligible to propagate from the book to linked services. `default_category` is
+ * intentionally excluded — a service's `category` is its own slot choice.
+ */
+const PROPAGATED_FIELDS = [
+  "title",
+  "author",
+  "song_key",
+  "bpm",
+  "youtube_url",
+  "chords_text",
+  "chords_image_url",
+  "chords_url",
+] as const;
+
+/**
+ * Push a song-book edit to selected services' linked songs, but only the fields
+ * that actually changed in this save — so a service that intentionally differs
+ * on a field you didn't touch keeps its own value. Constrained by
+ * `library_song_id` so only rows linked to this entry are updated. Replaced
+ * chord photos on those rows are cleaned from the bucket if now unreferenced.
+ */
+async function applyEditToServices(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  librarySongId: string,
+  oldRow: Record<string, unknown> | null | undefined,
+  newRow: Record<string, unknown>,
+  serviceIds: string[] | undefined,
+): Promise<void> {
+  if (!serviceIds || serviceIds.length === 0) return;
+
+  const changed: Record<string, unknown> = {};
+  for (const f of PROPAGATED_FIELDS) {
+    if ((oldRow?.[f] ?? null) !== (newRow[f] ?? null)) changed[f] = newRow[f] ?? null;
+  }
+  if (Object.keys(changed).length === 0) return;
+
+  // Capture old photo paths on the affected service songs before overwriting,
+  // so a replaced photo can be cleaned up afterward.
+  let oldServicePaths: string[] = [];
+  if ("chords_image_url" in changed) {
+    const { data: affected } = await supabase
+      .from("songs")
+      .select("chords_image_url")
+      .eq("library_song_id", librarySongId)
+      .in("service_id", serviceIds);
+    oldServicePaths = (affected ?? [])
+      .map((s) => s.chords_image_url as string | null)
+      .filter((p): p is string => !!p && p !== changed.chords_image_url);
+  }
+
+  const { error } = await supabase
+    .from("songs")
+    .update(changed)
+    .eq("library_song_id", librarySongId)
+    .in("service_id", serviceIds);
+  if (error) throw new Error(error.message);
+
+  for (const p of new Set(oldServicePaths)) {
+    await removeChordPhotoIfUnused(supabase, p);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/schedule");
+  revalidatePath("/manage");
+  for (const id of serviceIds) revalidatePath(`/schedule/${id}`);
+}
+
 export async function saveLibrarySong(
   payload: LibrarySongPayload,
 ): Promise<void> {
@@ -79,13 +153,16 @@ export async function saveLibrarySong(
   };
 
   if (payload.id) {
-    // Clean up a replaced/removed photo before overwriting the row.
+    // Fetch the current row: serves both photo cleanup and the changed-field
+    // diff used to propagate this edit to linked services.
     const { data: existing } = await supabase
       .from("library_songs")
-      .select("chords_image_url")
+      .select(
+        "title, author, song_key, bpm, youtube_url, chords_text, chords_image_url, chords_url",
+      )
       .eq("id", payload.id)
       .maybeSingle();
-    const oldPath = existing?.chords_image_url as string | null;
+    const oldPath = (existing?.chords_image_url as string | null) ?? null;
     if (oldPath && oldPath !== row.chords_image_url) {
       await removeChordPhotoIfUnused(supabase, oldPath, payload.id);
     }
@@ -94,6 +171,14 @@ export async function saveLibrarySong(
       .update(row)
       .eq("id", payload.id);
     if (error) throw new Error(error.message);
+
+    await applyEditToServices(
+      supabase,
+      payload.id,
+      existing,
+      row,
+      payload.applyToServiceIds,
+    );
   } else {
     const { error } = await supabase
       .from("library_songs")
