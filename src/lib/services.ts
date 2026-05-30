@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { todayInManila } from "@/lib/format";
 import type { Assignment, Evaluation, Service, Song } from "@/lib/domain";
 
@@ -52,6 +52,63 @@ export async function getServiceDetail(
     assignments: (assignments ?? []) as Assignment[],
     songs: (songs ?? []) as Song[],
     evaluation: (evaluation as Evaluation) ?? null,
+    names,
+  };
+}
+
+/**
+ * Read-only service detail for the PUBLIC, no-login share page (`/s/[id]`).
+ * Uses the service-role client to bypass RLS, but deliberately exposes only the
+ * fields the reminder already broadcasts — assignments, songs, schedule, notes —
+ * and never evaluation or recordings. Names are resolved only for the members
+ * this one service references, so no full roster leaks.
+ */
+export async function getPublicServiceDetail(
+  id: string,
+): Promise<ServiceDetail | null> {
+  const supabase = createAdminClient();
+  const [{ data: service }, { data: assignments }, { data: songs }] =
+    await Promise.all([
+      supabase
+        .from("services")
+        .select(
+          "id, service_date, rehearsal_at, rehearsal_location, wear_color_label, wear_color_hex, notes",
+        )
+        .eq("id", id)
+        .single(),
+      supabase
+        .from("assignments")
+        .select("id, service_id, role_type, member_id")
+        .eq("service_id", id),
+      supabase.from("songs").select("*").eq("service_id", id).order("position"),
+    ]);
+
+  if (!service) return null;
+
+  const memberIds = new Set<string>();
+  for (const a of (assignments ?? []) as Assignment[]) {
+    if (a.member_id) memberIds.add(a.member_id);
+  }
+  for (const s of (songs ?? []) as Song[]) {
+    if (s.song_leader_id) memberIds.add(s.song_leader_id);
+  }
+
+  const names: Record<string, string> = {};
+  if (memberIds.size) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", [...memberIds]);
+    for (const p of data ?? []) {
+      names[p.id] = (p.full_name as string) || "(no name)";
+    }
+  }
+
+  return {
+    service: service as Service,
+    assignments: (assignments ?? []) as Assignment[],
+    songs: (songs ?? []) as Song[],
+    evaluation: null,
     names,
   };
 }

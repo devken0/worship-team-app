@@ -13,6 +13,7 @@ export default async function HomePage() {
   if (!user.profile) redirect("/welcome");
 
   const firstName = (user.profile.full_name || "").split(" ")[0] || "there";
+  const isAdmin = user.profile.role === "admin";
   const detail = await getCurrentOrNextService();
 
   if (!detail) {
@@ -73,7 +74,11 @@ export default async function HomePage() {
           </div>
         </Card>
 
-        <ServiceDetailView detail={detail} currentUserId={user.id} />
+        <ServiceDetailView
+          detail={detail}
+          currentUserId={user.id}
+          isAdmin={isAdmin}
+        />
       </Page>
     </>
   );

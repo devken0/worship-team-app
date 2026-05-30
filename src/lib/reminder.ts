@@ -76,9 +76,7 @@ export function buildServiceReminder(
 
   if (siteUrl) {
     lines.push("");
-    lines.push(
-      `Full details: ${siteUrl.replace(/\/$/, "")}/schedule/${service.id}`,
-    );
+    lines.push(`Full details: ${siteUrl.replace(/\/$/, "")}/s/${service.id}`);
   }
 
   return lines.join("\n");

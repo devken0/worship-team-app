@@ -35,7 +35,11 @@ export default async function ServiceDetailPage({
         }
       />
       <Page>
-        <ServiceDetailView detail={detail} currentUserId={user.id} />
+        <ServiceDetailView
+          detail={detail}
+          currentUserId={user.id}
+          isAdmin={isAdmin}
+        />
       </Page>
     </>
   );

@@ -1,31 +1,25 @@
-import Link from "next/link";
 import { Card, ColorChip, SectionTitle } from "@/components/ui";
 import { ClockIcon, MapPinIcon, ShirtIcon, NoteIcon } from "@/components/icons";
 import AssignmentsList from "@/components/AssignmentsList";
 import SongCard from "@/components/SongCard";
-import ReminderButton from "@/components/ReminderButton";
 import { chordsImageUrl, formatRehearsal } from "@/lib/format";
-import { buildServiceReminder } from "@/lib/reminder";
 import type { ServiceDetail } from "@/lib/services";
 
-export default function ServiceDetailView({
+/**
+ * Read-only schedule for the public, no-login share page. Mirrors what the
+ * reminder broadcasts (schedule, assignments, songs, notes) and deliberately
+ * omits evaluation, recordings, and any edit/admin controls.
+ */
+export default function PublicServiceView({
   detail,
-  currentUserId,
-  isAdmin = false,
 }: {
   detail: ServiceDetail;
-  currentUserId?: string;
-  isAdmin?: boolean;
 }) {
-  const { service, assignments, songs, evaluation, names } = detail;
+  const { service, assignments, songs, names } = detail;
   const rehearsal = formatRehearsal(service.rehearsal_at);
-  const reminderText = isAdmin
-    ? buildServiceReminder(detail, process.env.NEXT_PUBLIC_SITE_URL)
-    : null;
 
   return (
     <div className="space-y-3">
-      {reminderText && <ReminderButton text={reminderText} />}
       <Card>
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -57,11 +51,7 @@ export default function ServiceDetailView({
       </Card>
 
       <SectionTitle>Assignments</SectionTitle>
-      <AssignmentsList
-        assignments={assignments}
-        names={names}
-        currentUserId={currentUserId}
-      />
+      <AssignmentsList assignments={assignments} names={names} />
 
       {service.notes && (
         <Card className="bg-amber-50">
@@ -99,39 +89,6 @@ export default function ServiceDetailView({
           ))}
         </div>
       )}
-
-      <SectionTitle>Evaluation</SectionTitle>
-      {evaluation ? (
-        <Link
-          href={`/schedule/${service.id}/evaluation`}
-          className="block rounded-2xl border border-border bg-card p-4 shadow-sm transition active:scale-[0.98]"
-        >
-          <div className="flex items-center justify-between font-medium">
-            Meeting minutes
-            <span className="text-muted">›</span>
-          </div>
-          <p className="mt-1 line-clamp-2 text-sm text-muted">
-            {evaluation.comments.trim() || "Tap to view the minutes."}
-          </p>
-        </Link>
-      ) : (
-        <Link
-          href={`/schedule/${service.id}/evaluation`}
-          className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition active:scale-[0.98]"
-        >
-          Evaluation minutes
-          <span className="text-muted">›</span>
-        </Link>
-      )}
-
-      <SectionTitle>Recording</SectionTitle>
-      <Link
-        href={`/recordings/${service.id}`}
-        className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm"
-      >
-        Recordings for this service
-        <span className="text-muted">›</span>
-      </Link>
     </div>
   );
 }
