@@ -17,6 +17,9 @@ export interface LibrarySongFormInitial {
   id?: string;
   title: string;
   default_category: SongCategory | null;
+  author: string | null;
+  song_key: string | null;
+  bpm: number | null;
   youtube_url: string | null;
   chords_text: string | null;
   chords_image_url: string | null;
@@ -28,12 +31,20 @@ const inputClass =
 
 export default function LibrarySongForm({
   initial,
+  authors = [],
 }: {
   initial?: LibrarySongFormInitial;
+  /** Existing authors for the autocomplete suggestions. */
+  authors?: string[];
 }) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [category, setCategory] = useState<SongCategory | "">(
     initial?.default_category ?? "",
+  );
+  const [author, setAuthor] = useState(initial?.author ?? "");
+  const [songKey, setSongKey] = useState(initial?.song_key ?? "");
+  const [bpm, setBpm] = useState(
+    initial?.bpm != null ? String(initial.bpm) : "",
   );
   const [youtube, setYoutube] = useState(initial?.youtube_url ?? "");
   const [chordsText, setChordsText] = useState(initial?.chords_text ?? "");
@@ -71,10 +82,18 @@ export default function LibrarySongForm({
       setError("Please enter a song title.");
       return;
     }
+    const trimmedBpm = bpm.trim();
+    if (trimmedBpm && !(Number(trimmedBpm) > 0)) {
+      setError("BPM must be a positive number.");
+      return;
+    }
     const payload: LibrarySongPayload = {
       id: initial?.id,
       title,
       default_category: category || null,
+      author,
+      song_key: songKey,
+      bpm: trimmedBpm ? Number(trimmedBpm) : null,
       youtube_url: youtube,
       chords_text: chordsText,
       chords_image_url: chordsImage,
@@ -130,6 +149,57 @@ export default function LibrarySongForm({
             </option>
           ))}
         </select>
+      </div>
+
+      <div>
+        <label htmlFor="author" className="mb-1 block text-sm font-medium">
+          Author / artist <span className="text-muted">(optional)</span>
+        </label>
+        <input
+          id="author"
+          list="library-song-authors"
+          value={author}
+          onChange={(e) => setAuthor(e.target.value)}
+          placeholder="e.g. Matt Redman"
+          className={inputClass}
+        />
+        {authors.length > 0 && (
+          <datalist id="library-song-authors">
+            {authors.map((a) => (
+              <option key={a} value={a} />
+            ))}
+          </datalist>
+        )}
+      </div>
+
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <label htmlFor="song_key" className="mb-1 block text-sm font-medium">
+            Key <span className="text-muted">(optional)</span>
+          </label>
+          <input
+            id="song_key"
+            value={songKey}
+            onChange={(e) => setSongKey(e.target.value)}
+            placeholder="e.g. G"
+            className={inputClass}
+          />
+        </div>
+        <div className="flex-1">
+          <label htmlFor="bpm" className="mb-1 block text-sm font-medium">
+            BPM <span className="text-muted">(optional)</span>
+          </label>
+          <input
+            id="bpm"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={bpm}
+            onChange={(e) => setBpm(e.target.value)}
+            placeholder="e.g. 73"
+            className={inputClass}
+          />
+        </div>
       </div>
 
       <div>

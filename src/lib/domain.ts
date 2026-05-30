@@ -114,6 +114,12 @@ export interface Song {
   category: SongCategory;
   position: number;
   song_leader_id: string | null;
+  /** Songwriter or original artist; copied from the book or typed for a one-off. */
+  author: string | null;
+  /** Musical key, e.g. "G" or "Bb" (DB column is `song_key`). */
+  song_key: string | null;
+  /** Tempo in beats per minute. */
+  bpm: number | null;
   youtube_url: string | null;
   chords_text: string | null;
   /** Storage path of the chord-chart photo in the public `chords` bucket. */
@@ -130,6 +136,12 @@ export interface LibrarySong {
   title: string;
   /** Optional default category, used as the picker's initial pick. */
   default_category: SongCategory | null;
+  /** Songwriter or original artist. */
+  author: string | null;
+  /** Musical key, e.g. "G" or "Bb" (DB column is `song_key`). */
+  song_key: string | null;
+  /** Tempo in beats per minute. */
+  bpm: number | null;
   youtube_url: string | null;
   chords_text: string | null;
   /** Storage path of the chord-chart photo in the public `chords` bucket. */

@@ -10,6 +10,12 @@ export interface SongInput {
   title: string;
   category: SongCategory;
   song_leader_id: string | null;
+  /** Songwriter or original artist. */
+  author: string;
+  /** Musical key, e.g. "G" or "Bb". */
+  song_key: string;
+  /** Tempo in beats per minute, or null if unset. */
+  bpm: number | null;
   youtube_url: string;
   chords_text: string;
   /** Storage path of the chord-chart photo in the `chords` bucket, or null. */
@@ -147,6 +153,9 @@ export async function saveService(payload: ServicePayload): Promise<void> {
       category: s.category,
       position: i,
       song_leader_id: s.song_leader_id || null,
+      author: s.author.trim() || null,
+      song_key: s.song_key.trim() || null,
+      bpm: s.bpm,
       youtube_url: s.youtube_url.trim() || null,
       chords_text: s.chords_text.trim() || null,
       chords_image_url: s.chords_image_url || null,

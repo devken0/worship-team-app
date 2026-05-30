@@ -4,7 +4,7 @@ import { Page, PageHeader } from "@/components/ui";
 import LibrarySongForm, {
   type LibrarySongFormInitial,
 } from "@/components/LibrarySongForm";
-import { getLibrarySong } from "@/lib/library";
+import { getLibrarySong, listSongAuthors } from "@/lib/library";
 import { deleteLibrarySong } from "@/app/manage/songs/actions";
 import DeleteButton from "@/components/DeleteButton";
 
@@ -18,13 +18,19 @@ export default async function EditLibrarySongPage({
   if (!user) redirect("/login");
   if (user.profile?.role !== "admin") redirect("/");
 
-  const song = await getLibrarySong(id);
+  const [song, authors] = await Promise.all([
+    getLibrarySong(id),
+    listSongAuthors(),
+  ]);
   if (!song) notFound();
 
   const initial: LibrarySongFormInitial = {
     id: song.id,
     title: song.title,
     default_category: song.default_category,
+    author: song.author,
+    song_key: song.song_key,
+    bpm: song.bpm,
     youtube_url: song.youtube_url,
     chords_text: song.chords_text,
     chords_image_url: song.chords_image_url,
@@ -35,7 +41,7 @@ export default async function EditLibrarySongPage({
     <>
       <PageHeader title="Edit song" />
       <Page>
-        <LibrarySongForm initial={initial} />
+        <LibrarySongForm initial={initial} authors={authors} />
 
         <div className="mt-8">
           <DeleteButton

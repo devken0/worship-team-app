@@ -10,6 +10,12 @@ export interface LibrarySongPayload {
   id?: string;
   title: string;
   default_category: SongCategory | null;
+  /** Songwriter or original artist. */
+  author: string;
+  /** Musical key, e.g. "G" or "Bb". */
+  song_key: string;
+  /** Tempo in beats per minute, or null if unset. */
+  bpm: number | null;
   youtube_url: string;
   chords_text: string;
   /** Storage path of the chord-chart photo in the `chords` bucket, or null. */
@@ -63,6 +69,9 @@ export async function saveLibrarySong(
   const row = {
     title,
     default_category: payload.default_category,
+    author: payload.author.trim() || null,
+    song_key: payload.song_key.trim() || null,
+    bpm: payload.bpm,
     youtube_url: payload.youtube_url.trim() || null,
     chords_text: payload.chords_text.trim() || null,
     chords_image_url: payload.chords_image_url || null,

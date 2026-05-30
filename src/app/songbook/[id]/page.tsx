@@ -37,6 +37,9 @@ export default async function SongBookEntryPage({
             chordsImageUrl: chordsImageUrl(song.chords_image_url),
             chordsUrl: song.chords_url,
             leaderName: null,
+            author: song.author,
+            songKey: song.song_key,
+            bpm: song.bpm,
           }}
         />
       </Page>

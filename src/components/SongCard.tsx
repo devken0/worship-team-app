@@ -15,6 +15,12 @@ export interface SongCardData {
   /** External link to published chords, or null. */
   chordsUrl: string | null;
   leaderName: string | null;
+  /** Songwriter or original artist; omitted for per-service songs. */
+  author?: string | null;
+  /** Musical key, e.g. "G"; omitted for per-service songs. */
+  songKey?: string | null;
+  /** Tempo in BPM; omitted for per-service songs. */
+  bpm?: number | null;
 }
 
 const categoryColor: Record<SongCategory, string> = {
@@ -98,8 +104,25 @@ export default function SongCard({ song }: { song: SongCardData }) {
         <h3 className="mt-1.5 text-base font-semibold leading-tight">
           {song.title}
         </h3>
+        {song.author && (
+          <p className="mt-0.5 text-sm text-muted">by {song.author}</p>
+        )}
         {song.leaderName && (
           <p className="mt-0.5 text-sm text-muted">Led by {song.leaderName}</p>
+        )}
+        {(song.songKey || song.bpm != null) && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {song.songKey && (
+              <span className="rounded-full bg-background px-2 py-0.5 text-[11px] font-semibold text-muted">
+                Key {song.songKey}
+              </span>
+            )}
+            {song.bpm != null && (
+              <span className="rounded-full bg-background px-2 py-0.5 text-[11px] font-semibold text-muted">
+                {song.bpm} BPM
+              </span>
+            )}
+          </div>
         )}
       </div>
 

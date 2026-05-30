@@ -45,6 +45,9 @@ function emptySong(category: SongCategory): SongInput {
     title: "",
     category,
     song_leader_id: null,
+    author: "",
+    song_key: "",
+    bpm: null,
     youtube_url: "",
     chords_text: "",
     chords_image_url: null,
@@ -59,6 +62,9 @@ function songFromLibrary(lib: LibrarySong): SongInput {
     title: lib.title,
     category: lib.default_category ?? "praise",
     song_leader_id: null,
+    author: lib.author ?? "",
+    song_key: lib.song_key ?? "",
+    bpm: lib.bpm,
     youtube_url: lib.youtube_url ?? "",
     chords_text: lib.chords_text ?? "",
     chords_image_url: lib.chords_image_url,
@@ -91,14 +97,21 @@ export default function ServiceForm({
   const [backups, setBackups] = useState<string[]>(
     initial?.backupSingers?.length ? initial.backupSingers : [""],
   );
-  const [songs, setSongs] = useState<SongInput[]>(
-    initial?.songs?.length
-      ? initial.songs
-      : [emptySong("welcoming"), emptySong("praise"), emptySong("worship")],
-  );
+  // Start empty for a new schedule — the admin picks from the song book or
+  // adds blank songs, rather than three pre-seeded category slots.
+  const [songs, setSongs] = useState<SongInput[]>(initial?.songs ?? []);
   const [uploading, setUploading] = useState<Record<number, boolean>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // Distinct authors already in the song book, for the author autocomplete.
+  const authorOptions = Array.from(
+    new Set(
+      librarySongs
+        .map((l) => l.author?.trim())
+        .filter((a): a is string => !!a),
+    ),
+  ).sort((a, b) => a.localeCompare(b));
 
   function memberSelect(
     value: string | null,
@@ -152,6 +165,10 @@ export default function ServiceForm({
     setError(null);
     if (!date) {
       setError("Please pick the Sunday service date.");
+      return;
+    }
+    if (songs.some((s) => s.bpm != null && !(s.bpm > 0))) {
+      setError("BPM must be a positive number.");
       return;
     }
     const hex =
@@ -304,6 +321,13 @@ export default function ServiceForm({
           Songs
         </h2>
         <div className="space-y-3">
+          {authorOptions.length > 0 && (
+            <datalist id="song-authors">
+              {authorOptions.map((a) => (
+                <option key={a} value={a} />
+              ))}
+            </datalist>
+          )}
           {songs.map((song, i) => (
             <div
               key={i}
@@ -357,6 +381,65 @@ export default function ServiceForm({
                 {memberSelect(song.song_leader_id, (v) =>
                   updateSong(i, { song_leader_id: v }),
                 )}
+              </div>
+              <div>
+                <label
+                  htmlFor={`song-${i}-author`}
+                  className="mb-1 block text-xs text-muted"
+                >
+                  Author / artist
+                </label>
+                <input
+                  id={`song-${i}-author`}
+                  list="song-authors"
+                  value={song.author}
+                  onChange={(e) => updateSong(i, { author: e.target.value })}
+                  placeholder="e.g. Matt Redman"
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label
+                    htmlFor={`song-${i}-key`}
+                    className="mb-1 block text-xs text-muted"
+                  >
+                    Key
+                  </label>
+                  <input
+                    id={`song-${i}-key`}
+                    value={song.song_key}
+                    onChange={(e) =>
+                      updateSong(i, { song_key: e.target.value })
+                    }
+                    placeholder="e.g. G"
+                    className={inputClass}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label
+                    htmlFor={`song-${i}-bpm`}
+                    className="mb-1 block text-xs text-muted"
+                  >
+                    BPM
+                  </label>
+                  <input
+                    id={`song-${i}-bpm`}
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    value={song.bpm ?? ""}
+                    onChange={(e) =>
+                      updateSong(i, {
+                        bpm: e.target.value.trim()
+                          ? Number(e.target.value)
+                          : null,
+                      })
+                    }
+                    placeholder="e.g. 73"
+                    className={inputClass}
+                  />
+                </div>
               </div>
               <div>
                 <label
