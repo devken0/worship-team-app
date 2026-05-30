@@ -24,6 +24,13 @@ export interface SongInput {
   chords_url: string;
   /** Song-book entry this song was copied from, or null for a one-off. */
   library_song_id: string | null;
+  /**
+   * When true (the default), write this song through to the song book on save:
+   * create a book entry if none exists, otherwise update the linked/matched one,
+   * and link this snapshot to it. Unchecked keeps the change local to this
+   * service. Intent only — not persisted on the `songs` row.
+   */
+  save_to_book: boolean;
 }
 
 export interface ServicePayload {
@@ -73,6 +80,88 @@ async function removableChordPaths(
     }
   }
   return safe;
+}
+
+/**
+ * Write "Save to song book" songs through to the canonical song book and return
+ * the resolved `library_song_id` for each song (keyed by the song object).
+ *
+ * For each filled song with `save_to_book`:
+ *  - already linked → update that book entry (this is the back-edit / typo-fix);
+ *  - unlinked but its title matches an existing entry (case-insensitive) → link
+ *    to it WITHOUT overwriting (a typed-from-scratch song never rewrites a
+ *    curated entry, and the match prevents a duplicate);
+ *  - unlinked with no match → create a new entry.
+ * Songs sharing a title in one save resolve to the same entry. Songs with
+ * `save_to_book` off keep their existing link untouched and are not written to
+ * the book. The snapshot copy on the `songs` row is updated separately by the
+ * caller, so past and other services are never rewritten — only the shared book
+ * row changes, and only ever the one a song is explicitly linked to.
+ */
+async function syncSongsToBook(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  songs: SongInput[],
+  userId: string | null,
+): Promise<Map<SongInput, string | null>> {
+  const links = new Map<SongInput, string | null>();
+  const filled = songs.filter((s) => s.title.trim());
+  for (const s of filled) links.set(s, s.library_song_id || null);
+
+  const toBook = filled.filter((s) => s.save_to_book);
+  if (toBook.length === 0) return links;
+
+  // Small library: fetch all titles once for case-insensitive matching.
+  const { data: existing } = await supabase
+    .from("library_songs")
+    .select("id, title");
+  const byTitle = new Map<string, string>();
+  for (const row of existing ?? []) {
+    byTitle.set((row.title as string).toLowerCase(), row.id as string);
+  }
+
+  for (const s of toBook) {
+    const title = s.title.trim();
+    const fields = {
+      title,
+      default_category: s.category,
+      author: s.author.trim() || null,
+      song_key: s.song_key.trim() || null,
+      bpm: s.bpm,
+      youtube_url: s.youtube_url.trim() || null,
+      chords_text: s.chords_text.trim() || null,
+      chords_image_url: s.chords_image_url || null,
+      chords_url: s.chords_url.trim() || null,
+    };
+    if (s.library_song_id) {
+      // Already linked: push the current fields back to its book entry.
+      const { error } = await supabase
+        .from("library_songs")
+        .update({ ...fields, updated_at: new Date().toISOString() })
+        .eq("id", s.library_song_id);
+      if (error) throw new Error(error.message);
+      links.set(s, s.library_song_id);
+      byTitle.set(title.toLowerCase(), s.library_song_id);
+    } else {
+      const matchId = byTitle.get(title.toLowerCase());
+      if (matchId) {
+        // Title matches a curated entry: link to it, leave its fields untouched.
+        links.set(s, matchId);
+      } else {
+        // No match: create a new book entry and link to it.
+        const { data, error } = await supabase
+          .from("library_songs")
+          .insert({ ...fields, created_by: userId })
+          .select("id")
+          .single();
+        if (error) throw new Error(error.message);
+        const newId = data.id as string;
+        links.set(s, newId);
+        byTitle.set(title.toLowerCase(), newId);
+      }
+    }
+  }
+
+  return links;
 }
 
 export async function saveService(payload: ServicePayload): Promise<void> {
@@ -141,6 +230,10 @@ export async function saveService(payload: ServicePayload): Promise<void> {
     if (error) throw new Error(error.message);
   }
 
+  // Write "Save to song book" songs through to the canonical book and get back
+  // the resolved library link for each (created, matched, or kept as-is).
+  const bookLinks = await syncSongsToBook(supabase, payload.songs, user?.id ?? null);
+
   // Replace songs: clear then re-insert in order. The two chord fields ride
   // the song row like chords_text. First, delete any chord photos whose paths
   // are no longer referenced (photo removed or replaced), so the public
@@ -160,7 +253,7 @@ export async function saveService(payload: ServicePayload): Promise<void> {
       chords_text: s.chords_text.trim() || null,
       chords_image_url: s.chords_image_url || null,
       chords_url: s.chords_url.trim() || null,
-      library_song_id: s.library_song_id || null,
+      library_song_id: bookLinks.get(s) ?? s.library_song_id ?? null,
     }));
 
   const keptPaths = new Set(
@@ -188,6 +281,8 @@ export async function saveService(payload: ServicePayload): Promise<void> {
   revalidatePath("/schedule");
   revalidatePath(`/schedule/${serviceId}`);
   revalidatePath("/manage");
+  revalidatePath("/songbook");
+  revalidatePath("/manage/songs");
   redirect(`/schedule/${serviceId}`);
 }
 

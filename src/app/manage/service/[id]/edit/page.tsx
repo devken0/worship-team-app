@@ -71,6 +71,7 @@ export default async function EditServicePage({
       chords_image_url: s.chords_image_url,
       chords_url: s.chords_url ?? "",
       library_song_id: s.library_song_id,
+      save_to_book: true,
     })),
   };
 

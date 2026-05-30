@@ -53,6 +53,7 @@ function emptySong(category: SongCategory): SongInput {
     chords_image_url: null,
     chords_url: "",
     library_song_id: null,
+    save_to_book: true,
   };
 }
 
@@ -70,6 +71,7 @@ function songFromLibrary(lib: LibrarySong): SongInput {
     chords_image_url: lib.chords_image_url,
     chords_url: lib.chords_url ?? "",
     library_song_id: lib.id,
+    save_to_book: true,
   };
 }
 
@@ -531,6 +533,23 @@ export default function ServiceForm({
                   className={inputClass}
                 />
               </div>
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={song.save_to_book}
+                  onChange={(e) =>
+                    updateSong(i, { save_to_book: e.target.checked })
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-border"
+                />
+                <span>
+                  Save to song book
+                  <span className="block text-xs text-muted">
+                    Keeps the shared song-book entry in sync. Uncheck to keep
+                    changes only on this service.
+                  </span>
+                </span>
+              </label>
             </div>
           ))}
           {librarySongs.length > 0 && (
