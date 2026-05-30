@@ -48,6 +48,13 @@ export default function ServiceDetailView({
         </div>
       </Card>
 
+      <SectionTitle>Assignments</SectionTitle>
+      <AssignmentsList
+        assignments={assignments}
+        names={names}
+        currentUserId={currentUserId}
+      />
+
       {service.notes && (
         <Card className="bg-amber-50">
           <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
@@ -57,13 +64,6 @@ export default function ServiceDetailView({
           <p className="text-sm whitespace-pre-wrap">{service.notes}</p>
         </Card>
       )}
-
-      <SectionTitle>Assignments</SectionTitle>
-      <AssignmentsList
-        assignments={assignments}
-        names={names}
-        currentUserId={currentUserId}
-      />
 
       <SectionTitle>Songs</SectionTitle>
       {songs.length === 0 ? (
