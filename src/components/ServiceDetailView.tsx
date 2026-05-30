@@ -3,7 +3,9 @@ import { Card, ColorChip, SectionTitle } from "@/components/ui";
 import { ClockIcon, MapPinIcon, ShirtIcon, NoteIcon } from "@/components/icons";
 import AssignmentsList from "@/components/AssignmentsList";
 import SongCard from "@/components/SongCard";
+import ReminderButton from "@/components/ReminderButton";
 import { chordsImageUrl, formatRehearsal } from "@/lib/format";
+import { buildServiceReminder } from "@/lib/reminder";
 import type { ServiceDetail } from "@/lib/services";
 
 export default function ServiceDetailView({
@@ -15,9 +17,14 @@ export default function ServiceDetailView({
 }) {
   const { service, assignments, songs, evaluation, names } = detail;
   const rehearsal = formatRehearsal(service.rehearsal_at);
+  const reminderText = buildServiceReminder(
+    detail,
+    process.env.NEXT_PUBLIC_SITE_URL,
+  );
 
   return (
     <div className="space-y-3">
+      <ReminderButton text={reminderText} />
       <Card>
         <div className="flex items-start justify-between gap-3">
           <div>
