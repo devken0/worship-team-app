@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { youTubeId } from "@/lib/format";
 import { SONG_CATEGORY_LABELS, type SongCategory } from "@/lib/domain";
+import SongShareSheet from "@/components/SongShareSheet";
 
 export interface SongCardData {
   title: string;
@@ -86,14 +87,46 @@ function LinkIcon() {
   );
 }
 
+// Corner-bracket "screen capture" frame — reads as screenshot/snapshot.
+function ScreenshotIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-[18px] w-[18px]"
+      aria-hidden="true"
+    >
+      <path d="M4 8V6a2 2 0 0 1 2-2h2" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v2" />
+      <path d="M20 16v2a2 2 0 0 1-2 2h-2" />
+      <path d="M8 20H6a2 2 0 0 1-2-2v-2" />
+    </svg>
+  );
+}
+
 export default function SongCard({ song }: { song: SongCardData }) {
   const [playing, setPlaying] = useState(false);
   const [showChords, setShowChords] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const ytId = youTubeId(song.youtube_url);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <div className="p-4">
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <button
+        type="button"
+        onClick={() => setShowShare(true)}
+        aria-label={`Screenshot view of ${song.title}`}
+        title="Screenshot view"
+        className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full text-muted transition active:scale-90 hover:bg-background hover:text-foreground"
+      >
+        <ScreenshotIcon />
+      </button>
+
+      <div className="p-4 pr-12">
         {song.category && (
           <span
             className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${categoryColor[song.category]}`}
@@ -230,6 +263,21 @@ export default function SongCard({ song }: { song: SongCardData }) {
             )}
           </div>
         </div>
+      )}
+
+      {showShare && (
+        <SongShareSheet
+          song={{
+            title: song.title,
+            category: song.category,
+            author: song.author ?? null,
+            leaderName: song.leaderName,
+            songKey: song.songKey ?? null,
+            bpm: song.bpm ?? null,
+            chordsText: song.chords_text,
+          }}
+          onClose={() => setShowShare(false)}
+        />
       )}
     </div>
   );
