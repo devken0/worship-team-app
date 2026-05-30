@@ -1,0 +1,11 @@
+# Supabase
+.branches
+.temp
+
+# Local-stack env (supabase start)
+.env
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local

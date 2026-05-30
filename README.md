@@ -35,10 +35,23 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 ### 3. Create the database
-In the Supabase dashboard → **SQL Editor**, paste and run the contents of
-[`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
+The schema lives as versioned migrations in
+[`supabase/migrations/`](supabase/migrations/). Apply them with the
+[Supabase CLI](https://supabase.com/docs/guides/cli):
+
+```bash
+supabase login                                   # one-time, opens browser
+supabase link --project-ref upmhhtadrephzigimyqi # prompts for the DB password
+supabase db push                                 # applies all migrations
+```
+
 This creates all tables, security rules, the new-user trigger, and the
 `recordings` (private) and `chords` (public) storage buckets.
+
+Going forward, add schema changes with `supabase migration new <name>`, edit the
+generated SQL file, then `supabase db push`. (For a quick one-off you can still
+paste a migration's SQL into the dashboard **SQL Editor**, but the CLI keeps the
+remote history in sync — prefer it.)
 
 ### 4. Set up the invite email
 In **Authentication → Email Templates → Invite user**:
