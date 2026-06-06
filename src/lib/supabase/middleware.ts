@@ -37,9 +37,12 @@ export async function updateSession(request: NextRequest) {
   const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));
 
   if (!user && !isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    // Anchor to the public origin, not request.nextUrl: behind a reverse proxy
+    // the request host is the container's internal address (0.0.0.0:3000), which
+    // would redirect external visitors there. Fall back to the request origin
+    // only in local dev (no env set).
+    const base = process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin;
+    return NextResponse.redirect(new URL("/login", base));
   }
 
   return supabaseResponse;
