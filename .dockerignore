@@ -1,0 +1,32 @@
+# Keep the build context small and keep secrets out of image layers.
+
+# deps & build output (reinstalled/rebuilt inside the image)
+node_modules
+.next
+out
+build
+coverage
+
+# env files — NEVER ship real secrets into an image. .env.local has live keys.
+.env*
+!.env.example
+
+# vcs / tooling / docs not needed at build
+.git
+.gitignore
+.claude
+.mcp.json
+README.md
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# supabase migrations are applied via the CLI, not needed in the image
+supabase
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+*.tsbuildinfo
+.vercel

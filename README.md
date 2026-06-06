@@ -140,3 +140,68 @@ environment variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KE
 `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SITE_URL`, `CLEANUP_SECRET`), and set
 `NEXT_PUBLIC_SITE_URL` to the production URL. Remember to add the production URL
 to Supabase's redirect URLs (step 4).
+
+## Self-host with Docker
+
+The app is a stateless Next.js server (all data/auth/storage live in Supabase),
+so it containerizes cleanly. `next.config.ts` uses `output: "standalone"`, and
+the [`Dockerfile`](Dockerfile) builds a minimal non-root image. Recording and
+chord uploads go **browser → Supabase directly**, so even on a home connection
+those large transfers never pass through this server.
+
+**Build-time vs runtime env.** Next.js inlines `NEXT_PUBLIC_*` values into the
+build, so they're passed as **build args**; the secrets (`SUPABASE_SERVICE_ROLE_KEY`,
+`CLEANUP_SECRET`) are injected at **runtime** from the env file.
+[`docker-compose.yml`](docker-compose.yml) wires both.
+
+### Run locally
+```bash
+docker compose --env-file .env.local up --build
+```
+The `--env-file` flag is required — Compose only auto-loads a file named `.env`,
+but this project uses `.env.local`. Open http://localhost:3000.
+
+### Run on a homelab behind a Cloudflare Tunnel
+1. Copy [`.env.production.example`](.env.production.example) → `.env.production`
+   and set `NEXT_PUBLIC_SITE_URL` to your tunnel hostname (e.g.
+   `https://worship.example.com`). This **must** be set at build time — invite
+   and reminder links are generated from it.
+2. In Supabase → **Authentication → URL Configuration**, set the Site URL and
+   add the tunnel origin under **Redirect URLs** (e.g. `https://worship.example.com/**`).
+   The invite confirm flow redirects to `${SITE_URL}/auth/confirm`; Supabase
+   rejects origins not on this allowlist, so auth breaks without it.
+3. Start the container:
+   ```bash
+   docker compose --env-file .env.production up --build -d
+   ```
+4. Point your Cloudflare Tunnel at the container's local port — no port
+   forwarding needed:
+   ```yaml
+   # cloudflared config.yml
+   ingress:
+     - hostname: worship.example.com
+       service: http://localhost:3000
+     - service: http_status:404
+   ```
+
+> **Storage cleanup when self-hosting:** moving off Vercel means no Vercel Cron.
+> Either press **Manage → Maintenance → Run cleanup now** as needed, or point a
+> free scheduler (cron-job.org, a host cron, etc.) at `POST /api/cleanup` with
+> the `Authorization: Bearer <CLEANUP_SECRET>` header. See [Storage cleanup](#storage-cleanup).
+
+### Shipping updates
+Rebuild the image and recreate the container:
+```bash
+docker compose --env-file .env.production up --build -d
+```
+- Docker layer caching skips `npm ci` unless `package.json`/lockfile changed, so
+  a typical code change only re-runs `next build` (~30–60s), then swaps the
+  container (a few seconds of downtime — the tunnel reconnects automatically).
+- **Changed a `NEXT_PUBLIC_*` value** (e.g. the site URL)? You must rebuild
+  (`--build`) — those are baked in. A plain restart won't pick it up.
+- **Changed only a secret** (`SUPABASE_SERVICE_ROLE_KEY`, `CLEANUP_SECRET`)? No
+  rebuild needed — `docker compose --env-file .env.production up -d` recreates
+  the container with the new runtime env.
+- **Schema change?** Migrations are independent of the container — apply them to
+  Supabase with `supabase db push` (see step 3 of Setup). Push a
+  backward-compatible migration first, then redeploy the app.
