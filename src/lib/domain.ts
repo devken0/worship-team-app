@@ -50,18 +50,27 @@ export const INSTRUMENT_OPTIONS: string[] = [
   "Backup Singer",
 ];
 
-export type SongCategory = "welcoming" | "praise" | "worship";
+export type SongCategory =
+  | "warm_up"
+  | "welcoming"
+  | "praise"
+  | "worship"
+  | "closing";
 
 export const SONG_CATEGORIES: SongCategory[] = [
+  "warm_up",
   "welcoming",
   "praise",
   "worship",
+  "closing",
 ];
 
 export const SONG_CATEGORY_LABELS: Record<SongCategory, string> = {
+  warm_up: "Warm Up",
   welcoming: "Welcoming",
   praise: "Praise",
   worship: "Worship",
+  closing: "Closing",
 };
 
 /** Common attire colors for the "what to wear" picker (label + hex). */
