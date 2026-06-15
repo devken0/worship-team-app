@@ -48,6 +48,7 @@ function emptySong(category: SongCategory): SongInput {
     author: "",
     song_key: "",
     bpm: null,
+    notes: "",
     youtube_url: "",
     chords_text: "",
     chords_image_url: null,
@@ -66,6 +67,7 @@ function songFromLibrary(lib: LibrarySong): SongInput {
     author: lib.author ?? "",
     song_key: lib.song_key ?? "",
     bpm: lib.bpm,
+    notes: lib.notes ?? "",
     youtube_url: lib.youtube_url ?? "",
     chords_text: lib.chords_text ?? "",
     chords_image_url: lib.chords_image_url,
@@ -530,6 +532,22 @@ export default function ServiceForm({
                     updateSong(i, { chords_url: e.target.value })
                   }
                   placeholder="e.g. published chords URL"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor={`song-${i}-notes`}
+                  className="mb-1 block text-xs text-muted"
+                >
+                  Notes
+                </label>
+                <textarea
+                  id={`song-${i}-notes`}
+                  value={song.notes}
+                  onChange={(e) => updateSong(i, { notes: e.target.value })}
+                  placeholder="Arrangement reminders, cues, capo, etc."
+                  rows={2}
                   className={inputClass}
                 />
               </div>

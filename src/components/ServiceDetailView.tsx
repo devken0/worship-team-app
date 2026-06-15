@@ -94,6 +94,7 @@ export default function ServiceDetailView({
                 author: s.author,
                 songKey: s.song_key,
                 bpm: s.bpm,
+                notes: s.notes,
               }}
             />
           ))}

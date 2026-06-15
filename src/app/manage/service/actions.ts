@@ -16,6 +16,8 @@ export interface SongInput {
   song_key: string;
   /** Tempo in beats per minute, or null if unset. */
   bpm: number | null;
+  /** Free-text notes for the team. */
+  notes: string;
   youtube_url: string;
   chords_text: string;
   /** Storage path of the chord-chart photo in the `chords` bucket, or null. */
@@ -127,6 +129,7 @@ async function syncSongsToBook(
       author: s.author.trim() || null,
       song_key: s.song_key.trim() || null,
       bpm: s.bpm,
+      notes: s.notes.trim() || null,
       youtube_url: s.youtube_url.trim() || null,
       chords_text: s.chords_text.trim() || null,
       chords_image_url: s.chords_image_url || null,
@@ -249,6 +252,7 @@ export async function saveService(payload: ServicePayload): Promise<void> {
       author: s.author.trim() || null,
       song_key: s.song_key.trim() || null,
       bpm: s.bpm,
+      notes: s.notes.trim() || null,
       youtube_url: s.youtube_url.trim() || null,
       chords_text: s.chords_text.trim() || null,
       chords_image_url: s.chords_image_url || null,

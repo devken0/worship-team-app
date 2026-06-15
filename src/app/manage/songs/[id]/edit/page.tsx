@@ -37,6 +37,7 @@ export default async function EditLibrarySongPage({
     author: song.author,
     song_key: song.song_key,
     bpm: song.bpm,
+    notes: song.notes,
     youtube_url: song.youtube_url,
     chords_text: song.chords_text,
     chords_image_url: song.chords_image_url,

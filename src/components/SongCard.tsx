@@ -22,6 +22,8 @@ export interface SongCardData {
   songKey?: string | null;
   /** Tempo in BPM; omitted for per-service songs. */
   bpm?: number | null;
+  /** Free-text notes for the team; shown as a block when present. */
+  notes?: string | null;
 }
 
 const categoryColor: Record<SongCategory, string> = {
@@ -159,6 +161,11 @@ export default function SongCard({ song }: { song: SongCardData }) {
             )}
           </div>
         )}
+        {song.notes && (
+          <p className="mt-2 whitespace-pre-wrap rounded-lg bg-amber-50 px-3 py-2 text-sm text-foreground">
+            {song.notes}
+          </p>
+        )}
       </div>
 
       {ytId && (
@@ -276,6 +283,7 @@ export default function SongCard({ song }: { song: SongCardData }) {
             leaderName: song.leaderName,
             songKey: song.songKey ?? null,
             bpm: song.bpm ?? null,
+            notes: song.notes ?? null,
             chordsText: song.chords_text,
           }}
           onClose={() => setShowShare(false)}

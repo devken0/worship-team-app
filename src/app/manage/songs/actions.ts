@@ -16,6 +16,8 @@ export interface LibrarySongPayload {
   song_key: string;
   /** Tempo in beats per minute, or null if unset. */
   bpm: number | null;
+  /** Free-text notes for the team. */
+  notes: string;
   youtube_url: string;
   chords_text: string;
   /** Storage path of the chord-chart photo in the `chords` bucket, or null. */
@@ -69,6 +71,7 @@ const PROPAGATED_FIELDS = [
   "author",
   "song_key",
   "bpm",
+  "notes",
   "youtube_url",
   "chords_text",
   "chords_image_url",
@@ -146,6 +149,7 @@ export async function saveLibrarySong(
     author: payload.author.trim() || null,
     song_key: payload.song_key.trim() || null,
     bpm: payload.bpm,
+    notes: payload.notes.trim() || null,
     youtube_url: payload.youtube_url.trim() || null,
     chords_text: payload.chords_text.trim() || null,
     chords_image_url: payload.chords_image_url || null,
@@ -158,7 +162,7 @@ export async function saveLibrarySong(
     const { data: existing } = await supabase
       .from("library_songs")
       .select(
-        "title, author, song_key, bpm, youtube_url, chords_text, chords_image_url, chords_url",
+        "title, author, song_key, bpm, notes, youtube_url, chords_text, chords_image_url, chords_url",
       )
       .eq("id", payload.id)
       .maybeSingle();

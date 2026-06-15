@@ -40,6 +40,7 @@ export default async function SongBookEntryPage({
             author: song.author,
             songKey: song.song_key,
             bpm: song.bpm,
+            notes: song.notes,
           }}
         />
       </Page>

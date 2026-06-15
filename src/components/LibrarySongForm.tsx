@@ -26,6 +26,7 @@ const PROPAGATED_FIELD_LABELS: Record<string, string> = {
   author: "author",
   song_key: "key",
   bpm: "BPM",
+  notes: "notes",
   youtube_url: "YouTube link",
   chords_text: "chords",
   chords_image_url: "chord photo",
@@ -39,6 +40,7 @@ export interface LibrarySongFormInitial {
   author: string | null;
   song_key: string | null;
   bpm: number | null;
+  notes: string | null;
   youtube_url: string | null;
   chords_text: string | null;
   chords_image_url: string | null;
@@ -71,6 +73,7 @@ export default function LibrarySongForm({
   const [bpm, setBpm] = useState(
     initial?.bpm != null ? String(initial.bpm) : "",
   );
+  const [notes, setNotes] = useState(initial?.notes ?? "");
   const [youtube, setYoutube] = useState(initial?.youtube_url ?? "");
   const [chordsText, setChordsText] = useState(initial?.chords_text ?? "");
   const [chordsImage, setChordsImage] = useState<string | null>(
@@ -107,6 +110,7 @@ export default function LibrarySongForm({
       author: author.trim() || null,
       song_key: songKey.trim() || null,
       bpm: trimmedBpm ? Number(trimmedBpm) : null,
+      notes: notes.trim() || null,
       youtube_url: youtube.trim() || null,
       chords_text: chordsText.trim() || null,
       chords_image_url: chordsImage || null,
@@ -117,6 +121,7 @@ export default function LibrarySongForm({
       author: initial.author?.trim() || null,
       song_key: initial.song_key?.trim() || null,
       bpm: initial.bpm ?? null,
+      notes: initial.notes?.trim() || null,
       youtube_url: initial.youtube_url?.trim() || null,
       chords_text: initial.chords_text?.trim() || null,
       chords_image_url: initial.chords_image_url || null,
@@ -169,6 +174,7 @@ export default function LibrarySongForm({
       author,
       song_key: songKey,
       bpm: trimmedBpm ? Number(trimmedBpm) : null,
+      notes,
       youtube_url: youtube,
       chords_text: chordsText,
       chords_image_url: chordsImage,
@@ -363,6 +369,20 @@ export default function LibrarySongForm({
           value={chordsUrl}
           onChange={(e) => setChordsUrl(e.target.value)}
           placeholder="e.g. published chords URL"
+          className={inputClass}
+        />
+      </div>
+
+      <div>
+        <label htmlFor="notes" className="mb-1 block text-sm font-medium">
+          Notes <span className="text-muted">(optional)</span>
+        </label>
+        <textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Arrangement reminders, cues, capo, etc."
+          rows={3}
           className={inputClass}
         />
       </div>

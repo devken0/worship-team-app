@@ -129,6 +129,8 @@ export interface Song {
   song_key: string | null;
   /** Tempo in beats per minute. */
   bpm: number | null;
+  /** Free-text notes for the team (arrangement reminders, cues, etc.). */
+  notes: string | null;
   youtube_url: string | null;
   chords_text: string | null;
   /** Storage path of the chord-chart photo in the public `chords` bucket. */
@@ -151,6 +153,8 @@ export interface LibrarySong {
   song_key: string | null;
   /** Tempo in beats per minute. */
   bpm: number | null;
+  /** Free-text notes for the team (arrangement reminders, cues, etc.). */
+  notes: string | null;
   youtube_url: string | null;
   chords_text: string | null;
   /** Storage path of the chord-chart photo in the public `chords` bucket. */
