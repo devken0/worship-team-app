@@ -66,6 +66,8 @@ export default async function EditServicePage({
       author: s.author ?? "",
       song_key: s.song_key ?? "",
       bpm: s.bpm,
+      transposed_key: s.transposed_key ?? "",
+      transposed_bpm: s.transposed_bpm,
       notes: s.notes ?? "",
       youtube_url: s.youtube_url ?? "",
       chords_text: s.chords_text ?? "",

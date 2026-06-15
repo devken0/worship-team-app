@@ -41,8 +41,10 @@ export default async function SongBookEntryPage({
             chordsUrl: song.chords_url,
             leaderName: null,
             author: song.author,
-            songKey: song.song_key,
-            bpm: song.bpm,
+            originalKey: song.song_key,
+            originalBpm: song.bpm,
+            transposedKey: song.transposed_key,
+            transposedBpm: song.transposed_bpm,
             notes: song.notes,
           }}
         />

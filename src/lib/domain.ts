@@ -125,10 +125,14 @@ export interface Song {
   song_leader_id: string | null;
   /** Songwriter or original artist; copied from the book or typed for a one-off. */
   author: string | null;
-  /** Musical key, e.g. "G" or "Bb" (DB column is `song_key`). */
+  /** Original musical key, e.g. "G" or "Bb" (DB column is `song_key`). */
   song_key: string | null;
-  /** Tempo in beats per minute. */
+  /** Original tempo in beats per minute. */
   bpm: number | null;
+  /** Performed key when transposed off the original, or null to use the original. */
+  transposed_key: string | null;
+  /** Performed tempo when changed off the original, or null to use the original. */
+  transposed_bpm: number | null;
   /** Free-text notes for the team (arrangement reminders, cues, etc.). */
   notes: string | null;
   youtube_url: string | null;
@@ -149,10 +153,14 @@ export interface LibrarySong {
   default_category: SongCategory | null;
   /** Songwriter or original artist. */
   author: string | null;
-  /** Musical key, e.g. "G" or "Bb" (DB column is `song_key`). */
+  /** Original musical key, e.g. "G" or "Bb" (DB column is `song_key`). */
   song_key: string | null;
-  /** Tempo in beats per minute. */
+  /** Original tempo in beats per minute. */
   bpm: number | null;
+  /** Team-default performed key when transposed off the original, or null. */
+  transposed_key: string | null;
+  /** Team-default performed tempo when changed off the original, or null. */
+  transposed_bpm: number | null;
   /** Free-text notes for the team (arrangement reminders, cues, etc.). */
   notes: string | null;
   youtube_url: string | null;

@@ -12,10 +12,14 @@ export interface LibrarySongPayload {
   default_category: SongCategory | null;
   /** Songwriter or original artist. */
   author: string;
-  /** Musical key, e.g. "G" or "Bb". */
+  /** Original musical key, e.g. "G" or "Bb". */
   song_key: string;
-  /** Tempo in beats per minute, or null if unset. */
+  /** Original tempo in beats per minute, or null if unset. */
   bpm: number | null;
+  /** Team-default performed key when transposed, or null to use the original. */
+  transposed_key: string;
+  /** Team-default performed tempo when changed, or null to use the original. */
+  transposed_bpm: number | null;
   /** Free-text notes for the team. */
   notes: string;
   youtube_url: string;
@@ -71,6 +75,8 @@ const PROPAGATED_FIELDS = [
   "author",
   "song_key",
   "bpm",
+  "transposed_key",
+  "transposed_bpm",
   "notes",
   "youtube_url",
   "chords_text",
@@ -149,6 +155,8 @@ export async function saveLibrarySong(
     author: payload.author.trim() || null,
     song_key: payload.song_key.trim() || null,
     bpm: payload.bpm,
+    transposed_key: payload.transposed_key.trim() || null,
+    transposed_bpm: payload.transposed_bpm,
     notes: payload.notes.trim() || null,
     youtube_url: payload.youtube_url.trim() || null,
     chords_text: payload.chords_text.trim() || null,
@@ -162,7 +170,7 @@ export async function saveLibrarySong(
     const { data: existing } = await supabase
       .from("library_songs")
       .select(
-        "title, author, song_key, bpm, notes, youtube_url, chords_text, chords_image_url, chords_url",
+        "title, author, song_key, bpm, transposed_key, transposed_bpm, notes, youtube_url, chords_text, chords_image_url, chords_url",
       )
       .eq("id", payload.id)
       .maybeSingle();

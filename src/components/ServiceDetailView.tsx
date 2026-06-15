@@ -92,8 +92,10 @@ export default function ServiceDetailView({
                   ? (names[s.song_leader_id] ?? null)
                   : null,
                 author: s.author,
-                songKey: s.song_key,
-                bpm: s.bpm,
+                originalKey: s.song_key,
+                originalBpm: s.bpm,
+                transposedKey: s.transposed_key,
+                transposedBpm: s.transposed_bpm,
                 notes: s.notes,
               }}
             />

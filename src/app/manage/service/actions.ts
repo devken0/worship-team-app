@@ -12,10 +12,14 @@ export interface SongInput {
   song_leader_id: string | null;
   /** Songwriter or original artist. */
   author: string;
-  /** Musical key, e.g. "G" or "Bb". */
+  /** Original musical key, e.g. "G" or "Bb". */
   song_key: string;
-  /** Tempo in beats per minute, or null if unset. */
+  /** Original tempo in beats per minute, or null if unset. */
   bpm: number | null;
+  /** Performed key when transposed off the original, or null to use the original. */
+  transposed_key: string;
+  /** Performed tempo when changed off the original, or null to use the original. */
+  transposed_bpm: number | null;
   /** Free-text notes for the team. */
   notes: string;
   youtube_url: string;
@@ -129,6 +133,8 @@ async function syncSongsToBook(
       author: s.author.trim() || null,
       song_key: s.song_key.trim() || null,
       bpm: s.bpm,
+      transposed_key: s.transposed_key.trim() || null,
+      transposed_bpm: s.transposed_bpm,
       notes: s.notes.trim() || null,
       youtube_url: s.youtube_url.trim() || null,
       chords_text: s.chords_text.trim() || null,
@@ -252,6 +258,8 @@ export async function saveService(payload: ServicePayload): Promise<void> {
       author: s.author.trim() || null,
       song_key: s.song_key.trim() || null,
       bpm: s.bpm,
+      transposed_key: s.transposed_key.trim() || null,
+      transposed_bpm: s.transposed_bpm,
       notes: s.notes.trim() || null,
       youtube_url: s.youtube_url.trim() || null,
       chords_text: s.chords_text.trim() || null,

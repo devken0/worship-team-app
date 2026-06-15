@@ -18,10 +18,14 @@ export interface SongCardData {
   leaderName: string | null;
   /** Songwriter or original artist; omitted for per-service songs. */
   author?: string | null;
-  /** Musical key, e.g. "G"; omitted for per-service songs. */
-  songKey?: string | null;
-  /** Tempo in BPM; omitted for per-service songs. */
-  bpm?: number | null;
+  /** Original musical key, e.g. "G". */
+  originalKey?: string | null;
+  /** Original tempo in BPM. */
+  originalBpm?: number | null;
+  /** Performed key when transposed off the original, or null/empty. */
+  transposedKey?: string | null;
+  /** Performed tempo when changed off the original, or null. */
+  transposedBpm?: number | null;
   /** Free-text notes for the team; shown as a block when present. */
   notes?: string | null;
 }
@@ -118,6 +122,19 @@ export default function SongCard({ song }: { song: SongCardData }) {
   const [showShare, setShowShare] = useState(false);
   const ytId = youTubeId(song.youtube_url);
 
+  // Performed value = transposed override when set, else the original. Show the
+  // "(orig. …)" note + "Transposed" badge only when both exist and differ.
+  const origKey = song.originalKey?.trim() || null;
+  const transKey = song.transposedKey?.trim() || null;
+  const performedKey = transKey ?? origKey;
+  const keyTransposed = !!(transKey && origKey && transKey !== origKey);
+
+  const origBpm = song.originalBpm ?? null;
+  const transBpm = song.transposedBpm ?? null;
+  const performedBpm = transBpm ?? origBpm;
+  const bpmTransposed =
+    transBpm != null && origBpm != null && transBpm !== origBpm;
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <button
@@ -147,16 +164,33 @@ export default function SongCard({ song }: { song: SongCardData }) {
         {song.leaderName && (
           <p className="mt-0.5 text-sm text-muted">Led by {song.leaderName}</p>
         )}
-        {(song.songKey || song.bpm != null) && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {song.songKey && (
+        {(performedKey || performedBpm != null) && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {performedKey && (
               <span className="rounded-full bg-background px-2 py-0.5 text-[11px] font-semibold text-muted">
-                Key {song.songKey}
+                Key {performedKey}
+                {keyTransposed && (
+                  <span className="font-normal text-muted/70">
+                    {" "}
+                    (orig. {origKey})
+                  </span>
+                )}
               </span>
             )}
-            {song.bpm != null && (
+            {performedBpm != null && (
               <span className="rounded-full bg-background px-2 py-0.5 text-[11px] font-semibold text-muted">
-                {song.bpm} BPM
+                {performedBpm} BPM
+                {bpmTransposed && (
+                  <span className="font-normal text-muted/70">
+                    {" "}
+                    (orig. {origBpm})
+                  </span>
+                )}
+              </span>
+            )}
+            {(keyTransposed || bpmTransposed) && (
+              <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-800">
+                Transposed
               </span>
             )}
           </div>
@@ -281,8 +315,8 @@ export default function SongCard({ song }: { song: SongCardData }) {
             category: song.category,
             author: song.author ?? null,
             leaderName: song.leaderName,
-            songKey: song.songKey ?? null,
-            bpm: song.bpm ?? null,
+            songKey: performedKey,
+            bpm: performedBpm,
             notes: song.notes ?? null,
             chordsText: song.chords_text,
           }}

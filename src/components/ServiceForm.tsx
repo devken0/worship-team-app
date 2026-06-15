@@ -17,6 +17,7 @@ import {
   manilaInputToISO,
 } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui";
 import { saveService, type SongInput } from "@/app/manage/service/actions";
 
 export interface MemberOption {
@@ -48,6 +49,8 @@ function emptySong(category: SongCategory): SongInput {
     author: "",
     song_key: "",
     bpm: null,
+    transposed_key: "",
+    transposed_bpm: null,
     notes: "",
     youtube_url: "",
     chords_text: "",
@@ -67,6 +70,8 @@ function songFromLibrary(lib: LibrarySong): SongInput {
     author: lib.author ?? "",
     song_key: lib.song_key ?? "",
     bpm: lib.bpm,
+    transposed_key: lib.transposed_key ?? "",
+    transposed_bpm: lib.transposed_bpm,
     notes: lib.notes ?? "",
     youtube_url: lib.youtube_url ?? "",
     chords_text: lib.chords_text ?? "",
@@ -105,6 +110,19 @@ export default function ServiceForm({
   // adds blank songs, rather than three pre-seeded category slots.
   const [songs, setSongs] = useState<SongInput[]>(initial?.songs ?? []);
   const [uploading, setUploading] = useState<Record<number, boolean>>({});
+  // Song indices whose transpose inputs are revealed. Seeded from songs that
+  // already carry a transposition; the values themselves drive display, this
+  // just keeps empty rows open while the admin types.
+  const [transposeOpen, setTransposeOpen] = useState<Set<number>>(
+    () =>
+      new Set(
+        (initial?.songs ?? [])
+          .map((s, i) =>
+            s.transposed_key.trim() || s.transposed_bpm != null ? i : -1,
+          )
+          .filter((i) => i >= 0),
+      ),
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -145,6 +163,31 @@ export default function ServiceForm({
     );
   }
 
+  // Remove a song and shift the index-keyed transpose-open set down to match.
+  function removeSong(i: number) {
+    setSongs((prev) => prev.filter((_, idx) => idx !== i));
+    setTransposeOpen((prev) => {
+      const next = new Set<number>();
+      for (const idx of prev) {
+        if (idx < i) next.add(idx);
+        else if (idx > i) next.add(idx - 1);
+      }
+      return next;
+    });
+  }
+
+  // Reveal/hide a song's transpose inputs; hiding clears the transposed values
+  // ("stick with the original").
+  function toggleTranspose(i: number, on: boolean) {
+    setTransposeOpen((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(i);
+      else next.delete(i);
+      return next;
+    });
+    if (!on) updateSong(i, { transposed_key: "", transposed_bpm: null });
+  }
+
   async function uploadChordPhoto(i: number, file: File) {
     // Uploads immediately on pick; saveService cleans up photos that are
     // replaced/removed before saving. A form abandoned after an upload (never
@@ -171,7 +214,13 @@ export default function ServiceForm({
       setError("Please pick the Sunday service date.");
       return;
     }
-    if (songs.some((s) => s.bpm != null && !(s.bpm > 0))) {
+    if (
+      songs.some(
+        (s) =>
+          (s.bpm != null && !(s.bpm > 0)) ||
+          (s.transposed_bpm != null && !(s.transposed_bpm > 0)),
+      )
+    ) {
       setError("BPM must be a positive number.");
       return;
     }
@@ -355,9 +404,7 @@ export default function ServiceForm({
                 </select>
                 <button
                   type="button"
-                  onClick={() =>
-                    setSongs((prev) => prev.filter((_, idx) => idx !== i))
-                  }
+                  onClick={() => removeSong(i)}
                   className="text-sm text-muted"
                 >
                   Remove
@@ -408,7 +455,7 @@ export default function ServiceForm({
                     htmlFor={`song-${i}-key`}
                     className="mb-1 block text-xs text-muted"
                   >
-                    Key
+                    Original key
                   </label>
                   <input
                     id={`song-${i}-key`}
@@ -425,7 +472,7 @@ export default function ServiceForm({
                     htmlFor={`song-${i}-bpm`}
                     className="mb-1 block text-xs text-muted"
                   >
-                    BPM
+                    Original BPM
                   </label>
                   <input
                     id={`song-${i}-bpm`}
@@ -444,6 +491,67 @@ export default function ServiceForm({
                     className={inputClass}
                   />
                 </div>
+              </div>
+              <div className="rounded-xl border border-border p-3">
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={transposeOpen.has(i)}
+                    onChange={(e) => toggleTranspose(i, e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-border"
+                  />
+                  <span>
+                    Transpose for this service
+                    <span className="block text-xs text-muted">
+                      Played in a different key/tempo than the original.
+                    </span>
+                  </span>
+                </label>
+                {transposeOpen.has(i) && (
+                  <div className="mt-3 flex gap-3">
+                    <div className="flex-1">
+                      <label
+                        htmlFor={`song-${i}-tkey`}
+                        className="mb-1 block text-xs text-muted"
+                      >
+                        Transposed key
+                      </label>
+                      <input
+                        id={`song-${i}-tkey`}
+                        value={song.transposed_key}
+                        onChange={(e) =>
+                          updateSong(i, { transposed_key: e.target.value })
+                        }
+                        placeholder="e.g. A"
+                        className={inputClass}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label
+                        htmlFor={`song-${i}-tbpm`}
+                        className="mb-1 block text-xs text-muted"
+                      >
+                        Transposed BPM
+                      </label>
+                      <input
+                        id={`song-${i}-tbpm`}
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        value={song.transposed_bpm ?? ""}
+                        onChange={(e) =>
+                          updateSong(i, {
+                            transposed_bpm: e.target.value.trim()
+                              ? Number(e.target.value)
+                              : null,
+                          })
+                        }
+                        placeholder="e.g. 80"
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label
@@ -619,14 +727,9 @@ export default function ServiceForm({
         </p>
       )}
 
-      <button
-        type="button"
-        onClick={submit}
-        disabled={pending}
-        className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60"
-      >
+      <Button type="button" full onClick={submit} disabled={pending}>
         {pending ? "Saving…" : initial?.id ? "Save changes" : "Create schedule"}
-      </button>
+      </Button>
     </div>
   );
 }

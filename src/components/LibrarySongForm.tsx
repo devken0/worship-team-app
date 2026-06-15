@@ -9,6 +9,7 @@ import {
 import { chordsImageUrl, formatServiceDate } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { Button } from "@/components/ui";
 import {
   saveLibrarySong,
   type LibrarySongPayload,
@@ -24,8 +25,10 @@ export interface LinkedServiceOption {
 const PROPAGATED_FIELD_LABELS: Record<string, string> = {
   title: "title",
   author: "author",
-  song_key: "key",
-  bpm: "BPM",
+  song_key: "original key",
+  bpm: "original BPM",
+  transposed_key: "transposed key",
+  transposed_bpm: "transposed BPM",
   notes: "notes",
   youtube_url: "YouTube link",
   chords_text: "chords",
@@ -40,6 +43,8 @@ export interface LibrarySongFormInitial {
   author: string | null;
   song_key: string | null;
   bpm: number | null;
+  transposed_key: string | null;
+  transposed_bpm: number | null;
   notes: string | null;
   youtube_url: string | null;
   chords_text: string | null;
@@ -73,6 +78,18 @@ export default function LibrarySongForm({
   const [bpm, setBpm] = useState(
     initial?.bpm != null ? String(initial.bpm) : "",
   );
+  // Transposition is an optional override on top of the original key/bpm. The
+  // toggle is derived (on when either transposed value is already set); turning
+  // it off clears the transposed values on save ("stick with the original").
+  const [transposed, setTransposed] = useState(
+    initial?.transposed_key != null || initial?.transposed_bpm != null,
+  );
+  const [transposedKey, setTransposedKey] = useState(
+    initial?.transposed_key ?? "",
+  );
+  const [transposedBpm, setTransposedBpm] = useState(
+    initial?.transposed_bpm != null ? String(initial.transposed_bpm) : "",
+  );
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [youtube, setYoutube] = useState(initial?.youtube_url ?? "");
   const [chordsText, setChordsText] = useState(initial?.chords_text ?? "");
@@ -105,11 +122,15 @@ export default function LibrarySongForm({
   const changedFieldLabels: string[] = (() => {
     if (!initial) return [];
     const trimmedBpm = bpm.trim();
+    const trimmedTransposedBpm = transposedBpm.trim();
     const current: Record<string, string | number | null> = {
       title: title.trim() || null,
       author: author.trim() || null,
       song_key: songKey.trim() || null,
       bpm: trimmedBpm ? Number(trimmedBpm) : null,
+      transposed_key: transposed ? transposedKey.trim() || null : null,
+      transposed_bpm:
+        transposed && trimmedTransposedBpm ? Number(trimmedTransposedBpm) : null,
       notes: notes.trim() || null,
       youtube_url: youtube.trim() || null,
       chords_text: chordsText.trim() || null,
@@ -121,6 +142,8 @@ export default function LibrarySongForm({
       author: initial.author?.trim() || null,
       song_key: initial.song_key?.trim() || null,
       bpm: initial.bpm ?? null,
+      transposed_key: initial.transposed_key?.trim() || null,
+      transposed_bpm: initial.transposed_bpm ?? null,
       notes: initial.notes?.trim() || null,
       youtube_url: initial.youtube_url?.trim() || null,
       chords_text: initial.chords_text?.trim() || null,
@@ -167,6 +190,11 @@ export default function LibrarySongForm({
       setError("BPM must be a positive number.");
       return null;
     }
+    const trimmedTransposedBpm = transposed ? transposedBpm.trim() : "";
+    if (trimmedTransposedBpm && !(Number(trimmedTransposedBpm) > 0)) {
+      setError("Transposed BPM must be a positive number.");
+      return null;
+    }
     return {
       id: initial?.id,
       title,
@@ -174,6 +202,8 @@ export default function LibrarySongForm({
       author,
       song_key: songKey,
       bpm: trimmedBpm ? Number(trimmedBpm) : null,
+      transposed_key: transposed ? transposedKey : "",
+      transposed_bpm: trimmedTransposedBpm ? Number(trimmedTransposedBpm) : null,
       notes,
       youtube_url: youtube,
       chords_text: chordsText,
@@ -271,7 +301,7 @@ export default function LibrarySongForm({
       <div className="flex gap-3">
         <div className="flex-1">
           <label htmlFor="song_key" className="mb-1 block text-sm font-medium">
-            Key <span className="text-muted">(optional)</span>
+            Original key <span className="text-muted">(optional)</span>
           </label>
           <input
             id="song_key"
@@ -283,7 +313,7 @@ export default function LibrarySongForm({
         </div>
         <div className="flex-1">
           <label htmlFor="bpm" className="mb-1 block text-sm font-medium">
-            BPM <span className="text-muted">(optional)</span>
+            Original BPM <span className="text-muted">(optional)</span>
           </label>
           <input
             id="bpm"
@@ -296,6 +326,61 @@ export default function LibrarySongForm({
             className={inputClass}
           />
         </div>
+      </div>
+
+      <div className="rounded-xl border border-border p-3">
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={transposed}
+            onChange={(e) => setTransposed(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-border"
+          />
+          <span>
+            Transpose this song
+            <span className="block text-xs text-muted">
+              Set a default performed key/tempo different from the original.
+              Scheduled songs inherit this and can re-transpose per service.
+            </span>
+          </span>
+        </label>
+        {transposed && (
+          <div className="mt-3 flex gap-3">
+            <div className="flex-1">
+              <label
+                htmlFor="transposed_key"
+                className="mb-1 block text-sm font-medium"
+              >
+                Transposed key
+              </label>
+              <input
+                id="transposed_key"
+                value={transposedKey}
+                onChange={(e) => setTransposedKey(e.target.value)}
+                placeholder="e.g. A"
+                className={inputClass}
+              />
+            </div>
+            <div className="flex-1">
+              <label
+                htmlFor="transposed_bpm"
+                className="mb-1 block text-sm font-medium"
+              >
+                Transposed BPM
+              </label>
+              <input
+                id="transposed_bpm"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                value={transposedBpm}
+                onChange={(e) => setTransposedBpm(e.target.value)}
+                placeholder="e.g. 80"
+                className={inputClass}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div>
@@ -465,14 +550,9 @@ export default function LibrarySongForm({
         </p>
       )}
 
-      <button
-        type="button"
-        onClick={submit}
-        disabled={pending}
-        className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 disabled:opacity-60"
-      >
+      <Button type="button" full onClick={submit} disabled={pending}>
         {pending ? "Saving…" : initial?.id ? "Save changes" : "Add to song book"}
-      </button>
+      </Button>
 
       <ConfirmDialog
         open={confirmOpen}
