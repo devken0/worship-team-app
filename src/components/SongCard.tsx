@@ -144,12 +144,18 @@ export default function SongCard({ song }: { song: SongCardData }) {
     transBpm != null && origBpm != null && transBpm !== origBpm;
 
   // Performed chords = the transposed chart when present, else the original
-  // (per field, since a chart in the new key replaces the original).
-  const chordsText =
-    song.transposedChordsText?.trim() || song.originalChordsText;
-  const chordsImageUrl =
-    song.transposedChordsImageUrl ?? song.originalChordsImageUrl;
-  const chordsUrl = song.transposedChordsUrl?.trim() || song.originalChordsUrl;
+  // (per field, since a chart in the new key replaces the original). But once
+  // the *key* is transposed, the original chart is in the wrong key, so we
+  // don't fall back to it — a blank transposed field shows nothing rather than
+  // misleading original-key chords. (A BPM-only change keeps the chords valid,
+  // so the fallback still applies there.)
+  const origChordsText = keyTransposed ? null : song.originalChordsText;
+  const origChordsImageUrl = keyTransposed ? null : song.originalChordsImageUrl;
+  const origChordsUrl = keyTransposed ? null : song.originalChordsUrl;
+
+  const chordsText = song.transposedChordsText?.trim() || origChordsText;
+  const chordsImageUrl = song.transposedChordsImageUrl ?? origChordsImageUrl;
+  const chordsUrl = song.transposedChordsUrl?.trim() || origChordsUrl;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
