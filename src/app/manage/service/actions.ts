@@ -23,11 +23,18 @@ export interface SongInput {
   /** Free-text notes for the team. */
   notes: string;
   youtube_url: string;
+  /** Original chord chart text. */
   chords_text: string;
-  /** Storage path of the chord-chart photo in the `chords` bucket, or null. */
+  /** Storage path of the original chord-chart photo in the `chords` bucket, or null. */
   chords_image_url: string | null;
-  /** External link to published chords. */
+  /** External link to the original published chords. */
   chords_url: string;
+  /** Transposed chord chart text, or "" to use the original. */
+  transposed_chords_text: string;
+  /** Storage path of the transposed chord-chart photo, or null. */
+  transposed_chords_image_url: string | null;
+  /** External link to transposed published chords, or "". */
+  transposed_chords_url: string;
   /** Song-book entry this song was copied from, or null for a one-off. */
   library_song_id: string | null;
   /**
@@ -72,12 +79,13 @@ async function removableChordPaths(
 ): Promise<string[]> {
   const safe: string[] = [];
   for (const p of paths) {
+    const orFilter = `chords_image_url.eq.${p},transposed_chords_image_url.eq.${p}`;
     const [{ data: libRefs }, { data: otherSongs }] = await Promise.all([
-      supabase.from("library_songs").select("id").eq("chords_image_url", p).limit(1),
+      supabase.from("library_songs").select("id").or(orFilter).limit(1),
       supabase
         .from("songs")
         .select("id")
-        .eq("chords_image_url", p)
+        .or(orFilter)
         .neq("service_id", exceptServiceId)
         .limit(1),
     ]);
@@ -140,6 +148,9 @@ async function syncSongsToBook(
       chords_text: s.chords_text.trim() || null,
       chords_image_url: s.chords_image_url || null,
       chords_url: s.chords_url.trim() || null,
+      transposed_chords_text: s.transposed_chords_text.trim() || null,
+      transposed_chords_image_url: s.transposed_chords_image_url || null,
+      transposed_chords_url: s.transposed_chords_url.trim() || null,
     };
     if (s.library_song_id) {
       // Already linked: push the current fields back to its book entry.
@@ -265,18 +276,26 @@ export async function saveService(payload: ServicePayload): Promise<void> {
       chords_text: s.chords_text.trim() || null,
       chords_image_url: s.chords_image_url || null,
       chords_url: s.chords_url.trim() || null,
+      transposed_chords_text: s.transposed_chords_text.trim() || null,
+      transposed_chords_image_url: s.transposed_chords_image_url || null,
+      transposed_chords_url: s.transposed_chords_url.trim() || null,
       library_song_id: bookLinks.get(s) ?? s.library_song_id ?? null,
     }));
 
   const keptPaths = new Set(
-    songRows.map((r) => r.chords_image_url).filter(Boolean) as string[],
+    songRows.flatMap((r) =>
+      [r.chords_image_url, r.transposed_chords_image_url].filter(Boolean),
+    ) as string[],
   );
   const { data: existingSongs } = await supabase
     .from("songs")
-    .select("chords_image_url")
+    .select("chords_image_url, transposed_chords_image_url")
     .eq("service_id", serviceId);
   const removedPaths = (existingSongs ?? [])
-    .map((s) => s.chords_image_url as string | null)
+    .flatMap((s) => [
+      s.chords_image_url as string | null,
+      s.transposed_chords_image_url as string | null,
+    ])
     .filter((p): p is string => !!p && !keptPaths.has(p));
   if (removedPaths.length > 0) {
     const safe = await removableChordPaths(supabase, removedPaths, serviceId);
@@ -307,10 +326,13 @@ export async function deleteService(formData: FormData) {
   // so they don't orphan in the public `chords` bucket.
   const { data: songs } = await supabase
     .from("songs")
-    .select("chords_image_url")
+    .select("chords_image_url, transposed_chords_image_url")
     .eq("service_id", id);
   const paths = (songs ?? [])
-    .map((s) => s.chords_image_url as string | null)
+    .flatMap((s) => [
+      s.chords_image_url as string | null,
+      s.transposed_chords_image_url as string | null,
+    ])
     .filter((p): p is string => !!p);
   if (paths.length > 0) {
     const safe = await removableChordPaths(supabase, paths, id);

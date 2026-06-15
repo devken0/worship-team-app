@@ -44,6 +44,9 @@ export default async function EditLibrarySongPage({
     chords_text: song.chords_text,
     chords_image_url: song.chords_image_url,
     chords_url: song.chords_url,
+    transposed_chords_text: song.transposed_chords_text,
+    transposed_chords_image_url: song.transposed_chords_image_url,
+    transposed_chords_url: song.transposed_chords_url,
   };
 
   return (

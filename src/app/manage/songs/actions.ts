@@ -23,11 +23,18 @@ export interface LibrarySongPayload {
   /** Free-text notes for the team. */
   notes: string;
   youtube_url: string;
+  /** Original chord chart text. */
   chords_text: string;
-  /** Storage path of the chord-chart photo in the `chords` bucket, or null. */
+  /** Storage path of the original chord-chart photo in the `chords` bucket, or null. */
   chords_image_url: string | null;
-  /** External link to published chords. */
+  /** External link to the original published chords. */
   chords_url: string;
+  /** Transposed chord chart text, or "" to use the original. */
+  transposed_chords_text: string;
+  /** Storage path of the transposed chord-chart photo, or null. */
+  transposed_chords_image_url: string | null;
+  /** External link to transposed published chords, or "". */
+  transposed_chords_url: string;
   /**
    * Service ids whose linked songs should receive this edit (only the fields
    * that actually changed). Empty/omitted = book-only edit, services untouched.
@@ -37,28 +44,26 @@ export interface LibrarySongPayload {
 
 /**
  * Delete a chord photo from the public `chords` bucket, but only if no other
- * library entry and no per-service song still references the path. Library
- * entries and snapshot copies on `songs` rows can share a path, so a blind
- * remove() would orphan a photo that's still in use elsewhere.
+ * library entry and no per-service song still references the path — in EITHER
+ * the original (`chords_image_url`) or transposed (`transposed_chords_image_url`)
+ * photo slot. Library entries and snapshot copies on `songs` rows can share a
+ * path, so a blind remove() would orphan a photo that's still in use elsewhere.
  */
 async function removeChordPhotoIfUnused(
   supabase: Awaited<ReturnType<typeof createClient>>,
   path: string,
   exceptLibrarySongId?: string,
 ): Promise<void> {
+  const orFilter = `chords_image_url.eq.${path},transposed_chords_image_url.eq.${path}`;
   let libQuery = supabase
     .from("library_songs")
     .select("id")
-    .eq("chords_image_url", path)
+    .or(orFilter)
     .limit(1);
   if (exceptLibrarySongId) libQuery = libQuery.neq("id", exceptLibrarySongId);
   const [{ data: libRefs }, { data: songRefs }] = await Promise.all([
     libQuery,
-    supabase
-      .from("songs")
-      .select("id")
-      .eq("chords_image_url", path)
-      .limit(1),
+    supabase.from("songs").select("id").or(orFilter).limit(1),
   ]);
   if ((libRefs?.length ?? 0) === 0 && (songRefs?.length ?? 0) === 0) {
     await supabase.storage.from("chords").remove([path]);
@@ -82,6 +87,9 @@ const PROPAGATED_FIELDS = [
   "chords_text",
   "chords_image_url",
   "chords_url",
+  "transposed_chords_text",
+  "transposed_chords_image_url",
+  "transposed_chords_url",
 ] as const;
 
 /**
@@ -107,17 +115,26 @@ async function applyEditToServices(
   if (Object.keys(changed).length === 0) return;
 
   // Capture old photo paths on the affected service songs before overwriting,
-  // so a replaced photo can be cleaned up afterward.
+  // so a replaced photo (in either the original or transposed slot) can be
+  // cleaned up afterward.
+  const photoCols = (
+    ["chords_image_url", "transposed_chords_image_url"] as const
+  ).filter((c) => c in changed);
   let oldServicePaths: string[] = [];
-  if ("chords_image_url" in changed) {
+  if (photoCols.length > 0) {
+    const newVals = new Set(
+      photoCols
+        .map((c) => changed[c] as string | null)
+        .filter((p): p is string => !!p),
+    );
     const { data: affected } = await supabase
       .from("songs")
-      .select("chords_image_url")
+      .select("chords_image_url, transposed_chords_image_url")
       .eq("library_song_id", librarySongId)
       .in("service_id", serviceIds);
     oldServicePaths = (affected ?? [])
-      .map((s) => s.chords_image_url as string | null)
-      .filter((p): p is string => !!p && p !== changed.chords_image_url);
+      .flatMap((s) => photoCols.map((c) => s[c] as string | null))
+      .filter((p): p is string => !!p && !newVals.has(p));
   }
 
   const { error } = await supabase
@@ -162,6 +179,9 @@ export async function saveLibrarySong(
     chords_text: payload.chords_text.trim() || null,
     chords_image_url: payload.chords_image_url || null,
     chords_url: payload.chords_url.trim() || null,
+    transposed_chords_text: payload.transposed_chords_text.trim() || null,
+    transposed_chords_image_url: payload.transposed_chords_image_url || null,
+    transposed_chords_url: payload.transposed_chords_url.trim() || null,
   };
 
   if (payload.id) {
@@ -170,13 +190,23 @@ export async function saveLibrarySong(
     const { data: existing } = await supabase
       .from("library_songs")
       .select(
-        "title, author, song_key, bpm, transposed_key, transposed_bpm, notes, youtube_url, chords_text, chords_image_url, chords_url",
+        "title, author, song_key, bpm, transposed_key, transposed_bpm, notes, youtube_url, chords_text, chords_image_url, chords_url, transposed_chords_text, transposed_chords_image_url, transposed_chords_url",
       )
       .eq("id", payload.id)
       .maybeSingle();
-    const oldPath = (existing?.chords_image_url as string | null) ?? null;
-    if (oldPath && oldPath !== row.chords_image_url) {
-      await removeChordPhotoIfUnused(supabase, oldPath, payload.id);
+    // Clean each old photo (original or transposed) no longer referenced by the
+    // new row's two photo slots.
+    const newPaths = new Set(
+      [row.chords_image_url, row.transposed_chords_image_url].filter(
+        (p): p is string => !!p,
+      ),
+    );
+    const oldPaths = [
+      existing?.chords_image_url as string | null,
+      existing?.transposed_chords_image_url as string | null,
+    ].filter((p): p is string => !!p && !newPaths.has(p));
+    for (const p of new Set(oldPaths)) {
+      await removeChordPhotoIfUnused(supabase, p, payload.id);
     }
     const { error } = await supabase
       .from("library_songs")

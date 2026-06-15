@@ -11,11 +11,18 @@ export interface SongCardData {
   /** Category chip; omit (null) for song-book entries without a default. */
   category: SongCategory | null;
   youtube_url: string | null;
-  chords_text: string | null;
-  /** Resolved public URL of the chord-chart photo, or null. */
-  chordsImageUrl: string | null;
-  /** External link to published chords, or null. */
-  chordsUrl: string | null;
+  /** Original chord chart text. */
+  originalChordsText: string | null;
+  /** Resolved public URL of the original chord-chart photo, or null. */
+  originalChordsImageUrl: string | null;
+  /** External link to the original published chords, or null. */
+  originalChordsUrl: string | null;
+  /** Transposed chord chart text, or null to use the original. */
+  transposedChordsText?: string | null;
+  /** Resolved public URL of the transposed chord-chart photo, or null. */
+  transposedChordsImageUrl?: string | null;
+  /** External link to transposed published chords, or null. */
+  transposedChordsUrl?: string | null;
   leaderName: string | null;
   /** Songwriter or original artist; omitted for per-service songs. */
   author?: string | null;
@@ -136,6 +143,14 @@ export default function SongCard({ song }: { song: SongCardData }) {
   const bpmTransposed =
     transBpm != null && origBpm != null && transBpm !== origBpm;
 
+  // Performed chords = the transposed chart when present, else the original
+  // (per field, since a chart in the new key replaces the original).
+  const chordsText =
+    song.transposedChordsText?.trim() || song.originalChordsText;
+  const chordsImageUrl =
+    song.transposedChordsImageUrl ?? song.originalChordsImageUrl;
+  const chordsUrl = song.transposedChordsUrl?.trim() || song.originalChordsUrl;
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
       <button
@@ -247,13 +262,13 @@ export default function SongCard({ song }: { song: SongCardData }) {
         </a>
       )}
 
-      {(song.chords_text || song.chordsImageUrl || song.chordsUrl) && (
+      {(chordsText || chordsImageUrl || chordsUrl) && (
         <div className="border-t border-border">
           <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted">
             Chords
           </p>
           <div className="divide-y divide-border">
-            {song.chords_text && (
+            {chordsText && (
               <div>
                 <button
                   type="button"
@@ -268,15 +283,15 @@ export default function SongCard({ song }: { song: SongCardData }) {
                 </button>
                 {showChords && (
                   <pre className="overflow-x-auto whitespace-pre-wrap break-words bg-background px-4 py-3 font-mono text-sm leading-relaxed">
-                    {song.chords_text}
+                    {chordsText}
                   </pre>
                 )}
               </div>
             )}
 
-            {song.chordsImageUrl && (
+            {chordsImageUrl && (
               <a
-                href={song.chordsImageUrl}
+                href={chordsImageUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary"
@@ -285,7 +300,7 @@ export default function SongCard({ song }: { song: SongCardData }) {
                 <span>Chord photo</span>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={song.chordsImageUrl}
+                  src={chordsImageUrl}
                   alt={`Chord chart for ${song.title}`}
                   className="ml-auto h-12 w-12 rounded-lg border border-border object-cover"
                 />
@@ -293,9 +308,9 @@ export default function SongCard({ song }: { song: SongCardData }) {
               </a>
             )}
 
-            {song.chordsUrl && (
+            {chordsUrl && (
               <a
-                href={song.chordsUrl}
+                href={chordsUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary"
@@ -319,7 +334,7 @@ export default function SongCard({ song }: { song: SongCardData }) {
             songKey: performedKey,
             bpm: performedBpm,
             notes: song.notes ?? null,
-            chordsText: song.chords_text,
+            chordsText: chordsText,
           }}
           onClose={() => setShowShare(false)}
         />

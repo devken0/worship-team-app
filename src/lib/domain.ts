@@ -136,11 +136,18 @@ export interface Song {
   /** Free-text notes for the team (arrangement reminders, cues, etc.). */
   notes: string | null;
   youtube_url: string | null;
+  /** Original chord chart (chords for the original key). */
   chords_text: string | null;
-  /** Storage path of the chord-chart photo in the public `chords` bucket. */
+  /** Storage path of the original chord-chart photo in the public `chords` bucket. */
   chords_image_url: string | null;
-  /** External link to published chords (clickable). */
+  /** External link to the original published chords (clickable). */
   chords_url: string | null;
+  /** Transposed chord chart text, or null to use the original. */
+  transposed_chords_text: string | null;
+  /** Storage path of the transposed chord-chart photo, or null. */
+  transposed_chords_image_url: string | null;
+  /** External link to transposed published chords, or null. */
+  transposed_chords_url: string | null;
   /** Song-book entry this song was copied from, or null for a one-off. */
   library_song_id: string | null;
 }
@@ -164,11 +171,18 @@ export interface LibrarySong {
   /** Free-text notes for the team (arrangement reminders, cues, etc.). */
   notes: string | null;
   youtube_url: string | null;
+  /** Original chord chart (chords for the original key). */
   chords_text: string | null;
-  /** Storage path of the chord-chart photo in the public `chords` bucket. */
+  /** Storage path of the original chord-chart photo in the public `chords` bucket. */
   chords_image_url: string | null;
-  /** External link to published chords. */
+  /** External link to the original published chords. */
   chords_url: string | null;
+  /** Transposed chord chart text, or null to use the original. */
+  transposed_chords_text: string | null;
+  /** Storage path of the transposed chord-chart photo, or null. */
+  transposed_chords_image_url: string | null;
+  /** External link to transposed published chords, or null. */
+  transposed_chords_url: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

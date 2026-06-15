@@ -56,6 +56,9 @@ function emptySong(category: SongCategory): SongInput {
     chords_text: "",
     chords_image_url: null,
     chords_url: "",
+    transposed_chords_text: "",
+    transposed_chords_image_url: null,
+    transposed_chords_url: "",
     library_song_id: null,
     save_to_book: true,
   };
@@ -77,6 +80,9 @@ function songFromLibrary(lib: LibrarySong): SongInput {
     chords_text: lib.chords_text ?? "",
     chords_image_url: lib.chords_image_url,
     chords_url: lib.chords_url ?? "",
+    transposed_chords_text: lib.transposed_chords_text ?? "",
+    transposed_chords_image_url: lib.transposed_chords_image_url,
+    transposed_chords_url: lib.transposed_chords_url ?? "",
     library_song_id: lib.id,
     save_to_book: true,
   };
@@ -109,7 +115,9 @@ export default function ServiceForm({
   // Start empty for a new schedule — the admin picks from the song book or
   // adds blank songs, rather than three pre-seeded category slots.
   const [songs, setSongs] = useState<SongInput[]>(initial?.songs ?? []);
-  const [uploading, setUploading] = useState<Record<number, boolean>>({});
+  // Keyed by `${songIndex}:${photoField}` so a song can upload its original and
+  // transposed chord photos independently.
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
   // Song indices whose transpose inputs are revealed. Seeded from songs that
   // already carry a transposition; the values themselves drive display, this
   // just keeps empty rows open while the admin types.
@@ -118,7 +126,13 @@ export default function ServiceForm({
       new Set(
         (initial?.songs ?? [])
           .map((s, i) =>
-            s.transposed_key.trim() || s.transposed_bpm != null ? i : -1,
+            s.transposed_key.trim() ||
+            s.transposed_bpm != null ||
+            s.transposed_chords_text.trim() ||
+            s.transposed_chords_image_url ||
+            s.transposed_chords_url.trim()
+              ? i
+              : -1,
           )
           .filter((i) => i >= 0),
       ),
@@ -185,27 +199,39 @@ export default function ServiceForm({
       else next.delete(i);
       return next;
     });
-    if (!on) updateSong(i, { transposed_key: "", transposed_bpm: null });
+    if (!on)
+      updateSong(i, {
+        transposed_key: "",
+        transposed_bpm: null,
+        transposed_chords_text: "",
+        transposed_chords_image_url: null,
+        transposed_chords_url: "",
+      });
   }
 
-  async function uploadChordPhoto(i: number, file: File) {
+  async function uploadChordPhoto(
+    i: number,
+    file: File,
+    field: "chords_image_url" | "transposed_chords_image_url",
+  ) {
     // Uploads immediately on pick; saveService cleans up photos that are
     // replaced/removed before saving. A form abandoned after an upload (never
     // saved) leaves an orphan in the bucket — accepted as negligible here.
     setError(null);
-    setUploading((prev) => ({ ...prev, [i]: true }));
+    const key = `${i}:${field}`;
+    setUploading((prev) => ({ ...prev, [key]: true }));
     const supabase = createClient();
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const path = `${crypto.randomUUID()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from("chords")
       .upload(path, file, { contentType: file.type, upsert: false });
-    setUploading((prev) => ({ ...prev, [i]: false }));
+    setUploading((prev) => ({ ...prev, [key]: false }));
     if (upErr) {
       setError(`Photo upload failed: ${upErr.message}`);
       return;
     }
-    updateSong(i, { chords_image_url: path });
+    updateSong(i, { [field]: path });
   }
 
   function submit() {
@@ -449,6 +475,23 @@ export default function ServiceForm({
                   className={inputClass}
                 />
               </div>
+              <div>
+                <label
+                  htmlFor={`song-${i}-youtube`}
+                  className="mb-1 block text-xs text-muted"
+                >
+                  YouTube link
+                </label>
+                <input
+                  id={`song-${i}-youtube`}
+                  value={song.youtube_url}
+                  onChange={(e) =>
+                    updateSong(i, { youtube_url: e.target.value })
+                  }
+                  placeholder="Paste from the pastor"
+                  className={inputClass}
+                />
+              </div>
               <div className="flex gap-3">
                 <div className="flex-1">
                   <label
@@ -492,90 +535,12 @@ export default function ServiceForm({
                   />
                 </div>
               </div>
-              <div className="rounded-xl border border-border p-3">
-                <label className="flex items-start gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={transposeOpen.has(i)}
-                    onChange={(e) => toggleTranspose(i, e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-border"
-                  />
-                  <span>
-                    Transpose for this service
-                    <span className="block text-xs text-muted">
-                      Played in a different key/tempo than the original.
-                    </span>
-                  </span>
-                </label>
-                {transposeOpen.has(i) && (
-                  <div className="mt-3 flex gap-3">
-                    <div className="flex-1">
-                      <label
-                        htmlFor={`song-${i}-tkey`}
-                        className="mb-1 block text-xs text-muted"
-                      >
-                        Transposed key
-                      </label>
-                      <input
-                        id={`song-${i}-tkey`}
-                        value={song.transposed_key}
-                        onChange={(e) =>
-                          updateSong(i, { transposed_key: e.target.value })
-                        }
-                        placeholder="e.g. A"
-                        className={inputClass}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label
-                        htmlFor={`song-${i}-tbpm`}
-                        className="mb-1 block text-xs text-muted"
-                      >
-                        Transposed BPM
-                      </label>
-                      <input
-                        id={`song-${i}-tbpm`}
-                        type="number"
-                        inputMode="numeric"
-                        min={1}
-                        value={song.transposed_bpm ?? ""}
-                        onChange={(e) =>
-                          updateSong(i, {
-                            transposed_bpm: e.target.value.trim()
-                              ? Number(e.target.value)
-                              : null,
-                          })
-                        }
-                        placeholder="e.g. 80"
-                        className={inputClass}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div>
-                <label
-                  htmlFor={`song-${i}-youtube`}
-                  className="mb-1 block text-xs text-muted"
-                >
-                  YouTube link
-                </label>
-                <input
-                  id={`song-${i}-youtube`}
-                  value={song.youtube_url}
-                  onChange={(e) =>
-                    updateSong(i, { youtube_url: e.target.value })
-                  }
-                  placeholder="Paste from the pastor"
-                  className={inputClass}
-                />
-              </div>
               <div>
                 <label
                   htmlFor={`song-${i}-chords`}
                   className="mb-1 block text-xs text-muted"
                 >
-                  Chords
+                  Original chords
                 </label>
                 <textarea
                   id={`song-${i}-chords`}
@@ -590,7 +555,7 @@ export default function ServiceForm({
               </div>
               <div>
                 <label className="mb-1 block text-xs text-muted">
-                  Chord photo
+                  Original chord photo
                 </label>
                 {song.chords_image_url ? (
                   <div className="flex items-center gap-3">
@@ -613,16 +578,17 @@ export default function ServiceForm({
                     type="file"
                     accept="image/*"
                     capture="environment"
-                    disabled={uploading[i]}
+                    disabled={uploading[`${i}:chords_image_url`]}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) uploadChordPhoto(i, file);
+                      if (file)
+                        uploadChordPhoto(i, file, "chords_image_url");
                       e.target.value = "";
                     }}
                     className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground disabled:opacity-60"
                   />
                 )}
-                {uploading[i] && (
+                {uploading[`${i}:chords_image_url`] && (
                   <p className="mt-1 text-xs text-muted">Uploading photo…</p>
                 )}
               </div>
@@ -631,7 +597,7 @@ export default function ServiceForm({
                   htmlFor={`song-${i}-chords-url`}
                   className="mb-1 block text-xs text-muted"
                 >
-                  Chords link
+                  Original chords link
                 </label>
                 <input
                   id={`song-${i}-chords-url`}
@@ -642,6 +608,164 @@ export default function ServiceForm({
                   placeholder="e.g. published chords URL"
                   className={inputClass}
                 />
+              </div>
+              <div className="space-y-3 rounded-xl border border-border p-3">
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={transposeOpen.has(i)}
+                    onChange={(e) => toggleTranspose(i, e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-border"
+                  />
+                  <span>
+                    Transpose for this service
+                    <span className="block text-xs text-muted">
+                      Played in a different key/tempo and chord chart than the
+                      original.
+                    </span>
+                  </span>
+                </label>
+                {transposeOpen.has(i) && (
+                  <>
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <label
+                          htmlFor={`song-${i}-tkey`}
+                          className="mb-1 block text-xs text-muted"
+                        >
+                          Transposed key
+                        </label>
+                        <input
+                          id={`song-${i}-tkey`}
+                          value={song.transposed_key}
+                          onChange={(e) =>
+                            updateSong(i, { transposed_key: e.target.value })
+                          }
+                          placeholder="e.g. A"
+                          className={inputClass}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label
+                          htmlFor={`song-${i}-tbpm`}
+                          className="mb-1 block text-xs text-muted"
+                        >
+                          Transposed BPM
+                        </label>
+                        <input
+                          id={`song-${i}-tbpm`}
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          value={song.transposed_bpm ?? ""}
+                          onChange={(e) =>
+                            updateSong(i, {
+                              transposed_bpm: e.target.value.trim()
+                                ? Number(e.target.value)
+                                : null,
+                            })
+                          }
+                          placeholder="e.g. 80"
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor={`song-${i}-tchords`}
+                        className="mb-1 block text-xs text-muted"
+                      >
+                        Transposed chords
+                      </label>
+                      <textarea
+                        id={`song-${i}-tchords`}
+                        value={song.transposed_chords_text}
+                        onChange={(e) =>
+                          updateSong(i, {
+                            transposed_chords_text: e.target.value,
+                          })
+                        }
+                        placeholder="Paste the transposed chord chart here"
+                        rows={3}
+                        className={`${inputClass} font-mono text-sm`}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs text-muted">
+                        Transposed chord photo
+                      </label>
+                      {song.transposed_chords_image_url ? (
+                        <div className="flex items-center gap-3">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={
+                              chordsImageUrl(
+                                song.transposed_chords_image_url,
+                              ) ?? ""
+                            }
+                            alt="Transposed chord chart"
+                            className="h-20 w-20 rounded-lg border border-border object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateSong(i, {
+                                transposed_chords_image_url: null,
+                              })
+                            }
+                            className="text-sm font-medium text-red-600"
+                          >
+                            Remove photo
+                          </button>
+                        </div>
+                      ) : (
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          disabled={
+                            uploading[`${i}:transposed_chords_image_url`]
+                          }
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file)
+                              uploadChordPhoto(
+                                i,
+                                file,
+                                "transposed_chords_image_url",
+                              );
+                            e.target.value = "";
+                          }}
+                          className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground disabled:opacity-60"
+                        />
+                      )}
+                      {uploading[`${i}:transposed_chords_image_url`] && (
+                        <p className="mt-1 text-xs text-muted">
+                          Uploading photo…
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label
+                        htmlFor={`song-${i}-tchords-url`}
+                        className="mb-1 block text-xs text-muted"
+                      >
+                        Transposed chords link
+                      </label>
+                      <input
+                        id={`song-${i}-tchords-url`}
+                        value={song.transposed_chords_url}
+                        onChange={(e) =>
+                          updateSong(i, {
+                            transposed_chords_url: e.target.value,
+                          })
+                        }
+                        placeholder="e.g. published chords URL"
+                        className={inputClass}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
               <div>
                 <label

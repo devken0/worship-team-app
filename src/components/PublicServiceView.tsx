@@ -75,9 +75,14 @@ export default function PublicServiceView({
                 title: s.title,
                 category: s.category,
                 youtube_url: s.youtube_url,
-                chords_text: s.chords_text,
-                chordsImageUrl: chordsImageUrl(s.chords_image_url),
-                chordsUrl: s.chords_url,
+                originalChordsText: s.chords_text,
+                originalChordsImageUrl: chordsImageUrl(s.chords_image_url),
+                originalChordsUrl: s.chords_url,
+                transposedChordsText: s.transposed_chords_text,
+                transposedChordsImageUrl: chordsImageUrl(
+                  s.transposed_chords_image_url,
+                ),
+                transposedChordsUrl: s.transposed_chords_url,
                 leaderName: s.song_leader_id
                   ? (names[s.song_leader_id] ?? null)
                   : null,
