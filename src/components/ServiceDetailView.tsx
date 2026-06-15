@@ -4,18 +4,21 @@ import { ClockIcon, MapPinIcon, ShirtIcon, NoteIcon } from "@/components/icons";
 import AssignmentsList from "@/components/AssignmentsList";
 import SongCard from "@/components/SongCard";
 import ReminderButton from "@/components/ReminderButton";
-import { chordsImageUrl, formatRehearsal } from "@/lib/format";
+import EvaluationFollowUps from "@/components/EvaluationFollowUps";
+import { chordsImageUrl, formatRehearsal, formatServiceDate } from "@/lib/format";
 import { buildServiceReminder } from "@/lib/reminder";
-import type { ServiceDetail } from "@/lib/services";
+import type { PreviousFollowUps, ServiceDetail } from "@/lib/services";
 
 export default function ServiceDetailView({
   detail,
   currentUserId,
   isAdmin = false,
+  followUps = null,
 }: {
   detail: ServiceDetail;
   currentUserId?: string;
   isAdmin?: boolean;
+  followUps?: PreviousFollowUps | null;
 }) {
   const { service, assignments, songs, evaluation, names } = detail;
   const rehearsal = formatRehearsal(service.rehearsal_at);
@@ -55,6 +58,14 @@ export default function ServiceDetailView({
           </div>
         </div>
       </Card>
+
+      {followUps && (
+        <EvaluationFollowUps
+          dateLabel={formatServiceDate(followUps.serviceDate)}
+          actionItems={followUps.actionItems}
+          problems={followUps.problems}
+        />
+      )}
 
       <SectionTitle>Assignments</SectionTitle>
       <AssignmentsList

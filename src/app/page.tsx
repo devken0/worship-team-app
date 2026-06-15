@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getCurrentOrNextService } from "@/lib/services";
+import { getCurrentOrNextService, getPreviousFollowUps } from "@/lib/services";
 import { Page, PageHeader, Card, EmptyState } from "@/components/ui";
 import { CalendarIcon } from "@/components/icons";
 import ServiceDetailView from "@/components/ServiceDetailView";
@@ -47,6 +47,7 @@ export default async function HomePage() {
   }
 
   const isUpcoming = detail.service.service_date >= todayInManila();
+  const followUps = await getPreviousFollowUps(detail.service.service_date);
 
   return (
     <>
@@ -78,6 +79,7 @@ export default async function HomePage() {
           detail={detail}
           currentUserId={user.id}
           isAdmin={isAdmin}
+          followUps={followUps}
         />
       </Page>
     </>

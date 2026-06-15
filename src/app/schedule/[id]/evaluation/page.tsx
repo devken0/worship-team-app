@@ -1,9 +1,14 @@
 import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getServiceDetail, noteTakerId } from "@/lib/services";
+import {
+  getPreviousFollowUps,
+  getServiceDetail,
+  noteTakerId,
+} from "@/lib/services";
 import { Page, PageHeader, Card, EmptyState } from "@/components/ui";
 import { NoteIcon } from "@/components/icons";
 import EvaluationForm from "@/components/EvaluationForm";
+import EvaluationFollowUps from "@/components/EvaluationFollowUps";
 import { formatServiceDate } from "@/lib/format";
 import { EVALUATION_SECTIONS } from "@/lib/domain";
 
@@ -24,6 +29,15 @@ export default async function EvaluationPage({
   const takerId = noteTakerId(assignments);
   const canEdit = isAdmin || takerId === user.id;
 
+  const prev = await getPreviousFollowUps(service.service_date);
+  const previousFollowUps = prev
+    ? {
+        dateLabel: formatServiceDate(prev.serviceDate),
+        actionItems: prev.actionItems,
+        problems: prev.problems,
+      }
+    : null;
+
   const dateLabel = formatServiceDate(service.service_date);
   const noteTakerName = takerId
     ? (names[takerId] ?? "—")
@@ -41,9 +55,17 @@ export default async function EvaluationPage({
             dateLabel={dateLabel}
             noteTakerName={noteTakerName}
             evaluation={evaluation}
+            previousFollowUps={previousFollowUps}
           />
         ) : evaluation ? (
           <div className="space-y-4">
+            {previousFollowUps && (
+              <EvaluationFollowUps
+                dateLabel={previousFollowUps.dateLabel}
+                actionItems={previousFollowUps.actionItems}
+                problems={previousFollowUps.problems}
+              />
+            )}
             <Card>
               <p className="text-base font-semibold">Minutes of the Meeting</p>
               <dl className="mt-2 space-y-1 text-sm">

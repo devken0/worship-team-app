@@ -113,6 +113,50 @@ export async function getPublicServiceDetail(
   };
 }
 
+export interface PreviousFollowUps {
+  serviceId: string;
+  serviceDate: string;
+  actionItems: string;
+  problems: string;
+}
+
+/**
+ * Open assignments and problems from the most recent prior service that has
+ * evaluation minutes — surfaced while prepping the next service so they get
+ * acted on instead of forgotten. Returns null when there is no earlier
+ * evaluation, or that evaluation recorded no assignments or problems.
+ */
+export async function getPreviousFollowUps(
+  beforeDate: string,
+): Promise<PreviousFollowUps | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("services")
+    .select("id, service_date, evaluations!inner(action_items, problems)")
+    .lt("service_date", beforeDate)
+    .order("service_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) return null;
+  const row = data as {
+    id: string;
+    service_date: string;
+    evaluations:
+      | { action_items: string | null; problems: string | null }
+      | { action_items: string | null; problems: string | null }[]
+      | null;
+  };
+  const ev = Array.isArray(row.evaluations)
+    ? row.evaluations[0]
+    : row.evaluations;
+  const actionItems = (ev?.action_items ?? "").trim();
+  const problems = (ev?.problems ?? "").trim();
+  if (!actionItems && !problems) return null;
+
+  return { serviceId: row.id, serviceDate: row.service_date, actionItems, problems };
+}
+
 /** The next upcoming service (today or later, Manila time), else the latest past one. */
 export async function getCurrentOrNextService(): Promise<ServiceDetail | null> {
   const supabase = await createClient();

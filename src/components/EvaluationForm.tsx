@@ -4,6 +4,7 @@ import { useFormStatus } from "react-dom";
 import { saveEvaluation } from "@/app/schedule/[id]/actions";
 import { EVALUATION_SECTIONS, type Evaluation } from "@/lib/domain";
 import { Button } from "@/components/ui";
+import EvaluationFollowUps from "@/components/EvaluationFollowUps";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -19,15 +20,29 @@ export default function EvaluationForm({
   dateLabel,
   noteTakerName,
   evaluation,
+  previousFollowUps,
 }: {
   serviceId: string;
   dateLabel: string;
   noteTakerName: string;
   evaluation: Evaluation | null;
+  previousFollowUps?: {
+    dateLabel: string;
+    actionItems: string;
+    problems: string;
+  } | null;
 }) {
   return (
     <form action={saveEvaluation} className="space-y-4">
       <input type="hidden" name="service_id" value={serviceId} />
+
+      {previousFollowUps && (
+        <EvaluationFollowUps
+          dateLabel={previousFollowUps.dateLabel}
+          actionItems={previousFollowUps.actionItems}
+          problems={previousFollowUps.problems}
+        />
+      )}
 
       <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
         <p className="text-base font-semibold">Minutes of the Meeting</p>

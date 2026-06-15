@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getServiceDetail } from "@/lib/services";
+import { getPreviousFollowUps, getServiceDetail } from "@/lib/services";
 import { Page, PageHeader } from "@/components/ui";
 import ServiceDetailView from "@/components/ServiceDetailView";
 import { formatServiceDate } from "@/lib/format";
@@ -18,6 +18,8 @@ export default async function ServiceDetailPage({
 
   const detail = await getServiceDetail(id);
   if (!detail) notFound();
+
+  const followUps = await getPreviousFollowUps(detail.service.service_date);
 
   return (
     <>
@@ -39,6 +41,7 @@ export default async function ServiceDetailPage({
           detail={detail}
           currentUserId={user.id}
           isAdmin={isAdmin}
+          followUps={followUps}
         />
       </Page>
     </>
