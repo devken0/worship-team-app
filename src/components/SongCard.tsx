@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { youTubeId } from "@/lib/format";
 import { SONG_CATEGORY_LABELS, type SongCategory } from "@/lib/domain";
+import { PlayIcon } from "@/components/icons";
 import SongShareSheet from "@/components/SongShareSheet";
 
 export interface SongCardData {
@@ -226,8 +227,8 @@ export default function SongCard({ song }: { song: SongCardData }) {
                 className="h-full w-full object-cover opacity-90"
               />
               <span className="absolute inset-0 flex items-center justify-center">
-                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600 text-white shadow-lg transition group-active:scale-95">
-                  ▶
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600 text-white shadow-lg transition group-hover:scale-105 group-active:scale-95">
+                  <PlayIcon size={26} className="translate-x-0.5" />
                 </span>
               </span>
             </button>

@@ -127,3 +127,19 @@ export function MusicIcon(p: IconProps) {
     </Svg>
   );
 }
+
+/** Solid play triangle (filled, not stroked) — for media play buttons. */
+export function PlayIcon({ size = 20, className }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  );
+}

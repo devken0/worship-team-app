@@ -75,7 +75,7 @@ export default async function SchedulePage() {
       <Link
         key={s.id}
         href={`/schedule/${s.id}`}
-        className="block transition active:scale-[0.98]"
+        className="block transition hover:-translate-y-0.5 active:scale-[0.98]"
       >
         <Card className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
@@ -127,7 +127,7 @@ export default async function SchedulePage() {
       <Page>
         <Link
           href="/songbook"
-          className="mb-4 flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition active:scale-[0.98]"
+          className="mb-4 flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition hover:-translate-y-0.5 active:scale-[0.98]"
         >
           <span className="flex items-center gap-2">
             <svg

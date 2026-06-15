@@ -37,14 +37,14 @@ export default async function ManagePage() {
         <div className="space-y-2">
           <Link
             href="/manage/members"
-            className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition active:scale-[0.98]"
+            className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition hover:-translate-y-0.5 active:scale-[0.98]"
           >
             Members &amp; invitations
             <span className="text-muted">›</span>
           </Link>
           <Link
             href="/manage/songs"
-            className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition active:scale-[0.98]"
+            className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition hover:-translate-y-0.5 active:scale-[0.98]"
           >
             Song book
             <span className="text-muted">›</span>
@@ -62,7 +62,7 @@ export default async function ManagePage() {
               <Link
                 key={s.id}
                 href={`/manage/service/${s.id}/edit`}
-                className="block transition active:scale-[0.98]"
+                className="block transition hover:-translate-y-0.5 active:scale-[0.98]"
               >
                 <Card className="flex items-center justify-between">
                   <span className="font-medium">

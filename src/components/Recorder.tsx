@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatDuration } from "@/lib/format";
+import { Button } from "@/components/ui";
 
 type Phase = "idle" | "recording" | "preview" | "uploading";
 
@@ -270,13 +271,9 @@ export default function Recorder({
             placeholder="https://drive.google.com/…"
             className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base outline-none focus:border-primary"
           />
-          <button
-            type="submit"
-            disabled={savingLink}
-            className="w-full rounded-xl bg-foreground px-4 py-2.5 font-semibold text-background disabled:opacity-60"
-          >
+          <Button type="submit" variant="secondary" size="sm" full disabled={savingLink}>
             {savingLink ? "Saving…" : "Add link"}
-          </button>
+          </Button>
         </form>
       </details>
 

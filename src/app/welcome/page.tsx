@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Logo from "@/components/Logo";
 import InstrumentPicker from "@/components/InstrumentPicker";
 import PasswordInput from "@/components/PasswordInput";
+import { Button } from "@/components/ui";
 import { completeOnboarding, type OnboardingState } from "./actions";
 
 const initial: OnboardingState = {};
@@ -58,13 +59,9 @@ export default function WelcomePage() {
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60"
-        >
+        <Button type="submit" full disabled={pending}>
           {pending ? "Saving…" : "Finish setup"}
-        </button>
+        </Button>
       </form>
     </main>
   );

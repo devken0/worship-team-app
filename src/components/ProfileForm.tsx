@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import InstrumentPicker from "@/components/InstrumentPicker";
+import { Button } from "@/components/ui";
 import { updateProfile, type ProfileState } from "@/app/profile/actions";
 import type { Profile } from "@/lib/domain";
 
@@ -41,13 +42,9 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60"
-      >
+      <Button type="submit" full disabled={pending}>
         {pending ? "Saving…" : "Save changes"}
-      </button>
+      </Button>
     </form>
   );
 }

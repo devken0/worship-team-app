@@ -55,11 +55,11 @@ export default async function HomePage() {
         subtitle={isUpcoming ? "This Sunday" : "Most recent service"}
       />
       <Page>
-        <Card className="mb-3 bg-primary text-primary-foreground">
-          <p className="text-sm opacity-90">
+        <Card className="mb-3 border-transparent bg-gradient-to-br from-[#e8730f] via-primary to-[#bf520a] text-primary-foreground">
+          <p className="text-sm font-medium uppercase tracking-wide opacity-90">
             {isUpcoming ? "Sunday service" : "Service"}
           </p>
-          <p className="text-lg font-bold">
+          <p className="text-2xl font-extrabold leading-tight tracking-tight">
             {formatServiceDate(detail.service.service_date)}
           </p>
           <div className="mt-3 border-t border-white/20 pt-3">

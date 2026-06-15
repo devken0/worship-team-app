@@ -45,7 +45,7 @@ export default async function RecordingsIndexPage() {
                 <Link
                   key={s.id}
                   href={`/recordings/${s.id}`}
-                  className="block transition active:scale-[0.98]"
+                  className="block transition hover:-translate-y-0.5 active:scale-[0.98]"
                 >
                   <Card className="flex items-center justify-between gap-3">
                     <span className="font-medium">

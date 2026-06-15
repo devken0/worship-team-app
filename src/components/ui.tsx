@@ -7,7 +7,7 @@ export function PageHeader({
   subtitle,
   action,
 }: {
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   action?: React.ReactNode;
 }) {
@@ -42,7 +42,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-border bg-card p-4 shadow-sm ${className}`}
+      className={`rounded-2xl border border-border bg-card p-4 shadow-card ${className}`}
     >
       {children}
     </div>
@@ -77,6 +77,63 @@ export function ColorChip({
   );
 }
 
+type ButtonVariant = "primary" | "secondary" | "ghost";
+type ButtonSize = "sm" | "md";
+
+const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
+  primary:
+    "bg-primary text-primary-foreground shadow-sm focus-visible:ring-primary",
+  secondary: "bg-foreground text-background focus-visible:ring-foreground",
+  ghost: "text-foreground hover:bg-brand-soft focus-visible:ring-primary",
+};
+
+const BUTTON_SIZES: Record<ButtonSize, string> = {
+  sm: "px-4 py-2.5 text-sm",
+  md: "px-4 py-3 text-base",
+};
+
+/** Shared button/link className. Use directly on `<Link>`; `<Button>` wraps it. */
+export function buttonStyles({
+  variant = "primary",
+  size = "md",
+  full = false,
+  className = "",
+}: {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  full?: boolean;
+  className?: string;
+} = {}) {
+  return [
+    "inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold transition active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60",
+    BUTTON_VARIANTS[variant],
+    BUTTON_SIZES[size],
+    full ? "w-full" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+export function Button({
+  variant,
+  size,
+  full,
+  className,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  full?: boolean;
+}) {
+  return (
+    <button
+      className={buttonStyles({ variant, size, full, className })}
+      {...props}
+    />
+  );
+}
+
 export function PrimaryLink({
   href,
   children,
@@ -85,12 +142,19 @@ export function PrimaryLink({
   children: React.ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-    >
+    <Link href={href} className={buttonStyles({ size: "sm" })}>
       {children}
     </Link>
+  );
+}
+
+/** A pulsing placeholder block for loading skeletons. Pass sizing via className. */
+export function Skeleton({ className = "" }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`animate-pulse rounded-md bg-border/70 ${className}`}
+    />
   );
 }
 

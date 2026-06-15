@@ -107,7 +107,7 @@ export default function ServiceDetailView({
       {evaluation ? (
         <Link
           href={`/schedule/${service.id}/evaluation`}
-          className="block rounded-2xl border border-border bg-card p-4 shadow-sm transition active:scale-[0.98]"
+          className="block rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 active:scale-[0.98]"
         >
           <div className="flex items-center justify-between font-medium">
             Meeting minutes
@@ -120,7 +120,7 @@ export default function ServiceDetailView({
       ) : (
         <Link
           href={`/schedule/${service.id}/evaluation`}
-          className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition active:scale-[0.98]"
+          className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 font-medium shadow-sm transition hover:-translate-y-0.5 active:scale-[0.98]"
         >
           Evaluation minutes
           <span className="text-muted">›</span>

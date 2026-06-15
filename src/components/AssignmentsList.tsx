@@ -34,6 +34,7 @@ export default function AssignmentsList({
     <div className="divide-y divide-border rounded-2xl border border-border bg-card">
       {rows.map((row) => {
         const mine = currentUserId && row.memberIds.includes(currentUserId);
+        const empty = row.memberIds.length === 0;
         return (
           <div
             key={row.label}
@@ -41,7 +42,9 @@ export default function AssignmentsList({
           >
             <span className="text-sm text-muted">{row.label}</span>
             <span
-              className={`text-right text-sm font-medium ${mine ? "text-primary" : ""}`}
+              className={`text-right text-sm ${
+                empty ? "font-normal text-muted/60" : "font-medium"
+              } ${mine ? "text-primary" : ""}`}
             >
               {row.memberIds.length
                 ? row.memberIds.map((id) => names[id] ?? "—").join(", ")

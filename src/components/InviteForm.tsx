@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { Button } from "@/components/ui";
 import { inviteMember, type InviteState } from "@/app/manage/members/actions";
 
 const initial: InviteState = {};
@@ -39,13 +40,9 @@ export default function InviteForm() {
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-sm active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-60"
-      >
+      <Button type="submit" full disabled={pending}>
         {pending ? "Sending…" : "Send invitation"}
-      </button>
+      </Button>
     </form>
   );
 }

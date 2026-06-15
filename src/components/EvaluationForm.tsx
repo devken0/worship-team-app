@@ -3,17 +3,14 @@
 import { useFormStatus } from "react-dom";
 import { saveEvaluation } from "@/app/schedule/[id]/actions";
 import { EVALUATION_SECTIONS, type Evaluation } from "@/lib/domain";
+import { Button } from "@/components/ui";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="w-full rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground shadow-sm active:opacity-90 disabled:opacity-60"
-    >
+    <Button type="submit" full disabled={pending}>
       {pending ? "Saving…" : "Save minutes"}
-    </button>
+    </Button>
   );
 }
 

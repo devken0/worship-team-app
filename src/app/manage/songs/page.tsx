@@ -46,7 +46,7 @@ export default async function ManageSongsPage() {
               <Link
                 key={s.id}
                 href={`/manage/songs/${s.id}/edit`}
-                className="block transition active:scale-[0.98]"
+                className="block transition hover:-translate-y-0.5 active:scale-[0.98]"
               >
                 <Card className="flex items-center justify-between gap-3">
                   <span className="min-w-0">
