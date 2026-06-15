@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { Page, PageHeader } from "@/components/ui";
+import { Page, PageHeader, Card, SectionTitle, EmptyState } from "@/components/ui";
+import { MicIcon } from "@/components/icons";
 import SongCard from "@/components/SongCard";
-import { getLibrarySong } from "@/lib/library";
-import { chordsImageUrl } from "@/lib/format";
+import { getLibrarySong, getSongPlayHistory } from "@/lib/library";
+import { chordsImageUrl, formatServiceDate } from "@/lib/format";
 
 export default async function SongBookEntryPage({
   params,
@@ -17,6 +18,8 @@ export default async function SongBookEntryPage({
 
   const song = await getLibrarySong(id);
   if (!song) notFound();
+
+  const history = await getSongPlayHistory(song);
 
   return (
     <>
@@ -43,6 +46,42 @@ export default async function SongBookEntryPage({
             notes: song.notes,
           }}
         />
+
+        <SectionTitle>Played on ({history.length})</SectionTitle>
+        {history.length === 0 ? (
+          <EmptyState
+            icon={<MicIcon size={24} />}
+            title="Not played yet"
+            hint="This fills in automatically as the song is scheduled into services."
+          />
+        ) : (
+          <div className="space-y-2">
+            {history.map((p) => (
+              <Card
+                key={p.service_id}
+                className="flex items-center justify-between gap-3"
+              >
+                <Link
+                  href={`/schedule/${p.service_id}`}
+                  className="font-medium text-primary"
+                >
+                  {formatServiceDate(p.service_date)}
+                </Link>
+                {p.recordingCount > 0 ? (
+                  <Link
+                    href={`/recordings/${p.service_id}`}
+                    className="text-sm font-medium text-primary"
+                  >
+                    {p.recordingCount} recording
+                    {p.recordingCount > 1 ? "s" : ""} ›
+                  </Link>
+                ) : (
+                  <span className="text-sm text-muted">No recordings</span>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
       </Page>
     </>
   );

@@ -70,3 +70,51 @@ export async function listServicesForLibrarySong(
     b.service_date.localeCompare(a.service_date),
   );
 }
+
+/** A past Sunday a song was played, with how many recordings that service has. */
+export interface SongPlay {
+  service_id: string;
+  service_date: string;
+  recordingCount: number;
+}
+
+/** Past services where this song-book entry was played, newest first, each with
+ *  its service's recording count. Matches per-service song rows on the library
+ *  link OR an exact (case-insensitive) title so legacy/one-off songs saved before
+ *  the library link still surface. Recordings are filed per-Sunday, so the count
+ *  reflects that whole service, not just this song. */
+export async function getSongPlayHistory(song: LibrarySong): Promise<SongPlay[]> {
+  const supabase = await createClient();
+  const [byLink, byTitle] = await Promise.all([
+    supabase.from("songs").select("service_id").eq("library_song_id", song.id),
+    supabase.from("songs").select("service_id").ilike("title", song.title),
+  ]);
+
+  const ids = Array.from(
+    new Set([
+      ...((byLink.data ?? []) as { service_id: string }[]).map((r) => r.service_id),
+      ...((byTitle.data ?? []) as { service_id: string }[]).map((r) => r.service_id),
+    ]),
+  );
+  if (ids.length === 0) return [];
+
+  const [{ data: services }, { data: recs }] = await Promise.all([
+    supabase
+      .from("services")
+      .select("id, service_date")
+      .in("id", ids)
+      .order("service_date", { ascending: false }),
+    supabase.from("recordings").select("service_id").in("service_id", ids),
+  ]);
+
+  const counts = new Map<string, number>();
+  for (const r of (recs ?? []) as { service_id: string }[]) {
+    counts.set(r.service_id, (counts.get(r.service_id) ?? 0) + 1);
+  }
+
+  return ((services ?? []) as { id: string; service_date: string }[]).map((s) => ({
+    service_id: s.id,
+    service_date: s.service_date,
+    recordingCount: counts.get(s.id) ?? 0,
+  }));
+}
