@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader, Card, EmptyState } from "@/components/ui";
 import { MicIcon } from "@/components/icons";
+import Paginated from "@/components/Paginated";
 import { formatServiceDate } from "@/lib/format";
 import type { Service } from "@/lib/domain";
 
@@ -38,8 +39,8 @@ export default async function RecordingsIndexPage() {
             hint="Recordings are organized by Sunday service."
           />
         ) : (
-          <div className="space-y-2">
-            {list.map((s) => {
+          <Paginated
+            items={list.map((s) => {
               const n = counts.get(s.id) ?? 0;
               return (
                 <Link
@@ -60,7 +61,7 @@ export default async function RecordingsIndexPage() {
                 </Link>
               );
             })}
-          </div>
+          />
         )}
       </Page>
     </>

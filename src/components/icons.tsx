@@ -136,6 +136,27 @@ export function MusicIcon(p: IconProps) {
   );
 }
 
+export function SearchIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </Svg>
+  );
+}
+
+export function WifiOffIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M3 3l18 18" />
+      <path d="M9.5 16.5a4 4 0 0 1 5 0" />
+      <path d="M6.5 13a8 8 0 0 1 4-2.1M17.5 13a8 8 0 0 0-2.4-1.6" />
+      <path d="M3.5 9.5a13 13 0 0 1 3.4-2M20.5 9.5a13 13 0 0 0-7.3-3.4" />
+      <path d="M12 20h.01" />
+    </Svg>
+  );
+}
+
 /** Solid play triangle (filled, not stroked) — for media play buttons. */
 export function PlayIcon({ size = 20, className }: IconProps) {
   return (

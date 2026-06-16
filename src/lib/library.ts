@@ -71,6 +71,74 @@ export async function listServicesForLibrarySong(
   );
 }
 
+/** How often a song-book entry has been played, and when it was last played. */
+export interface PlayStat {
+  /** Distinct services this song has appeared in. */
+  count: number;
+  /** Service date (YYYY-MM-DD) of the most recent time played, or null. */
+  lastPlayed: string | null;
+}
+
+/**
+ * Play stats for every song-book entry, keyed by library-song id, in ONE query
+ * over all per-service songs. Matches a play on the library link OR an exact
+ * (case-insensitive) title — same rule as {@link getSongPlayHistory} — so legacy
+ * one-off songs saved before the link still count. Feeds the song-book list's
+ * "last played" line and the recency/frequency sorts.
+ */
+export async function getPlayStatsForLibrarySongs(
+  songs: LibrarySong[],
+): Promise<Map<string, PlayStat>> {
+  const stats = new Map<string, PlayStat>();
+  if (songs.length === 0) return stats;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("songs")
+    .select("service_id, library_song_id, title, services(service_date)");
+
+  type Row = {
+    service_id: string;
+    library_song_id: string | null;
+    title: string | null;
+    services: { service_date: string } | { service_date: string }[] | null;
+  };
+
+  // Index play rows by library id and by lowercased title for O(1) lookup.
+  const byLibId = new Map<string, Row[]>();
+  const byTitle = new Map<string, Row[]>();
+  const push = (map: Map<string, Row[]>, key: string, row: Row) => {
+    const arr = map.get(key);
+    if (arr) arr.push(row);
+    else map.set(key, [row]);
+  };
+  for (const row of (data ?? []) as unknown as Row[]) {
+    if (row.library_song_id) push(byLibId, row.library_song_id, row);
+    const t = row.title?.trim().toLowerCase();
+    if (t) push(byTitle, t, row);
+  }
+
+  for (const song of songs) {
+    const matches = [
+      ...(byLibId.get(song.id) ?? []),
+      ...(byTitle.get(song.title.trim().toLowerCase()) ?? []),
+    ];
+    // Dedupe by service so a song listed twice in one Sunday counts once.
+    const dateByService = new Map<string, string>();
+    for (const m of matches) {
+      const svc = Array.isArray(m.services) ? m.services[0] : m.services;
+      if (svc) dateByService.set(m.service_id, svc.service_date);
+    }
+    let lastPlayed: string | null = null;
+    for (const d of dateByService.values()) {
+      if (!lastPlayed || d > lastPlayed) lastPlayed = d;
+    }
+    stats.set(song.id, { count: dateByService.size, lastPlayed });
+  }
+
+  return stats;
+}
+
 /** A past Sunday a song was played, with how many recordings that service has. */
 export interface SongPlay {
   service_id: string;

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader, Card, EmptyState, PrimaryLink } from "@/components/ui";
 import { ColorChip } from "@/components/ui";
+import Paginated from "@/components/Paginated";
 import { PlusIcon, CalendarIcon } from "@/components/icons";
 import { formatServiceDate, todayInManila } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/domain";
@@ -152,9 +153,7 @@ export default async function SchedulePage() {
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">
                   Past
                 </h2>
-                {past.map((s) => (
-                  <ServiceRow key={s.id} s={s} />
-                ))}
+                <Paginated items={past.map((s) => <ServiceRow key={s.id} s={s} />)} />
               </div>
             )}
           </div>

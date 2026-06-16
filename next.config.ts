@@ -11,6 +11,22 @@ const nextConfig: NextConfig = {
   // client JS from hydrating when you open the app via the machine's LAN IP
   // (so taps like the YouTube play button do nothing). Add your LAN subnet.
   allowedDevOrigins: ["192.168.10.56", "192.168.10.*", "worship.jibie.duckdns.org."],
+
+  // The service worker must never be cached by the browser, so an updated
+  // worker (and its bumped cache version) ships on the next visit.
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
