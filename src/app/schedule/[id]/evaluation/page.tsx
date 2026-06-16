@@ -47,7 +47,11 @@ export default async function EvaluationPage({
 
   return (
     <>
-      <PageHeader title="Evaluation Minutes" subtitle={dateLabel} />
+      <PageHeader
+        title="Evaluation Minutes"
+        subtitle={dateLabel}
+        back={{ href: `/schedule/${service.id}`, label: "Back to service" }}
+      />
       <Page>
         {canEdit ? (
           <EvaluationForm

@@ -13,9 +13,13 @@ export default async function NewLibrarySongPage() {
 
   return (
     <>
-      <PageHeader title="New song" subtitle="Add to the song book" />
+      <PageHeader
+        title="New song"
+        subtitle="Add to the song book"
+        back={{ href: "/manage/songs", label: "Back to song book" }}
+      />
       <Page>
-        <LibrarySongForm authors={authors} />
+        <LibrarySongForm authors={authors} cancelHref="/manage/songs" />
       </Page>
     </>
   );

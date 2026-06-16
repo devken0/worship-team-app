@@ -62,6 +62,7 @@ export default async function ServiceRecordingsPage({
       <PageHeader
         title="Recordings"
         subtitle={formatServiceDate(svc.service_date)}
+        back={{ href: "/recordings", label: "Back to recordings" }}
       />
       <Page>
         <Recorder serviceId={svc.id} userId={user.id} />

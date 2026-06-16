@@ -83,12 +83,16 @@ export default async function EditServicePage({
 
   return (
     <>
-      <PageHeader title="Edit schedule" />
+      <PageHeader
+        title="Edit schedule"
+        back={{ href: "/manage", label: "Back to manage" }}
+      />
       <Page>
         <ServiceForm
           members={(members ?? []) as MemberOption[]}
           librarySongs={librarySongs}
           initial={initial}
+          cancelHref="/manage"
         />
 
         <div className="mt-8">

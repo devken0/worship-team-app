@@ -23,14 +23,11 @@ export default async function SongBookEntryPage({
 
   return (
     <>
-      <PageHeader title="Song Book" />
+      <PageHeader
+        title="Song Book"
+        back={{ href: "/songbook", label: "Back to song book" }}
+      />
       <Page>
-        <Link
-          href="/songbook"
-          className="mb-3 inline-block text-sm font-medium text-primary"
-        >
-          ‹ Back to song book
-        </Link>
         <SongCard
           song={{
             title: song.title,

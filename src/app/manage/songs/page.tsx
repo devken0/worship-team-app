@@ -25,6 +25,7 @@ export default async function ManageSongsPage() {
       <PageHeader
         title="Song Book"
         subtitle="Reusable songs for scheduling"
+        back={{ href: "/manage", label: "Back to manage" }}
         action={
           <PrimaryLink href="/manage/songs/new">
             <PlusIcon size={16} />

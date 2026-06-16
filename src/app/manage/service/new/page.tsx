@@ -19,9 +19,17 @@ export default async function NewServicePage() {
 
   return (
     <>
-      <PageHeader title="New schedule" subtitle="Set up a Sunday service" />
+      <PageHeader
+        title="New schedule"
+        subtitle="Set up a Sunday service"
+        back={{ href: "/manage", label: "Back to manage" }}
+      />
       <Page>
-        <ServiceForm members={members} librarySongs={librarySongs} />
+        <ServiceForm
+          members={members}
+          librarySongs={librarySongs}
+          cancelHref="/manage"
+        />
       </Page>
     </>
   );

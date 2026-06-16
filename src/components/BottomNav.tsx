@@ -29,6 +29,17 @@ const items: NavItem[] = [
     ),
   },
   {
+    href: "/songbook",
+    label: "Songs",
+    match: (p) => p.startsWith("/songbook"),
+    icon: (
+      <>
+        <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5Z" />
+        <path d="M9 7h6M9 11h6" />
+      </>
+    ),
+  },
+  {
     href: "/recordings",
     label: "Recordings",
     match: (p) => p.startsWith("/recordings"),

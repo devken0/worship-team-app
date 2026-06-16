@@ -1,21 +1,39 @@
 import Link from "next/link";
 import Logo from "./Logo";
+import { ChevronLeftIcon } from "./icons";
 
-/** Sticky top header for each screen, with an optional right-side action. */
+/**
+ * Sticky top header for each screen, with an optional right-side action.
+ * Pass `back` on nested screens (anything not reachable from the bottom nav)
+ * so there's a visible way back — the app installs as a PWA with no browser
+ * chrome. The back chevron takes the logo's place on those screens.
+ */
 export function PageHeader({
   title,
   subtitle,
   action,
+  back,
 }: {
   title: React.ReactNode;
   subtitle?: string;
   action?: React.ReactNode;
+  back?: { href: string; label?: string };
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-md items-start justify-between gap-3 px-4 py-3">
         <div className="flex min-w-0 items-start gap-2.5">
-          <Logo size={28} className="shrink-0" />
+          {back ? (
+            <Link
+              href={back.href}
+              aria-label={back.label ?? "Go back"}
+              className="-ml-1 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-foreground transition hover:bg-brand-soft active:scale-90"
+            >
+              <ChevronLeftIcon size={22} />
+            </Link>
+          ) : (
+            <Logo size={28} className="shrink-0" />
+          )}
           <div className="min-w-0">
             <h1 className="truncate text-lg font-semibold leading-7">{title}</h1>
             {subtitle && (

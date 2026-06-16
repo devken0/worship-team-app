@@ -7,9 +7,10 @@ import {
   type SongCategory,
 } from "@/lib/domain";
 import { chordsImageUrl, formatServiceDate } from "@/lib/format";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { Button } from "@/components/ui";
+import { Button, buttonStyles } from "@/components/ui";
 import {
   saveLibrarySong,
   type LibrarySongPayload,
@@ -66,6 +67,7 @@ export default function LibrarySongForm({
   authors = [],
   linkedServices = [],
   today,
+  cancelHref,
 }: {
   initial?: LibrarySongFormInitial;
   /** Existing authors for the autocomplete suggestions. */
@@ -74,6 +76,8 @@ export default function LibrarySongForm({
   linkedServices?: LinkedServiceOption[];
   /** Today in Manila (YYYY-MM-DD), to split upcoming vs past services. */
   today?: string;
+  /** Where the Cancel link returns to. Omit to hide it. */
+  cancelHref?: string;
 }) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [category, setCategory] = useState<SongCategory | "">(
@@ -672,6 +676,14 @@ export default function LibrarySongForm({
       <Button type="button" full onClick={submit} disabled={pending}>
         {pending ? "Saving…" : initial?.id ? "Save changes" : "Add to song book"}
       </Button>
+      {cancelHref && (
+        <Link
+          href={cancelHref}
+          className={buttonStyles({ variant: "ghost", full: true })}
+        >
+          Cancel
+        </Link>
+      )}
 
       <ConfirmDialog
         open={confirmOpen}

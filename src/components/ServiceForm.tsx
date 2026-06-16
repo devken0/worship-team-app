@@ -16,8 +16,9 @@ import {
   isoToManilaInput,
   manilaInputToISO,
 } from "@/lib/format";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui";
+import { Button, buttonStyles } from "@/components/ui";
 import { saveService, type SongInput } from "@/app/manage/service/actions";
 
 export interface MemberOption {
@@ -92,10 +93,13 @@ export default function ServiceForm({
   members,
   librarySongs,
   initial,
+  cancelHref,
 }: {
   members: MemberOption[];
   librarySongs: LibrarySong[];
   initial?: ServiceFormInitial;
+  /** Where the Cancel link returns to. Omit to hide it. */
+  cancelHref?: string;
 }) {
   const [date, setDate] = useState(initial?.service_date ?? "");
   const [rehearsal, setRehearsal] = useState(
@@ -854,6 +858,14 @@ export default function ServiceForm({
       <Button type="button" full onClick={submit} disabled={pending}>
         {pending ? "Saving…" : initial?.id ? "Save changes" : "Create schedule"}
       </Button>
+      {cancelHref && (
+        <Link
+          href={cancelHref}
+          className={buttonStyles({ variant: "ghost", full: true })}
+        >
+          Cancel
+        </Link>
+      )}
     </div>
   );
 }

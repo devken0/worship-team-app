@@ -25,6 +25,7 @@ export default async function ServiceDetailPage({
     <>
       <PageHeader
         title={formatServiceDate(detail.service.service_date)}
+        back={{ href: "/schedule", label: "Back to schedule" }}
         action={
           isAdmin ? (
             <Link

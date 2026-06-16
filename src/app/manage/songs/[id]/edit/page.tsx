@@ -51,13 +51,17 @@ export default async function EditLibrarySongPage({
 
   return (
     <>
-      <PageHeader title="Edit song" />
+      <PageHeader
+        title="Edit song"
+        back={{ href: "/manage/songs", label: "Back to song book" }}
+      />
       <Page>
         <LibrarySongForm
           initial={initial}
           authors={authors}
           linkedServices={linkedServices}
           today={todayInManila()}
+          cancelHref="/manage/songs"
         />
 
         <div className="mt-8">

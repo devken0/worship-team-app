@@ -29,7 +29,11 @@ export default async function MembersPage() {
 
   return (
     <>
-      <PageHeader title="Members" subtitle="Invite people and set roles" />
+      <PageHeader
+        title="Members"
+        subtitle="Invite people and set roles"
+        back={{ href: "/manage", label: "Back to manage" }}
+      />
       <Page>
         <Card>
           <h2 className="mb-3 font-semibold">Invite a new member</h2>
