@@ -6,8 +6,16 @@
 // notification as a side-effect that must not break the underlying save.
 import { createAdminClient } from "@/lib/supabase/server";
 import { getServiceDetail, getPublicServiceDetail } from "@/lib/services";
-import { buildServiceReminder } from "@/lib/reminder";
+import { buildServiceReminder, buildServiceReminderHtml } from "@/lib/reminder";
 import { sendEmail } from "@/lib/email";
+import {
+  esc,
+  escMultiline,
+  labeledRows,
+  paragraph,
+  renderEmail,
+  subheading,
+} from "@/lib/email-template";
 import { ROLE_LABELS, type AssignmentRole } from "@/lib/domain";
 import { formatServiceDate, formatRehearsal, todayInManila } from "@/lib/format";
 
@@ -79,6 +87,24 @@ function assignedMemberIds(
 }
 
 /**
+ * Send the same message to each recipient as a SEPARATE email (one `to` each),
+ * never one message addressed to the whole list. That keeps members' addresses
+ * private from one another and avoids the many-recipients-in-one-`to` pattern
+ * that mailbox providers flag as bulk/spam. Returns how many Resend accepted.
+ */
+async function sendToEach(
+  recipients: string[],
+  message: { subject: string; text: string; html?: string },
+): Promise<number> {
+  let sent = 0;
+  for (const to of recipients) {
+    const res = await sendEmail({ to, ...message });
+    if (res.sent) sent++;
+  }
+  return sent;
+}
+
+/**
  * Email each newly-assigned member their personal part for a service. Caller
  * passes only the (member, role) pairs that are NEW since the last save, so a
  * minor edit doesn't re-mail the whole band.
@@ -112,24 +138,48 @@ export async function notifyAssignments(
     const name = detail.names[memberId] ?? "";
     const roleList = roles.map((r) => ROLE_LABELS[r]).join(", ");
 
+    const rehearsalText =
+      (rehearsal ?? "To be announced") +
+      (detail.service.rehearsal_location
+        ? ` @ ${detail.service.rehearsal_location}`
+        : "");
+
     const lines = [
       name ? `Hi ${name},` : "Hi,",
       "",
       `You're on the worship team for ${dateLabel}.`,
       "",
       `Your part: ${roleList}`,
-      `Rehearsal: ${rehearsal ?? "To be announced"}` +
-        (detail.service.rehearsal_location
-          ? ` @ ${detail.service.rehearsal_location}`
-          : ""),
+      `Rehearsal: ${rehearsalText}`,
     ];
     if (wear) lines.push(`Wear: ${wear}`);
     lines.push("", `Full details: ${link}`);
+
+    const rows = [
+      { label: "Your part", value: esc(roleList) },
+      { label: "Rehearsal", value: esc(rehearsalText) },
+    ];
+    if (wear) rows.push({ label: "Wear", value: esc(wear) });
+    const html = renderEmail(
+      {
+        preheader: `You're on the worship team for ${dateLabel}.`,
+        heading: "You're scheduled 🎶",
+        bodyHtml:
+          paragraph(
+            name
+              ? `Hi ${esc(name)}, you're on the worship team for <strong>${esc(dateLabel)}</strong>.`
+              : `You're on the worship team for <strong>${esc(dateLabel)}</strong>.`,
+          ) + labeledRows(rows),
+        button: { label: "View details", href: link },
+      },
+      siteUrl(),
+    );
 
     const res = await sendEmail({
       to,
       subject: `You're scheduled for ${dateLabel}`,
       text: lines.join("\n"),
+      html,
     });
     if (res.sent) sent++;
   }
@@ -155,17 +205,38 @@ export async function notifyEvaluation(
   if (to.length === 0) return { sent: 0 };
 
   const dateLabel = formatServiceDate(detail.service.service_date);
+  const link = `${siteUrl()}/schedule/${serviceId}`;
   const lines = [`Evaluation follow-ups from ${dateLabel}:`, ""];
   if (actionItems) lines.push("Assignments:", actionItems, "");
   if (problems) lines.push("Problems to solve:", problems, "");
-  lines.push(`Full minutes: ${siteUrl()}/schedule/${serviceId}`);
+  lines.push(`Full minutes: ${link}`);
 
-  const res = await sendEmail({
-    to,
+  let bodyHtml = paragraph(
+    `Follow-ups from the evaluation of <strong>${esc(dateLabel)}</strong>:`,
+  );
+  if (actionItems) {
+    bodyHtml += subheading("Assignments") + paragraph(escMultiline(actionItems));
+  }
+  if (problems) {
+    bodyHtml += subheading("Problems to solve") + paragraph(escMultiline(problems));
+  }
+
+  const html = renderEmail(
+    {
+      preheader: `Evaluation follow-ups from ${dateLabel}.`,
+      heading: "Evaluation follow-ups",
+      bodyHtml,
+      button: { label: "View minutes", href: link },
+    },
+    siteUrl(),
+  );
+
+  const sent = await sendToEach(to, {
     subject: `Follow-ups from ${dateLabel}`,
     text: lines.join("\n"),
+    html,
   });
-  return { sent: res.sent ? to.length : 0 };
+  return { sent };
 }
 
 /** Email the service's assigned members that a new recording is available. */
@@ -181,20 +252,34 @@ export async function notifyRecordingReady(
   if (to.length === 0) return { sent: 0 };
 
   const dateLabel = formatServiceDate(detail.service.service_date);
+  const link = `${siteUrl()}/recordings/${serviceId}`;
   const text = [
     `A new recording was added for ${dateLabel}.`,
     "",
     recordingTitle,
     "",
-    `Listen: ${siteUrl()}/recordings/${serviceId}`,
+    `Listen: ${link}`,
   ].join("\n");
 
-  const res = await sendEmail({
-    to,
+  const html = renderEmail(
+    {
+      preheader: `A new recording was added for ${dateLabel}.`,
+      heading: "New recording 🎧",
+      bodyHtml:
+        paragraph(
+          `A new recording was added for <strong>${esc(dateLabel)}</strong>.`,
+        ) + paragraph(esc(recordingTitle), { muted: true }),
+      button: { label: "Listen", href: link },
+    },
+    siteUrl(),
+  );
+
+  const sent = await sendToEach(to, {
     subject: `New recording for ${dateLabel}`,
     text,
+    html,
   });
-  return { sent: res.sent ? to.length : 0 };
+  return { sent };
 }
 
 /**
@@ -238,10 +323,19 @@ export async function sendWeeklyReminder(): Promise<{
   if (to.length === 0) return { sent: 0, recipients: 0, skipped: "no-recipients" };
 
   const dateLabel = formatServiceDate(detail.service.service_date);
-  const res = await sendEmail({
-    to,
+  const html = renderEmail(
+    {
+      preheader: `This Sunday's worship team lineup — ${dateLabel}.`,
+      heading: "This Sunday 🎵",
+      bodyHtml: buildServiceReminderHtml(detail),
+      button: { label: "Full details", href: `${siteUrl()}/s/${serviceId}` },
+    },
+    siteUrl(),
+  );
+  const sent = await sendToEach(to, {
     subject: `Worship Team — ${dateLabel}`,
     text: buildServiceReminder(detail, siteUrl()),
+    html,
   });
-  return { sent: res.sent ? to.length : 0, recipients: to.length };
+  return { sent, recipients: to.length };
 }
