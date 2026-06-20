@@ -3,7 +3,11 @@ import { Page, PageHeader, Card, Skeleton } from "@/components/ui";
 export default function RecordingsLoading() {
   return (
     <>
-      <PageHeader title="Recordings" subtitle="Listen back & improve" />
+      <PageHeader
+        title="Recordings"
+        subtitle="Listen back & improve"
+        avatar={<Skeleton className="h-9 w-9 rounded-full" />}
+      />
       <Page>
         <div className="space-y-2">
           {[0, 1, 2, 3].map((i) => (

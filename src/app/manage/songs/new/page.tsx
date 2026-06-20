@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Page, PageHeader } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import LibrarySongForm from "@/components/LibrarySongForm";
 import { listSongAuthors } from "@/lib/library";
 
@@ -19,6 +20,7 @@ export default async function NewLibrarySongPage() {
         title="New song"
         subtitle="Add to the song book"
         back={{ href: "/manage/songs", label: "Back to song book" }}
+        avatar={<HeaderAvatar />}
       />
       <Page>
         <LibrarySongForm authors={authors} cancelHref="/manage/songs" />

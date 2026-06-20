@@ -3,7 +3,10 @@ import { Page, PageHeader, Card, Skeleton } from "@/components/ui";
 export default function ScheduleLoading() {
   return (
     <>
-      <PageHeader title="Schedule" />
+      <PageHeader
+        title="Schedule"
+        avatar={<Skeleton className="h-9 w-9 rounded-full" />}
+      />
       <Page>
         <Skeleton className="mb-4 h-14 w-full rounded-2xl" />
         <div className="space-y-2">

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Page, PageHeader, Card, SectionTitle } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import { ShieldIcon, LogOutIcon } from "@/components/icons";
 import ProfileForm from "@/components/ProfileForm";
 import ChangePasswordForm from "@/components/ChangePasswordForm";
@@ -15,7 +16,11 @@ export default async function ProfilePage() {
 
   return (
     <>
-      <PageHeader title="Profile" subtitle={user.email ?? undefined} />
+      <PageHeader
+        title="Profile"
+        subtitle={user.email ?? undefined}
+        avatar={<HeaderAvatar />}
+      />
       <Page>
         {user.profile.role === "admin" && (
           <p className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">

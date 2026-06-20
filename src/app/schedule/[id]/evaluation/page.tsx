@@ -6,6 +6,7 @@ import {
   noteTakerId,
 } from "@/lib/services";
 import { Page, PageHeader, Card, EmptyState } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import { NoteIcon } from "@/components/icons";
 import EvaluationForm from "@/components/EvaluationForm";
 import EvaluationFollowUps from "@/components/EvaluationFollowUps";
@@ -51,6 +52,7 @@ export default async function EvaluationPage({
         title="Evaluation Minutes"
         subtitle={dateLabel}
         back={{ href: `/schedule/${service.id}`, label: "Back to service" }}
+        avatar={<HeaderAvatar />}
       />
       <Page>
         {canEdit ? (

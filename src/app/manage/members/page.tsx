@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Page, PageHeader, Card, SectionTitle } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import InviteForm from "@/components/InviteForm";
 import RemoveMemberButton from "@/components/RemoveMemberButton";
 import MemberRoleButton from "@/components/MemberRoleButton";
@@ -36,6 +37,7 @@ export default async function MembersPage() {
         title="Members"
         subtitle="Invite people and set roles"
         back={{ href: "/manage", label: "Back to manage" }}
+        avatar={<HeaderAvatar />}
       />
       <Page>
         <Card>

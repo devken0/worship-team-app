@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Avatar } from "./ui";
 import { ShieldIcon, LogOutIcon } from "./icons";
 import ThemeToggle from "./ThemeToggle";
@@ -42,6 +43,9 @@ export default function AccountMenu({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  // The avatar is persistent chrome, so it stays on /profile too — but the menu
+  // shouldn't link you to the page you're already on. Mark it as current instead.
+  const onProfile = usePathname() === "/profile";
 
   useEffect(() => {
     if (!open) return;
@@ -93,15 +97,27 @@ export default function AccountMenu({
             )}
           </div>
 
-          <Link
-            href="/profile"
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            className={menuItem}
-          >
-            <UserGlyph />
-            Profile
-          </Link>
+          {onProfile ? (
+            <div
+              role="menuitem"
+              aria-current="page"
+              aria-disabled="true"
+              className={`${menuItem} cursor-default text-muted hover:bg-transparent active:bg-transparent`}
+            >
+              <UserGlyph />
+              Profile
+            </div>
+          ) : (
+            <Link
+              href="/profile"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className={menuItem}
+            >
+              <UserGlyph />
+              Profile
+            </Link>
+          )}
 
           <div className="border-t border-border px-3 py-2.5">
             <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">

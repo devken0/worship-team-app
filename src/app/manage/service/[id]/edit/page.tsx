@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import ServiceForm, {
   type MemberOption,
   type ServiceFormInitial,
@@ -88,6 +89,7 @@ export default async function EditServicePage({
       <PageHeader
         title="Edit schedule"
         back={{ href: "/manage", label: "Back to manage" }}
+        avatar={<HeaderAvatar />}
       />
       <Page>
         <ServiceForm

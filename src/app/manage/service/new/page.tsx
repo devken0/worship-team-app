@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import ServiceForm, { type MemberOption } from "@/components/ServiceForm";
 import { listLibrarySongs } from "@/lib/library";
 
@@ -25,6 +26,7 @@ export default async function NewServicePage() {
         title="New schedule"
         subtitle="Set up a Sunday service"
         back={{ href: "/manage", label: "Back to manage" }}
+        avatar={<HeaderAvatar />}
       />
       <Page>
         <ServiceForm

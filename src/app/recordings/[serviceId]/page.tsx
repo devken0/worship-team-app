@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader, SectionTitle, EmptyState } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import { MicIcon } from "@/components/icons";
 import Recorder from "@/components/Recorder";
 import RecordingItem, { type RecordingView } from "@/components/RecordingItem";
@@ -63,6 +64,7 @@ export default async function ServiceRecordingsPage({
         title="Recordings"
         subtitle={formatServiceDate(svc.service_date)}
         back={{ href: "/recordings", label: "Back to recordings" }}
+        avatar={<HeaderAvatar />}
       />
       <Page>
         <Recorder serviceId={svc.id} userId={user.id} />

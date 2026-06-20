@@ -7,6 +7,7 @@ export default function MembersLoading() {
         title="Members"
         subtitle="Invite people and set roles"
         back={{ href: "/manage", label: "Back to manage" }}
+        avatar={<Skeleton className="h-9 w-9 rounded-full" />}
       />
       <Page>
         <Card className="space-y-3">

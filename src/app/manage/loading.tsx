@@ -5,7 +5,10 @@ import { Page, PageHeader, Card, Skeleton } from "@/components/ui";
 export default function ManageLoading() {
   return (
     <>
-      <PageHeader title={<Skeleton className="h-6 w-32" />} />
+      <PageHeader
+        title={<Skeleton className="h-6 w-32" />}
+        avatar={<Skeleton className="h-9 w-9 rounded-full" />}
+      />
       <Page>
         <div className="space-y-2">
           {[0, 1, 2].map((i) => (

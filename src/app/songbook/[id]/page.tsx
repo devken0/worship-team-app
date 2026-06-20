@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Page, PageHeader, Card, SectionTitle, EmptyState } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import { MicIcon } from "@/components/icons";
 import SongCard from "@/components/SongCard";
 import { getLibrarySong, getSongPlayHistory } from "@/lib/library";
@@ -36,6 +37,7 @@ export default async function SongBookEntryPage({
       <PageHeader
         title="Song Book"
         back={{ href: "/songbook", label: "Back to song book" }}
+        avatar={<HeaderAvatar />}
       />
       <Page>
         <SongCard

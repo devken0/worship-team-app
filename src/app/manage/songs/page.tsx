@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Page, PageHeader, PrimaryLink, EmptyState } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import { PlusIcon, MusicIcon } from "@/components/icons";
 import SongBookBrowser, { type BrowserSong } from "@/components/SongBookBrowser";
 import { listLibrarySongs, getPlayStatsForLibrarySongs } from "@/lib/library";
@@ -35,6 +36,7 @@ export default async function ManageSongsPage() {
             New
           </PrimaryLink>
         }
+        avatar={<HeaderAvatar />}
       />
       <Page>
         {rows.length === 0 ? (

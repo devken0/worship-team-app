@@ -3,7 +3,11 @@ import { Page, PageHeader, Card, Skeleton } from "@/components/ui";
 export default function SongBookLoading() {
   return (
     <>
-      <PageHeader title="Song Book" subtitle="Every song the team uses" />
+      <PageHeader
+        title="Song Book"
+        subtitle="Every song the team uses"
+        avatar={<Skeleton className="h-9 w-9 rounded-full" />}
+      />
       <Page>
         <Skeleton className="mb-2 mt-5 h-3 w-16" />
         <div className="space-y-2">

@@ -3,7 +3,11 @@ import { Page, PageHeader, Card, Skeleton } from "@/components/ui";
 export default function HomeLoading() {
   return (
     <>
-      <PageHeader title={<Skeleton className="h-6 w-36" />} subtitle="This Sunday" />
+      <PageHeader
+        title={<Skeleton className="h-6 w-36" />}
+        subtitle="This Sunday"
+        avatar={<Skeleton className="h-9 w-9 rounded-full" />}
+      />
       <Page>
         <Skeleton className="mb-3 h-32 w-full rounded-2xl" />
         <div className="space-y-2">

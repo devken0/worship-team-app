@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getPreviousFollowUps, getServiceDetail } from "@/lib/services";
 import { Page, PageHeader } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import ServiceDetailView from "@/components/ServiceDetailView";
 import { formatServiceDate } from "@/lib/format";
 
@@ -48,6 +49,7 @@ export default async function ServiceDetailPage({
             </Link>
           ) : undefined
         }
+        avatar={<HeaderAvatar />}
       />
       <Page>
         <ServiceDetailView
