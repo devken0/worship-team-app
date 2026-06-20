@@ -19,11 +19,15 @@ export async function completeOnboarding(
 
   const fullName = String(formData.get("full_name") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirm_password") ?? "");
   const instruments = formData.getAll("instruments").map(String);
 
   if (!fullName) return { error: "Please enter your name." };
-  if (password.length < 6) {
-    return { error: "Choose a password with at least 6 characters." };
+  if (password.length < 8) {
+    return { error: "Choose a password with at least 8 characters." };
+  }
+  if (password !== confirmPassword) {
+    return { error: "Passwords don't match. Please re-enter them." };
   }
 
   const { error: pwError } = await supabase.auth.updateUser({ password });
@@ -31,7 +35,7 @@ export async function completeOnboarding(
 
   const { error: profileError } = await supabase
     .from("profiles")
-    .update({ full_name: fullName, instruments })
+    .update({ full_name: fullName, instruments, onboarded: true })
     .eq("id", user.id);
   if (profileError) return { error: profileError.message };
 

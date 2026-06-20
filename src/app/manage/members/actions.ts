@@ -44,6 +44,34 @@ export async function inviteMember(
   return { invited: email };
 }
 
+/**
+ * Re-send the invitation email to someone who hasn't finished onboarding yet
+ * (their first link was lost or expired). Reuses the same invite mailer and
+ * template as the original invite.
+ */
+export async function resendInvite(
+  memberId: string,
+): Promise<{ error?: string; resent?: boolean }> {
+  if (!(await isAdmin())) return { error: "Only admins can resend invites." };
+  if (!memberId) return { error: "Missing member." };
+
+  const admin = createAdminClient();
+  const { data: userData, error: lookupError } =
+    await admin.auth.admin.getUserById(memberId);
+  const email = userData?.user?.email;
+  if (lookupError || !email) {
+    return { error: "Couldn't find that member's email address." };
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${siteUrl}/auth/confirm?next=/welcome`,
+  });
+  if (error) return { error: error.message };
+
+  return { resent: true };
+}
+
 export async function setMemberRole(
   memberId: string,
   role: UserRole,

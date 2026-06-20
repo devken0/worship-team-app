@@ -2,7 +2,22 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /** Public routes that do not require a signed-in user. */
-const PUBLIC_PATHS = ["/login", "/auth", "/welcome", "/s/", "/offline"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/forgot-password",
+  "/auth",
+  "/welcome",
+  "/s/",
+  "/offline",
+];
+
+/**
+ * Paths a signed-in but not-yet-onboarded user is still allowed to reach.
+ * Everything else funnels them back to /welcome so they can't get stranded
+ * with no password set (see the onboarding migration). /reset-password is here
+ * because a password-recovery link signs the user in before they reach it.
+ */
+const ONBOARDING_EXEMPT = ["/welcome", "/auth", "/login", "/reset-password"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -36,13 +51,33 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));
 
+  // Anchor redirects to the public origin, not request.nextUrl: behind a reverse
+  // proxy the request host is the container's internal address (0.0.0.0:3000),
+  // which would redirect external visitors there. Fall back to the request origin
+  // only in local dev (no env set).
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin;
+
   if (!user && !isPublic) {
-    // Anchor to the public origin, not request.nextUrl: behind a reverse proxy
-    // the request host is the container's internal address (0.0.0.0:3000), which
-    // would redirect external visitors there. Fall back to the request origin
-    // only in local dev (no env set).
-    const base = process.env.NEXT_PUBLIC_SITE_URL ?? request.nextUrl.origin;
     return NextResponse.redirect(new URL("/login", base));
+  }
+
+  if (user) {
+    // Keep a not-yet-onboarded user pinned to /welcome until they've set a
+    // password, and conversely keep a finished user off /welcome.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarded")
+      .eq("id", user.id)
+      .single();
+    const onboarded = profile?.onboarded ?? false;
+    const exempt = ONBOARDING_EXEMPT.some((p) => path.startsWith(p));
+
+    if (!onboarded && !exempt) {
+      return NextResponse.redirect(new URL("/welcome", base));
+    }
+    if (onboarded && path.startsWith("/welcome")) {
+      return NextResponse.redirect(new URL("/", base));
+    }
   }
 
   return supabaseResponse;

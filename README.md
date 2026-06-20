@@ -71,6 +71,17 @@ In **Authentication → Email Templates → Invite user**:
    files. The header logo loads from `{{ .SiteURL }}/logo.png`, so it only shows
    once `NEXT_PUBLIC_SITE_URL` points at a public host.)
 
+Then do the same in **Authentication → Email Templates → Reset password**, using
+[`supabase/templates/reset-password.html`](supabase/templates/reset-password.html).
+This one is **required** for the "Forgot password?" flow to work — the default
+template uses `{{ .ConfirmationURL }}`, which points at Supabase's own verify
+endpoint and never reaches this app. The branded template links through the same
+confirm route instead:
+
+   ```
+   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/reset-password
+   ```
+
 Also add your site URL(s) under **Authentication → URL Configuration →
 Redirect URLs** (e.g. `http://localhost:3000/**` and your production URL).
 

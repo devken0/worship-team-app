@@ -5,6 +5,7 @@ import { Page, PageHeader, Card, SectionTitle } from "@/components/ui";
 import InviteForm from "@/components/InviteForm";
 import RemoveMemberButton from "@/components/RemoveMemberButton";
 import MemberRoleButton from "@/components/MemberRoleButton";
+import ResendInviteButton from "@/components/ResendInviteButton";
 import type { Profile } from "@/lib/domain";
 
 export default async function MembersPage() {
@@ -15,7 +16,7 @@ export default async function MembersPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("id, full_name, role, instruments")
+    .select("id, full_name, role, instruments, onboarded")
     .order("full_name");
   const members = (data ?? []) as Profile[];
 
@@ -61,13 +62,22 @@ export default async function MembersPage() {
                       <span className="ml-1 text-xs text-muted">(you)</span>
                     )}
                   </p>
-                  {m.instruments.length > 0 && (
-                    <p className="truncate text-xs text-muted">
-                      {m.instruments.join(", ")}
+                  {!m.onboarded ? (
+                    <p className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                      Invited · hasn&apos;t set up yet
                     </p>
+                  ) : (
+                    m.instruments.length > 0 && (
+                      <p className="truncate text-xs text-muted">
+                        {m.instruments.join(", ")}
+                      </p>
+                    )
                   )}
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
+                  {!m.onboarded && email && (
+                    <ResendInviteButton memberId={m.id} name={email} />
+                  )}
                   <MemberRoleButton
                     memberId={m.id}
                     name={m.full_name || email || "this member"}

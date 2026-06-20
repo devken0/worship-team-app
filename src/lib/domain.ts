@@ -97,6 +97,7 @@ export interface Profile {
   full_name: string;
   role: UserRole;
   instruments: string[];
+  onboarded: boolean;
 }
 
 export interface Service {

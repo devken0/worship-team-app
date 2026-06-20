@@ -38,17 +38,19 @@ export default async function RootLayout({
 }>) {
   const user = await getCurrentUser();
   const isAdmin = user?.profile?.role === "admin";
-  const signedIn = !!user;
+  // Hide the nav until onboarding is finished — a half-set-up user is pinned to
+  // /welcome and shouldn't have tabs to wander off to before setting a password.
+  const showNav = !!user && !!user.profile?.onboarded;
 
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <ServiceWorkerRegister />
         <ToastProvider>
-          <div className={`flex-1 ${signedIn ? "has-bottom-nav" : ""}`}>
+          <div className={`flex-1 ${showNav ? "has-bottom-nav" : ""}`}>
             {children}
           </div>
-          {signedIn && <BottomNav isAdmin={isAdmin} />}
+          {showNav && <BottomNav isAdmin={isAdmin} />}
         </ToastProvider>
       </body>
     </html>

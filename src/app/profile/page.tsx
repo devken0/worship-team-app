@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { Page, PageHeader, Card, SectionTitle } from "@/components/ui";
 import { ShieldIcon, LogOutIcon } from "@/components/icons";
 import ProfileForm from "@/components/ProfileForm";
+import ChangePasswordForm from "@/components/ChangePasswordForm";
 import { signOut } from "./actions";
 
 export default async function ProfilePage() {
@@ -23,6 +24,11 @@ export default async function ProfilePage() {
 
         <Card>
           <ProfileForm profile={user.profile} />
+        </Card>
+
+        <SectionTitle>Password</SectionTitle>
+        <Card>
+          <ChangePasswordForm />
         </Card>
 
         <SectionTitle>Account</SectionTitle>

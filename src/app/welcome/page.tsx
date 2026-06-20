@@ -42,7 +42,16 @@ export default function WelcomePage() {
           label="Create a password"
           autoComplete="new-password"
           required
-          minLength={6}
+          minLength={8}
+        />
+
+        <PasswordInput
+          id="confirm_password"
+          name="confirm_password"
+          label="Confirm password"
+          autoComplete="new-password"
+          required
+          minLength={8}
         />
 
         <div>
