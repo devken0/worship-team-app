@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/auth";
+import { notifyAssignments } from "@/lib/notify";
 import type { AssignmentRole, SongCategory } from "@/lib/domain";
 
 export interface SongInput {
@@ -220,6 +221,16 @@ export async function saveService(payload: ServicePayload): Promise<void> {
     serviceId = data.id as string;
   }
 
+  // Capture the prior roster before the delete-then-reinsert, so we can email
+  // only the members who are *newly* assigned (a notes-only edit mails no one).
+  const { data: priorAssignments } = await supabase
+    .from("assignments")
+    .select("role_type, member_id")
+    .eq("service_id", serviceId);
+  const priorPairs = new Set(
+    (priorAssignments ?? []).map((a) => `${a.role_type}:${a.member_id}`),
+  );
+
   // Replace assignments: clear then re-insert the filled ones.
   await supabase.from("assignments").delete().eq("service_id", serviceId);
   const assignmentRows: {
@@ -306,6 +317,19 @@ export async function saveService(payload: ServicePayload): Promise<void> {
   if (songRows.length > 0) {
     const { error } = await supabase.from("songs").insert(songRows);
     if (error) throw new Error(error.message);
+  }
+
+  // Email members who are newly on the roster (skip ones carried over from the
+  // previous save). Best-effort: a mail failure must not fail the save.
+  const newlyAssigned = assignmentRows
+    .filter((r) => !priorPairs.has(`${r.role_type}:${r.member_id}`))
+    .map((r) => ({ memberId: r.member_id, role: r.role_type }));
+  if (newlyAssigned.length > 0) {
+    try {
+      await notifyAssignments(serviceId, newlyAssigned);
+    } catch (err) {
+      console.error("[saveService] assignment notify failed:", err);
+    }
   }
 
   revalidatePath("/");

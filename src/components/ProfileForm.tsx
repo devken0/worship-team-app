@@ -26,6 +26,22 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
         <InstrumentPicker selected={profile.instruments} />
       </div>
 
+      <label className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          name="email_notifications"
+          defaultChecked={!profile.email_opt_out}
+          className="mt-0.5 h-5 w-5 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        />
+        <span className="text-sm">
+          <span className="font-medium">Email me reminders</span>
+          <span className="block text-muted">
+            Schedule assignments, evaluation follow-ups, new recordings, and the
+            weekly Sunday reminder.
+          </span>
+        </span>
+      </label>
+
       {state.error && <FormMessage>{state.error}</FormMessage>}
       {state.saved && <FormMessage tone="success">Saved!</FormMessage>}
 

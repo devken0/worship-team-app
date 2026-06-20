@@ -1,0 +1,48 @@
+name: Weekly reminder
+
+# Calls the app's protected weekly-reminder endpoint, which emails the roster the
+# upcoming Sunday's lineup. The app has no built-in scheduler, so this workflow is
+# the cron that triggers it (same idea as pointing cron-job.org at the URL, but
+# version-controlled here instead).
+#
+# Setup (one-time): add two repository secrets under
+# Settings → Secrets and variables → Actions:
+#   APP_URL         e.g. https://worship.example.com   (no trailing slash)
+#   CLEANUP_SECRET  the same value as the app's CLEANUP_SECRET env var
+#
+# The endpoint must be reachable from GitHub's runners (a public URL / your
+# Cloudflare Tunnel hostname), not localhost.
+
+on:
+  schedule:
+    # 00:00 UTC every Saturday ≈ 08:00 Saturday in Asia/Manila (no DST in PH).
+    - cron: "0 0 * * 6"
+  # Lets you run it on demand from the Actions tab to test.
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger weekly reminder
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CLEANUP_SECRET: ${{ secrets.CLEANUP_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CLEANUP_SECRET" ]; then
+            echo "Missing APP_URL or CLEANUP_SECRET repository secret." >&2
+            exit 1
+          fi
+          # Capture body and HTTP status separately so the run log shows the
+          # JSON summary, and fail the job on any non-2xx (e.g. 401/503).
+          response=$(curl -sS -m 60 -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer $CLEANUP_SECRET" \
+            "$APP_URL/api/notifications/weekly")
+          status=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          echo "HTTP $status"
+          echo "$body"
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            echo "Weekly reminder failed (HTTP $status)." >&2
+            exit 1
+          fi

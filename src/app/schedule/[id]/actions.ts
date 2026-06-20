@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
+import { notifyEvaluation } from "@/lib/notify";
 
 export interface EvaluationState {
   error?: string;
@@ -53,6 +54,13 @@ export async function saveEvaluation(
     .from("evaluations")
     .upsert(row, { onConflict: "service_id" });
   if (error) return { error: error.message };
+
+  // Email the assigned members the action items / problems. Best-effort.
+  try {
+    await notifyEvaluation(serviceId);
+  } catch (notifyError) {
+    console.error("[saveEvaluation] notify failed:", notifyError);
+  }
 
   revalidatePath("/");
   revalidatePath(`/schedule/${serviceId}`);

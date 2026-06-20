@@ -2,6 +2,24 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { notifyRecordingReady } from "@/lib/notify";
+
+/**
+ * Fire after a recording row is inserted (the insert itself happens client-side
+ * in the Recorder). Emails the service's assigned members. Best-effort and never
+ * throws — the recording is already saved regardless of the mail outcome.
+ */
+export async function announceRecording(
+  serviceId: string,
+  title: string,
+): Promise<void> {
+  if (!serviceId) return;
+  try {
+    await notifyRecordingReady(serviceId, title || "New recording");
+  } catch (err) {
+    console.error("[announceRecording] notify failed:", err);
+  }
+}
 
 export async function deleteRecording(formData: FormData) {
   const id = String(formData.get("recording_id") ?? "");

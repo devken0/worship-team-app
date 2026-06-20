@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatDuration } from "@/lib/format";
+import { announceRecording } from "@/app/recordings/actions";
 import { Button, FormMessage } from "@/components/ui";
 
 type Phase = "idle" | "recording" | "preview" | "uploading";
@@ -151,6 +152,9 @@ export default function Recorder({
       return;
     }
 
+    // Notify the service's members (fire-and-forget; never block the UI).
+    void announceRecording(serviceId, title);
+
     setProgress(100);
     discard();
     setPhase("idle");
@@ -174,6 +178,10 @@ export default function Recorder({
       setError(insErr.message);
       return;
     }
+
+    // Notify the service's members (fire-and-forget; never block the UI).
+    void announceRecording(serviceId, linkTitle.trim() || "Recording link");
+
     setLinkUrl("");
     setLinkTitle("");
     router.refresh();

@@ -111,6 +111,8 @@ export interface Profile {
   role: UserRole;
   instruments: string[];
   onboarded: boolean;
+  /** When true, the member is excluded from all notification email. */
+  email_opt_out: boolean;
 }
 
 export interface Service {

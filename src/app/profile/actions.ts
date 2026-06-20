@@ -26,12 +26,14 @@ export async function updateProfile(
 
   const fullName = String(formData.get("full_name") ?? "").trim();
   const instruments = formData.getAll("instruments").map(String);
+  // Checkbox is "Email me reminders" (opt-IN in the UI); store the inverse.
+  const emailOptOut = formData.get("email_notifications") !== "on";
 
   if (!fullName) return { error: "Please enter your name." };
 
   const { error } = await supabase
     .from("profiles")
-    .update({ full_name: fullName, instruments })
+    .update({ full_name: fullName, instruments, email_opt_out: emailOptOut })
     .eq("id", user.id);
 
   if (error) return { error: error.message };

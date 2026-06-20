@@ -144,6 +144,40 @@ and set an env var named `CRON_SECRET` to the **same value** as
 scheduled calls, which the endpoint checks. Alternatives: a GitHub Actions cron
 or a free service like cron-job.org hitting the same URL with the header.
 
+## Email notifications
+
+The app sends per-member email through [Resend](https://resend.com) for four
+events: **schedule assignments** (each newly-assigned member gets their part when
+a service is saved), **evaluation follow-ups**, **new recordings**, and a
+**weekly Sunday reminder**. Members can opt out under **Profile → Email me
+reminders**. Email is always best-effort — a send failure is logged and never
+blocks the underlying save.
+
+Set `RESEND_API_KEY` and `EMAIL_FROM`. Until you verify a sending domain in
+Resend, mail only delivers from `onboarding@resend.dev` to your own account — fine
+for testing. With no key set, sends are skipped (logged), so local dev is
+unaffected.
+
+The first three fire from their server actions automatically. The **weekly
+reminder** is a protected endpoint, `POST /api/notifications/weekly`, gated by the
+**same `CLEANUP_SECRET`** as cleanup — something external has to call it on a
+schedule.
+
+This repo ships a GitHub Actions cron that does exactly that:
+[`.github/workflows/weekly-reminder.yml`](.github/workflows/weekly-reminder.yml),
+which POSTs to the endpoint every Saturday 00:00 UTC (≈ 08:00 Manila). To enable
+it, add two repository secrets under **Settings → Secrets and variables →
+Actions**:
+
+- `APP_URL` — your public app URL, no trailing slash (must be reachable from
+  GitHub's runners, e.g. your Cloudflare Tunnel hostname — not `localhost`).
+- `CLEANUP_SECRET` — same value as the app's `CLEANUP_SECRET` env var.
+
+You can run it on demand from the **Actions** tab (it has a `workflow_dispatch`
+trigger) to test without waiting for Saturday. Alternatives if you'd rather not
+use Actions: cron-job.org or a host cron hitting the same URL with the
+`Authorization: Bearer <CLEANUP_SECRET>` header.
+
 ## Deploy
 
 Deploy to [Vercel](https://vercel.com) (free): import the repo, add the same
