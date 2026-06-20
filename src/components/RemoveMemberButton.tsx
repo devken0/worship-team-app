@@ -39,7 +39,7 @@ export default function RemoveMemberButton({
         onClick={() => setOpen(true)}
         disabled={disabled || pending}
         title="Remove this member"
-        className="rounded-full px-3 py-2 text-xs font-semibold text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-40"
+        className="rounded-full px-3 py-2 text-xs font-semibold text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-40"
       >
         {pending ? "Removing…" : "Remove"}
       </button>

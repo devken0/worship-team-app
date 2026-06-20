@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Logo from "@/components/Logo";
 import PasswordInput from "@/components/PasswordInput";
-import { Button } from "@/components/ui";
+import { Button, FormMessage } from "@/components/ui";
 import { updatePassword, type ResetPasswordState } from "./actions";
 
 const initial: ResetPasswordState = {};
@@ -39,11 +39,7 @@ export default function ResetPasswordPage() {
           minLength={8}
         />
 
-        {state.error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-            {state.error}
-          </p>
-        )}
+        {state.error && <FormMessage>{state.error}</FormMessage>}
 
         <Button type="submit" full disabled={pending}>
           {pending ? "Saving…" : "Save new password"}

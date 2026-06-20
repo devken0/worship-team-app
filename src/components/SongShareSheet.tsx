@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { SONG_CATEGORY_LABELS, type SongCategory } from "@/lib/domain";
 import { XIcon } from "@/components/icons";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 // Kept in sync with the chip colors in SongCard.tsx.
 const categoryColor: Record<SongCategory, string> = {
@@ -36,6 +37,9 @@ export default function SongShareSheet({
   song: SongShareData;
   onClose: () => void;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, true);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -50,8 +54,10 @@ export default function SongShareSheet({
 
   return (
     <div
+      ref={dialogRef}
       onClick={onClose}
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4"
+      tabIndex={-1}
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4 outline-none"
       role="dialog"
       aria-modal="true"
       aria-label={`${song.title} — chords`}

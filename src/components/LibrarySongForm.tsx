@@ -10,7 +10,8 @@ import { chordsImageUrl, formatServiceDate } from "@/lib/format";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { Button, buttonStyles } from "@/components/ui";
+import { Button, buttonStyles, FormMessage } from "@/components/ui";
+import { Input, Textarea, Select } from "@/components/form";
 import {
   saveLibrarySong,
   type LibrarySongPayload,
@@ -58,9 +59,6 @@ export interface LibrarySongFormInitial {
   transposed_chords_image_url: string | null;
   transposed_chords_url: string | null;
 }
-
-const inputClass =
-  "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-base outline-none focus:border-primary";
 
 export default function LibrarySongForm({
   initial,
@@ -286,49 +284,38 @@ export default function LibrarySongForm({
 
   return (
     <div className="space-y-3">
-      <div>
-        <label htmlFor="title" className="mb-1 block text-sm font-medium">
-          Song title
-        </label>
-        <input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. 10,000 Reasons"
-          className={inputClass}
-        />
-      </div>
+      <Input
+        label="Song title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="e.g. 10,000 Reasons"
+      />
+
+      <Select
+        label="Default category"
+        value={category}
+        onChange={(e) => setCategory(e.target.value as SongCategory | "")}
+      >
+        <option value="">— None —</option>
+        {SONG_CATEGORIES.map((c) => (
+          <option key={c} value={c}>
+            {SONG_CATEGORY_LABELS[c]}
+          </option>
+        ))}
+      </Select>
 
       <div>
-        <label htmlFor="category" className="mb-1 block text-sm font-medium">
-          Default category
-        </label>
-        <select
-          id="category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value as SongCategory | "")}
-          className={inputClass}
-        >
-          <option value="">— None —</option>
-          {SONG_CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {SONG_CATEGORY_LABELS[c]}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label htmlFor="author" className="mb-1 block text-sm font-medium">
-          Author / artist <span className="text-muted">(optional)</span>
-        </label>
-        <input
+        <Input
           id="author"
+          label={
+            <>
+              Author / artist <span className="text-muted">(optional)</span>
+            </>
+          }
           list="library-song-authors"
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
           placeholder="e.g. Matt Redman"
-          className={inputClass}
         />
         {authors.length > 0 && (
           <datalist id="library-song-authors">
@@ -339,62 +326,59 @@ export default function LibrarySongForm({
         )}
       </div>
 
-      <div>
-        <label htmlFor="youtube" className="mb-1 block text-sm font-medium">
-          YouTube link <span className="text-muted">(optional)</span>
-        </label>
-        <input
-          id="youtube"
-          value={youtube}
-          onChange={(e) => setYoutube(e.target.value)}
-          placeholder="https://youtube.com/watch?v=…"
-          className={inputClass}
-        />
-      </div>
+      <Input
+        label={
+          <>
+            YouTube link <span className="text-muted">(optional)</span>
+          </>
+        }
+        value={youtube}
+        onChange={(e) => setYoutube(e.target.value)}
+        placeholder="https://youtube.com/watch?v=…"
+      />
 
       <div className="flex gap-3">
         <div className="flex-1">
-          <label htmlFor="song_key" className="mb-1 block text-sm font-medium">
-            Original key <span className="text-muted">(optional)</span>
-          </label>
-          <input
-            id="song_key"
+          <Input
+            label={
+              <>
+                Original key <span className="text-muted">(optional)</span>
+              </>
+            }
             value={songKey}
             onChange={(e) => setSongKey(e.target.value)}
             placeholder="e.g. G"
-            className={inputClass}
           />
         </div>
         <div className="flex-1">
-          <label htmlFor="bpm" className="mb-1 block text-sm font-medium">
-            Original BPM <span className="text-muted">(optional)</span>
-          </label>
-          <input
-            id="bpm"
+          <Input
+            label={
+              <>
+                Original BPM <span className="text-muted">(optional)</span>
+              </>
+            }
             type="number"
             inputMode="numeric"
             min={1}
             value={bpm}
             onChange={(e) => setBpm(e.target.value)}
             placeholder="e.g. 73"
-            className={inputClass}
           />
         </div>
       </div>
 
-      <div>
-        <label htmlFor="chords_text" className="mb-1 block text-sm font-medium">
-          Original chords <span className="text-muted">(optional)</span>
-        </label>
-        <textarea
-          id="chords_text"
-          value={chordsText}
-          onChange={(e) => setChordsText(e.target.value)}
-          placeholder="Paste the chord chart here"
-          rows={3}
-          className={`${inputClass} font-mono text-sm`}
-        />
-      </div>
+      <Textarea
+        label={
+          <>
+            Original chords <span className="text-muted">(optional)</span>
+          </>
+        }
+        value={chordsText}
+        onChange={(e) => setChordsText(e.target.value)}
+        placeholder="Paste the chord chart here"
+        rows={3}
+        className="font-mono text-sm"
+      />
 
       <div>
         <label className="mb-1 block text-xs text-muted">
@@ -411,7 +395,7 @@ export default function LibrarySongForm({
             <button
               type="button"
               onClick={() => setChordsImage(null)}
-              className="text-sm font-medium text-red-600"
+              className="text-sm font-medium text-danger"
             >
               Remove photo
             </button>
@@ -433,18 +417,16 @@ export default function LibrarySongForm({
         {uploading && <p className="mt-1 text-xs text-muted">Uploading photo…</p>}
       </div>
 
-      <div>
-        <label htmlFor="chords_url" className="mb-1 block text-sm font-medium">
-          Original chords link <span className="text-muted">(optional)</span>
-        </label>
-        <input
-          id="chords_url"
-          value={chordsUrl}
-          onChange={(e) => setChordsUrl(e.target.value)}
-          placeholder="e.g. published chords URL"
-          className={inputClass}
-        />
-      </div>
+      <Input
+        label={
+          <>
+            Original chords link <span className="text-muted">(optional)</span>
+          </>
+        }
+        value={chordsUrl}
+        onChange={(e) => setChordsUrl(e.target.value)}
+        placeholder="e.g. published chords URL"
+      />
 
       <div className="space-y-3 rounded-xl border border-border p-3">
         <label className="flex items-start gap-2 text-sm">
@@ -467,56 +449,34 @@ export default function LibrarySongForm({
           <>
             <div className="flex gap-3">
               <div className="flex-1">
-                <label
-                  htmlFor="transposed_key"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  Transposed key
-                </label>
-                <input
-                  id="transposed_key"
+                <Input
+                  label="Transposed key"
                   value={transposedKey}
                   onChange={(e) => setTransposedKey(e.target.value)}
                   placeholder="e.g. A"
-                  className={inputClass}
                 />
               </div>
               <div className="flex-1">
-                <label
-                  htmlFor="transposed_bpm"
-                  className="mb-1 block text-sm font-medium"
-                >
-                  Transposed BPM
-                </label>
-                <input
-                  id="transposed_bpm"
+                <Input
+                  label="Transposed BPM"
                   type="number"
                   inputMode="numeric"
                   min={1}
                   value={transposedBpm}
                   onChange={(e) => setTransposedBpm(e.target.value)}
                   placeholder="e.g. 80"
-                  className={inputClass}
                 />
               </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="transposed_chords_text"
-                className="mb-1 block text-sm font-medium"
-              >
-                Transposed chords
-              </label>
-              <textarea
-                id="transposed_chords_text"
-                value={transposedChordsText}
-                onChange={(e) => setTransposedChordsText(e.target.value)}
-                placeholder="Paste the transposed chord chart here"
-                rows={3}
-                className={`${inputClass} font-mono text-sm`}
-              />
-            </div>
+            <Textarea
+              label="Transposed chords"
+              value={transposedChordsText}
+              onChange={(e) => setTransposedChordsText(e.target.value)}
+              placeholder="Paste the transposed chord chart here"
+              rows={3}
+              className="font-mono text-sm"
+            />
 
             <div>
               <label className="mb-1 block text-xs text-muted">
@@ -533,7 +493,7 @@ export default function LibrarySongForm({
                   <button
                     type="button"
                     onClick={() => setTransposedChordsImage(null)}
-                    className="text-sm font-medium text-red-600"
+                    className="text-sm font-medium text-danger"
                   >
                     Remove photo
                   </button>
@@ -562,38 +522,27 @@ export default function LibrarySongForm({
               )}
             </div>
 
-            <div>
-              <label
-                htmlFor="transposed_chords_url"
-                className="mb-1 block text-sm font-medium"
-              >
-                Transposed chords link
-              </label>
-              <input
-                id="transposed_chords_url"
-                value={transposedChordsUrl}
-                onChange={(e) => setTransposedChordsUrl(e.target.value)}
-                placeholder="e.g. published chords URL"
-                className={inputClass}
-              />
-            </div>
+            <Input
+              label="Transposed chords link"
+              value={transposedChordsUrl}
+              onChange={(e) => setTransposedChordsUrl(e.target.value)}
+              placeholder="e.g. published chords URL"
+            />
           </>
         )}
       </div>
 
-      <div>
-        <label htmlFor="notes" className="mb-1 block text-sm font-medium">
-          Notes <span className="text-muted">(optional)</span>
-        </label>
-        <textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Arrangement reminders, cues, capo, etc."
-          rows={3}
-          className={inputClass}
-        />
-      </div>
+      <Textarea
+        label={
+          <>
+            Notes <span className="text-muted">(optional)</span>
+          </>
+        }
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        placeholder="Arrangement reminders, cues, capo, etc."
+        rows={3}
+      />
 
       {initial?.id && linkedServices.length > 0 && (
         <div className="rounded-xl border border-border p-3">
@@ -667,11 +616,7 @@ export default function LibrarySongForm({
         </div>
       )}
 
-      {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
-      )}
+      {error && <FormMessage>{error}</FormMessage>}
 
       <Button type="button" full onClick={submit} disabled={pending}>
         {pending ? "Saving…" : initial?.id ? "Save changes" : "Add to song book"}

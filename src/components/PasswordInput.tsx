@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-/** Password field with a show/hide toggle. Matches the app's input styling. */
+/**
+ * Password field with a show/hide toggle. Matches the app's input styling and
+ * the inline-validation behavior of the shared form primitives: native validity
+ * errors (required, minLength) render inline instead of as a browser bubble, and
+ * clear once the user edits the field. Pass `error` for a server message.
+ */
 export default function PasswordInput({
   id,
   name,
@@ -10,6 +15,8 @@ export default function PasswordInput({
   autoComplete,
   required,
   minLength,
+  hint,
+  error: serverError,
 }: {
   id: string;
   name: string;
@@ -17,13 +24,23 @@ export default function PasswordInput({
   autoComplete?: string;
   required?: boolean;
   minLength?: number;
+  hint?: string;
+  error?: string | null;
 }) {
   const [visible, setVisible] = useState(false);
+  const [native, setNative] = useState<string | null>(null);
+  const shown = native ?? serverError ?? null;
+  const errorId = `${id}-error`;
 
   return (
     <div>
       <label htmlFor={id} className="mb-1 block text-sm font-medium">
         {label}
+        {required && (
+          <span className="text-danger" aria-hidden="true">
+            {" *"}
+          </span>
+        )}
       </label>
       <div className="relative">
         <input
@@ -33,7 +50,16 @@ export default function PasswordInput({
           autoComplete={autoComplete}
           required={required}
           minLength={minLength}
-          className="w-full rounded-xl border border-border bg-card px-3 py-3 pr-12 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
+          aria-invalid={shown ? true : undefined}
+          aria-describedby={shown ? errorId : undefined}
+          onInvalid={(e) => {
+            e.preventDefault();
+            setNative(e.currentTarget.validationMessage);
+          }}
+          onInput={() => setNative(null)}
+          className={`w-full rounded-xl border bg-card px-3 py-3 pr-12 text-base outline-none transition focus:border-primary focus-visible:ring-1 focus-visible:ring-primary ${
+            shown ? "border-danger" : "border-border"
+          }`}
         />
         <button
           type="button"
@@ -45,6 +71,13 @@ export default function PasswordInput({
           {visible ? <EyeOffIcon /> : <EyeIcon />}
         </button>
       </div>
+      {shown ? (
+        <p id={errorId} className="mt-1 text-sm text-danger">
+          {shown}
+        </p>
+      ) : hint ? (
+        <p className="mt-1 text-xs text-muted">{hint}</p>
+      ) : null}
     </div>
   );
 }

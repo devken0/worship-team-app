@@ -10,6 +10,7 @@ import {
   PrimaryLink,
   EmptyState,
 } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import { PlusIcon, CalendarIcon } from "@/components/icons";
 import { formatServiceDate } from "@/lib/format";
 import CleanupButton from "@/components/CleanupButton";
@@ -35,6 +36,7 @@ export default async function ManagePage() {
     <>
       <PageHeader
         title="Manage"
+        avatar={<HeaderAvatar />}
         action={
           <PrimaryLink href="/manage/service/new">
             <PlusIcon size={16} />

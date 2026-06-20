@@ -6,7 +6,8 @@
   --foreground: #1c1a17;
   --card: #ffffff;
   --border: #ece6dd;
-  --muted: #857c6e;
+  /* Muted text — darkened to clear WCAG AA (~4.6:1) on the warm background. */
+  --muted: #6f6657;
   /* Interactive orange — deep enough for white text to pass WCAG AA. */
   --primary: #d9620a;
   --primary-foreground: #ffffff;
@@ -16,6 +17,69 @@
   /* Vivid logo gold — decorative accents and tinted badges only. */
   --brand: #f4a300;
   --brand-soft: #fdf0d8;
+  /* Semantic feedback — warm-leaning red / logo-derived green, both AA as text. */
+  --danger: #c0341d;
+  --danger-foreground: #ffffff;
+  --danger-soft: #fcebe6;
+  --success: #3f7e25;
+  --success-foreground: #ffffff;
+  --success-soft: #e7f3df;
+  /* Song category chips — a deliberate, muted spectrum that stays in the warm
+     family. Centralized here so chips adapt to dark mode for free. */
+  --cat-warm-up-bg: #fde4d3;
+  --cat-warm-up-fg: #9a4a16;
+  --cat-welcoming-bg: #fceccb;
+  --cat-welcoming-fg: #875312;
+  --cat-praise-bg: #d8ebe6;
+  --cat-praise-fg: #1f6b5c;
+  --cat-worship-bg: #e7e0f1;
+  --cat-worship-fg: #5b4a86;
+  --cat-closing-bg: #dceed3;
+  --cat-closing-fg: #3f6b27;
+  /* Warm-tinted card elevation — softer and cozier than a neutral gray shadow. */
+  --shadow-card: 0 1px 2px rgba(60, 45, 25, 0.06),
+    0 4px 12px -4px rgba(60, 45, 25, 0.1);
+}
+
+/*
+ * Dark theme. Applied via the `data-theme="dark"` attribute on <html>, which an
+ * inline script in the root layout sets before first paint (resolving the user's
+ * Light / Dark / System choice from localStorage). Attribute-driven — rather
+ * than a bare `prefers-color-scheme` media query — so the in-app switcher can
+ * override the OS setting.
+ */
+:root[data-theme="dark"] {
+  /* Warm near-blacks rather than pure gray — keeps the cozy, lamplit feel. */
+  --background: #17150f;
+  --foreground: #f2ede4;
+  --card: #211e16;
+  --border: #36302593;
+  --muted: #a89c8a;
+  /* Brighter orange so it sings against the dark; dark text rides on top. */
+  --primary: #f0871f;
+  --primary-foreground: #1c150b;
+  --accent: #6bbf48;
+  --accent-foreground: #11210a;
+  --brand: #f4a300;
+  --brand-soft: #352a14;
+  --danger: #f08a72;
+  --danger-foreground: #2a120c;
+  --danger-soft: #3a201b;
+  --success: #84c861;
+  --success-foreground: #122a0a;
+  --success-soft: #1f2e16;
+  --cat-warm-up-bg: #3a2517;
+  --cat-warm-up-fg: #f0a878;
+  --cat-welcoming-bg: #3a2e14;
+  --cat-welcoming-fg: #e7bd6a;
+  --cat-praise-bg: #133029;
+  --cat-praise-fg: #7fc9b8;
+  --cat-worship-bg: #272040;
+  --cat-worship-fg: #b3a3e0;
+  --cat-closing-bg: #1f2e16;
+  --cat-closing-fg: #9ed07f;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4),
+    0 4px 12px -4px rgba(0, 0, 0, 0.55);
 }
 
 @theme inline {
@@ -30,17 +94,33 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-brand: var(--brand);
   --color-brand-soft: var(--brand-soft);
-  /* Warm-tinted card elevation — softer and cozier than a neutral gray shadow. */
-  --shadow-card: 0 1px 2px rgba(60, 45, 25, 0.06),
-    0 4px 12px -4px rgba(60, 45, 25, 0.1);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --shadow-card: var(--shadow-card);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Named type scale (used via text-display / text-title utilities). Body and
+     smaller text keep Tailwind's defaults — this just pins the two display
+     sizes so headings stay consistent and a touch more deliberate. */
+  --text-display: 1.875rem;
+  --text-display--line-height: 1.15;
+  --text-display--letter-spacing: -0.02em;
+  --text-title: 1.25rem;
+  --text-title--line-height: 1.4;
+  --text-title--letter-spacing: -0.015em;
 }
 
 html {
   -webkit-text-size-adjust: 100%;
   /* Branded flash when tapping any link/button on touch devices (no hover). */
   -webkit-tap-highlight-color: rgba(217, 98, 10, 0.15);
+  /* Avoid a white flash before the dark theme paints on first load. */
+  background: var(--background);
+  color-scheme: light dark;
 }
 
 body {
@@ -62,7 +142,43 @@ body {
   letter-spacing: -0.005em;
 }
 
+/* Respect users who ask for less motion (WCAG 2.3.3): neutralize animations,
+   transitions, and smooth scrolling app-wide. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Keep content clear of the fixed bottom nav and iOS home indicator. */
 .has-bottom-nav {
   padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+}
+
+/* Song-category chips — backed by the --cat-* tokens so a single source of
+   truth drives both light and dark. Underscored to match the enum values. */
+.cat-warm_up {
+  background: var(--cat-warm-up-bg);
+  color: var(--cat-warm-up-fg);
+}
+.cat-welcoming {
+  background: var(--cat-welcoming-bg);
+  color: var(--cat-welcoming-fg);
+}
+.cat-praise {
+  background: var(--cat-praise-bg);
+  color: var(--cat-praise-fg);
+}
+.cat-worship {
+  background: var(--cat-worship-bg);
+  color: var(--cat-worship-fg);
+}
+.cat-closing {
+  background: var(--cat-closing-bg);
+  color: var(--cat-closing-fg);
 }

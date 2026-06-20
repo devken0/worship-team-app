@@ -4,7 +4,8 @@ import { useActionState } from "react";
 import Logo from "@/components/Logo";
 import InstrumentPicker from "@/components/InstrumentPicker";
 import PasswordInput from "@/components/PasswordInput";
-import { Button } from "@/components/ui";
+import { Input } from "@/components/form";
+import { Button, FormMessage } from "@/components/ui";
 import { completeOnboarding, type OnboardingState } from "./actions";
 
 const initial: OnboardingState = {};
@@ -24,17 +25,7 @@ export default function WelcomePage() {
       </p>
 
       <form action={formAction} className="mt-6 space-y-5">
-        <div>
-          <label htmlFor="full_name" className="mb-1 block text-sm font-medium">
-            Your name
-          </label>
-          <input
-            id="full_name"
-            name="full_name"
-            required
-            className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
-          />
-        </div>
+        <Input label="Your name" name="full_name" required />
 
         <PasswordInput
           id="password"
@@ -62,11 +53,7 @@ export default function WelcomePage() {
           <InstrumentPicker />
         </div>
 
-        {state.error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-            {state.error}
-          </p>
-        )}
+        {state.error && <FormMessage>{state.error}</FormMessage>}
 
         <Button type="submit" full disabled={pending}>
           {pending ? "Saving…" : "Finish setup"}

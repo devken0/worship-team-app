@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import PasswordInput from "@/components/PasswordInput";
-import { Button } from "@/components/ui";
+import { Button, FormMessage } from "@/components/ui";
 import { changePassword, type PasswordState } from "@/app/profile/actions";
 
 const initial: PasswordState = {};
@@ -42,15 +42,9 @@ export default function ChangePasswordForm() {
         minLength={8}
       />
 
-      {state.error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          {state.error}
-        </p>
-      )}
+      {state.error && <FormMessage>{state.error}</FormMessage>}
       {state.changed && (
-        <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
-          Password updated.
-        </p>
+        <FormMessage tone="success">Password updated.</FormMessage>
       )}
 
       <Button type="submit" full disabled={pending}>

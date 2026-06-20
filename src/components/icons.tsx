@@ -165,6 +165,96 @@ export function WifiOffIcon(p: IconProps) {
   );
 }
 
+export function HomeIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5Z" />
+    </Svg>
+  );
+}
+
+export function SettingsIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-3a7.4 7.4 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7.3 7.3 0 0 0-2-1.2L14.5 2h-5l-.4 2.4a7.3 7.3 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1c.6.5 1.3.9 2 1.2l.4 2.4h5l.4-2.4c.7-.3 1.4-.7 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2Z" />
+    </Svg>
+  );
+}
+
+export function BookIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5Z" />
+      <path d="M9 7h6M9 11h6" />
+    </Svg>
+  );
+}
+
+/** Three justified lines — reads as a chord/lyric chart. */
+export function ChartIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M4 7h16M4 12h16M4 17h10" />
+    </Svg>
+  );
+}
+
+export function CameraIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+      <circle cx="12" cy="13" r="3" />
+    </Svg>
+  );
+}
+
+export function LinkIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </Svg>
+  );
+}
+
+/** Corner-bracket capture frame — reads as screenshot/snapshot. */
+export function FrameIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M4 8V6a2 2 0 0 1 2-2h2" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v2" />
+      <path d="M20 16v2a2 2 0 0 1-2 2h-2" />
+      <path d="M8 20H6a2 2 0 0 1-2-2v-2" />
+    </Svg>
+  );
+}
+
+export function SunIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </Svg>
+  );
+}
+
+export function MoonIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" />
+    </Svg>
+  );
+}
+
+export function MonitorIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <rect x="3" y="4" width="18" height="12" rx="2" />
+      <path d="M8 20h8M12 16v4" />
+    </Svg>
+  );
+}
+
 /** Solid play triangle (filled, not stroked) — for media play buttons. */
 export function PlayIcon({ size = 20, className }: IconProps) {
   return (

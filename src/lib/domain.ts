@@ -73,6 +73,19 @@ export const SONG_CATEGORY_LABELS: Record<SongCategory, string> = {
   closing: "Closing",
 };
 
+/**
+ * Chip class per category. Each maps to a `.cat-*` rule in globals.css that is
+ * backed by the `--cat-*` design tokens, so the colors stay on-brand and adapt
+ * to dark mode from a single source of truth.
+ */
+export const SONG_CATEGORY_CHIP: Record<SongCategory, string> = {
+  warm_up: "cat-warm_up",
+  welcoming: "cat-welcoming",
+  praise: "cat-praise",
+  worship: "cat-worship",
+  closing: "cat-closing",
+};
+
 /** Common attire colors for the "what to wear" picker (label + hex). */
 export const WEAR_COLORS: { label: string; hex: string }[] = [
   { label: "White", hex: "#ffffff" },

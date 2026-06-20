@@ -2,6 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  HomeIcon,
+  CalendarIcon,
+  BookIcon,
+  MicIcon,
+  SettingsIcon,
+} from "./icons";
 
 interface NavItem {
   href: string;
@@ -11,59 +18,41 @@ interface NavItem {
   match: (path: string) => boolean;
 }
 
+const ICON_SIZE = 22;
+
 const items: NavItem[] = [
   {
     href: "/",
     label: "Sunday",
     match: (p) => p === "/",
-    icon: (
-      <path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5Z" />
-    ),
+    icon: <HomeIcon size={ICON_SIZE} />,
   },
   {
     href: "/schedule",
     label: "Schedule",
     match: (p) => p.startsWith("/schedule"),
-    icon: (
-      <path d="M7 3v3m10-3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
-    ),
+    icon: <CalendarIcon size={ICON_SIZE} />,
   },
   {
     href: "/songbook",
     label: "Songs",
     match: (p) => p.startsWith("/songbook"),
-    icon: (
-      <>
-        <path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5Z" />
-        <path d="M9 7h6M9 11h6" />
-      </>
-    ),
+    icon: <BookIcon size={ICON_SIZE} />,
   },
   {
     href: "/recordings",
     label: "Recordings",
     match: (p) => p.startsWith("/recordings"),
-    icon: (
-      <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Zm-7 9a7 7 0 0 0 14 0M12 19v2" />
-    ),
+    icon: <MicIcon size={ICON_SIZE} />,
   },
   {
     href: "/manage",
     label: "Manage",
     adminOnly: true,
     match: (p) => p.startsWith("/manage"),
-    icon: (
-      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-3a7.4 7.4 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7.3 7.3 0 0 0-2-1.2L14.5 2h-5l-.4 2.4a7.3 7.3 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1c.6.5 1.3.9 2 1.2l.4 2.4h5l.4-2.4c.7-.3 1.4-.7 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2Z" />
-    ),
+    icon: <SettingsIcon size={ICON_SIZE} />,
   },
-  {
-    href: "/profile",
-    label: "Profile",
-    match: (p) => p.startsWith("/profile"),
-    icon: (
-      <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0" />
-    ),
-  },
+  // Profile lives as an initials avatar in the page header, not a nav tab.
 ];
 
 export default function BottomNav({ isAdmin }: { isAdmin: boolean }) {
@@ -75,7 +64,7 @@ export default function BottomNav({ isAdmin }: { isAdmin: boolean }) {
       className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="mx-auto flex max-w-md items-stretch justify-around">
+      <ul className="mx-auto flex max-w-2xl items-stretch justify-around">
         {visible.map((item) => {
           const active = item.match(pathname);
           return (
@@ -92,18 +81,7 @@ export default function BottomNav({ isAdmin }: { isAdmin: boolean }) {
                       : "text-muted group-hover:bg-brand-soft/60 group-hover:text-primary"
                   }`}
                 >
-                  <svg
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    {item.icon}
-                  </svg>
+                  {item.icon}
                 </span>
                 <span
                   className={`transition-colors ${

@@ -54,7 +54,7 @@ export default function PublicServiceView({
       <AssignmentsList assignments={assignments} names={names} />
 
       {service.notes && (
-        <Card className="bg-amber-50">
+        <Card className="bg-brand-soft">
           <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
             <NoteIcon size={14} />
             Notes

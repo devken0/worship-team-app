@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Card, ColorChip, SectionTitle } from "@/components/ui";
 import { ClockIcon, MapPinIcon, ShirtIcon, NoteIcon } from "@/components/icons";
 import AssignmentsList from "@/components/AssignmentsList";
-import SongCard from "@/components/SongCard";
+import SongCard, { type SongCardData } from "@/components/SongCard";
+import RehearsalButton from "@/components/RehearsalButton";
 import ReminderButton from "@/components/ReminderButton";
 import EvaluationFollowUps from "@/components/EvaluationFollowUps";
 import { chordsImageUrl, formatRehearsal, formatServiceDate } from "@/lib/format";
@@ -22,6 +23,30 @@ export default function ServiceDetailView({
 }) {
   const { service, assignments, songs, evaluation, names } = detail;
   const rehearsal = formatRehearsal(service.rehearsal_at);
+
+  // Built once and reused for both the song cards and the rehearsal viewer so
+  // the "performed key/tempo/chords" stays identical between them.
+  const songCards: { id: string; data: SongCardData }[] = songs.map((s) => ({
+    id: s.id,
+    data: {
+      title: s.title,
+      category: s.category,
+      youtube_url: s.youtube_url,
+      originalChordsText: s.chords_text,
+      originalChordsImageUrl: chordsImageUrl(s.chords_image_url),
+      originalChordsUrl: s.chords_url,
+      transposedChordsText: s.transposed_chords_text,
+      transposedChordsImageUrl: chordsImageUrl(s.transposed_chords_image_url),
+      transposedChordsUrl: s.transposed_chords_url,
+      leaderName: s.song_leader_id ? (names[s.song_leader_id] ?? null) : null,
+      author: s.author,
+      originalKey: s.song_key,
+      originalBpm: s.bpm,
+      transposedKey: s.transposed_key,
+      transposedBpm: s.transposed_bpm,
+      notes: s.notes,
+    },
+  }));
   const reminderText = isAdmin
     ? buildServiceReminder(detail, process.env.NEXT_PUBLIC_SITE_URL)
     : null;
@@ -75,7 +100,7 @@ export default function ServiceDetailView({
       />
 
       {service.notes && (
-        <Card className="bg-amber-50">
+        <Card className="bg-brand-soft">
           <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
             <NoteIcon size={14} />
             Notes
@@ -85,36 +110,16 @@ export default function ServiceDetailView({
       )}
 
       <SectionTitle>Songs</SectionTitle>
-      {songs.length === 0 ? (
+      {songCards.length === 0 ? (
         <p className="text-sm text-muted">No songs added yet.</p>
       ) : (
         <div className="space-y-3">
-          {songs.map((s) => (
-            <SongCard
-              key={s.id}
-              song={{
-                title: s.title,
-                category: s.category,
-                youtube_url: s.youtube_url,
-                originalChordsText: s.chords_text,
-                originalChordsImageUrl: chordsImageUrl(s.chords_image_url),
-                originalChordsUrl: s.chords_url,
-                transposedChordsText: s.transposed_chords_text,
-                transposedChordsImageUrl: chordsImageUrl(
-                  s.transposed_chords_image_url,
-                ),
-                transposedChordsUrl: s.transposed_chords_url,
-                leaderName: s.song_leader_id
-                  ? (names[s.song_leader_id] ?? null)
-                  : null,
-                author: s.author,
-                originalKey: s.song_key,
-                originalBpm: s.bpm,
-                transposedKey: s.transposed_key,
-                transposedBpm: s.transposed_bpm,
-                notes: s.notes,
-              }}
-            />
+          <RehearsalButton
+            songs={songCards.map((c) => c.data)}
+            title={formatServiceDate(service.service_date)}
+          />
+          {songCards.map((c) => (
+            <SongCard key={c.id} song={c.data} />
           ))}
         </div>
       )}

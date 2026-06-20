@@ -40,7 +40,7 @@ export default function DeleteButton({
         onClick={() => setOpen(true)}
         className={
           className ??
-          "flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-card px-4 py-3 text-sm font-semibold text-red-600 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          "flex w-full items-center justify-center gap-2 rounded-xl border border-danger/30 bg-card px-4 py-3 text-sm font-semibold text-danger active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         }
       >
         <TrashIcon size={16} />

@@ -27,10 +27,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#faf8f4",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf8f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#17150f" },
+  ],
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: "cover",
 };
 
@@ -46,8 +48,19 @@ export default async function RootLayout({
   const showNav = !!user && !!user.profile?.onboarded;
 
   return (
-    <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${geistSans.variable} h-full antialiased`}
+    >
       <body className="min-h-full flex flex-col">
+        {/* Resolve the saved Light/Dark/System theme before first paint so there
+            is no flash of the wrong theme. Mirrors the logic in ThemeToggle. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||((!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light';}catch(e){}})();`,
+          }}
+        />
         <ServiceWorkerRegister />
         <ToastProvider>
           <div className={`flex-1 ${showNav ? "has-bottom-nav" : ""}`}>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader, Card, EmptyState } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import { MicIcon } from "@/components/icons";
 import Paginated from "@/components/Paginated";
 import { formatServiceDate } from "@/lib/format";
@@ -32,7 +33,11 @@ export default async function RecordingsIndexPage() {
 
   return (
     <>
-      <PageHeader title="Recordings" subtitle="Listen back & improve" />
+      <PageHeader
+        title="Recordings"
+        subtitle="Listen back & improve"
+        avatar={<HeaderAvatar />}
+      />
       <Page>
         {list.length === 0 ? (
           <EmptyState

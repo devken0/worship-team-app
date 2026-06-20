@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatDuration } from "@/lib/format";
-import { Button } from "@/components/ui";
+import { Button, FormMessage } from "@/components/ui";
 
 type Phase = "idle" | "recording" | "preview" | "uploading";
 
@@ -277,11 +277,7 @@ export default function Recorder({
         </form>
       </details>
 
-      {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
-      )}
+      {error && <FormMessage>{error}</FormMessage>}
     </div>
   );
 }

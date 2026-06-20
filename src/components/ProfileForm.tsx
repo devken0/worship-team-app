@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import InstrumentPicker from "@/components/InstrumentPicker";
-import { Button } from "@/components/ui";
+import { Input } from "@/components/form";
+import { Button, FormMessage } from "@/components/ui";
 import { updateProfile, type ProfileState } from "@/app/profile/actions";
 import type { Profile } from "@/lib/domain";
 
@@ -13,34 +14,20 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
 
   return (
     <form action={formAction} className="space-y-5">
-      <div>
-        <label htmlFor="full_name" className="mb-1 block text-sm font-medium">
-          Name
-        </label>
-        <input
-          id="full_name"
-          name="full_name"
-          defaultValue={profile.full_name}
-          required
-          className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
-        />
-      </div>
+      <Input
+        label="Name"
+        name="full_name"
+        defaultValue={profile.full_name}
+        required
+      />
 
       <div>
         <p className="mb-2 block text-sm font-medium">What you play / sing</p>
         <InstrumentPicker selected={profile.instruments} />
       </div>
 
-      {state.error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          {state.error}
-        </p>
-      )}
-      {state.saved && (
-        <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
-          Saved!
-        </p>
-      )}
+      {state.error && <FormMessage>{state.error}</FormMessage>}
+      {state.saved && <FormMessage tone="success">Saved!</FormMessage>}
 
       <Button type="submit" full disabled={pending}>
         {pending ? "Saving…" : "Save changes"}

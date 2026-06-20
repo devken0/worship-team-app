@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Page, PageHeader, Card, EmptyState, PrimaryLink } from "@/components/ui";
 import { ColorChip } from "@/components/ui";
 import Paginated from "@/components/Paginated";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import { PlusIcon, CalendarIcon } from "@/components/icons";
 import { formatServiceDate, todayInManila } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/domain";
@@ -118,6 +119,7 @@ export default async function SchedulePage() {
     <>
       <PageHeader
         title="Schedule"
+        avatar={<HeaderAvatar />}
         action={
           isAdmin ? (
             <PrimaryLink href="/manage/service/new">

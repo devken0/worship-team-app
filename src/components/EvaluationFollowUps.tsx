@@ -17,7 +17,7 @@ export default function EvaluationFollowUps({
   problems: string;
 }) {
   return (
-    <Card className="bg-amber-50">
+    <Card className="bg-brand-soft">
       <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
         <NoteIcon size={14} />
         Follow-ups from {dateLabel}

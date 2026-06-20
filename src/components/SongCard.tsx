@@ -2,9 +2,20 @@
 
 import { useState } from "react";
 import { youTubeId } from "@/lib/format";
-import { SONG_CATEGORY_LABELS, type SongCategory } from "@/lib/domain";
-import { PlayIcon } from "@/components/icons";
+import {
+  SONG_CATEGORY_LABELS,
+  SONG_CATEGORY_CHIP,
+  type SongCategory,
+} from "@/lib/domain";
+import {
+  PlayIcon,
+  ChartIcon,
+  CameraIcon,
+  LinkIcon,
+  FrameIcon,
+} from "@/components/icons";
 import SongShareSheet from "@/components/SongShareSheet";
+import { resolvePerformed } from "@/lib/song";
 
 export interface SongCardData {
   title: string;
@@ -38,141 +49,43 @@ export interface SongCardData {
   notes?: string | null;
 }
 
-const categoryColor: Record<SongCategory, string> = {
-  warm_up: "bg-orange-100 text-orange-800",
-  welcoming: "bg-amber-100 text-amber-800",
-  praise: "bg-sky-100 text-sky-800",
-  worship: "bg-violet-100 text-violet-800",
-  closing: "bg-emerald-100 text-emerald-800",
-};
-
-// Lightweight inline icons (no icon dependency); inherit color via currentColor.
-const iconClass = "h-4 w-4 shrink-0";
-
-function ChartIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      className={iconClass}
-      aria-hidden="true"
-    >
-      <line x1="4" y1="7" x2="20" y2="7" />
-      <line x1="4" y1="12" x2="20" y2="12" />
-      <line x1="4" y1="17" x2="14" y2="17" />
-    </svg>
-  );
-}
-
-function CameraIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={iconClass}
-      aria-hidden="true"
-    >
-      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-      <circle cx="12" cy="13" r="3" />
-    </svg>
-  );
-}
-
-function LinkIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={iconClass}
-      aria-hidden="true"
-    >
-      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-    </svg>
-  );
-}
-
-// Corner-bracket "screen capture" frame — reads as screenshot/snapshot.
-function ScreenshotIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-[18px] w-[18px]"
-      aria-hidden="true"
-    >
-      <path d="M4 8V6a2 2 0 0 1 2-2h2" />
-      <path d="M16 4h2a2 2 0 0 1 2 2v2" />
-      <path d="M20 16v2a2 2 0 0 1-2 2h-2" />
-      <path d="M8 20H6a2 2 0 0 1-2-2v-2" />
-    </svg>
-  );
-}
-
 export default function SongCard({ song }: { song: SongCardData }) {
   const [playing, setPlaying] = useState(false);
   const [showChords, setShowChords] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const ytId = youTubeId(song.youtube_url);
 
-  // Performed value = transposed override when set, else the original. Show the
-  // "(orig. …)" note + "Transposed" badge only when both exist and differ.
-  const origKey = song.originalKey?.trim() || null;
-  const transKey = song.transposedKey?.trim() || null;
-  const performedKey = transKey ?? origKey;
-  const keyTransposed = !!(transKey && origKey && transKey !== origKey);
-
-  const origBpm = song.originalBpm ?? null;
-  const transBpm = song.transposedBpm ?? null;
-  const performedBpm = transBpm ?? origBpm;
-  const bpmTransposed =
-    transBpm != null && origBpm != null && transBpm !== origBpm;
-
-  // Performed chords = the transposed chart when present, else the original
-  // (per field, since a chart in the new key replaces the original). But once
-  // the *key* is transposed, the original chart is in the wrong key, so we
-  // don't fall back to it — a blank transposed field shows nothing rather than
-  // misleading original-key chords. (A BPM-only change keeps the chords valid,
-  // so the fallback still applies there.)
-  const origChordsText = keyTransposed ? null : song.originalChordsText;
-  const origChordsImageUrl = keyTransposed ? null : song.originalChordsImageUrl;
-  const origChordsUrl = keyTransposed ? null : song.originalChordsUrl;
-
-  const chordsText = song.transposedChordsText?.trim() || origChordsText;
-  const chordsImageUrl = song.transposedChordsImageUrl ?? origChordsImageUrl;
-  const chordsUrl = song.transposedChordsUrl?.trim() || origChordsUrl;
+  // Performed key/tempo/chords (transposed override vs. original) — shared with
+  // the rehearsal viewer so the two stay in sync. Show the "(orig. …)" note +
+  // "Transposed" badge only when both exist and differ.
+  const {
+    origKey,
+    performedKey,
+    keyTransposed,
+    origBpm,
+    performedBpm,
+    bpmTransposed,
+    chordsText,
+    chordsImageUrl,
+    chordsUrl,
+  } = resolvePerformed(song);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card">
       <button
         type="button"
         onClick={() => setShowShare(true)}
         aria-label={`Screenshot view of ${song.title}`}
         title="Screenshot view"
-        className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full text-muted transition active:scale-90 hover:bg-background hover:text-foreground"
+        className="absolute right-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full text-muted transition active:scale-90 hover:bg-background hover:text-foreground"
       >
-        <ScreenshotIcon />
+        <FrameIcon size={18} />
       </button>
 
       <div className="p-4 pr-12">
         {song.category && (
           <span
-            className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${categoryColor[song.category]}`}
+            className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${SONG_CATEGORY_CHIP[song.category]}`}
           >
             {SONG_CATEGORY_LABELS[song.category]}
           </span>
@@ -192,7 +105,7 @@ export default function SongCard({ song }: { song: SongCardData }) {
               <span className="rounded-full bg-background px-2 py-0.5 text-[11px] font-semibold text-muted">
                 Key {performedKey}
                 {keyTransposed && (
-                  <span className="font-normal text-muted/70">
+                  <span className="font-normal text-muted">
                     {" "}
                     (orig. {origKey})
                   </span>
@@ -203,7 +116,7 @@ export default function SongCard({ song }: { song: SongCardData }) {
               <span className="rounded-full bg-background px-2 py-0.5 text-[11px] font-semibold text-muted">
                 {performedBpm} BPM
                 {bpmTransposed && (
-                  <span className="font-normal text-muted/70">
+                  <span className="font-normal text-muted">
                     {" "}
                     (orig. {origBpm})
                   </span>
@@ -211,14 +124,14 @@ export default function SongCard({ song }: { song: SongCardData }) {
               </span>
             )}
             {(keyTransposed || bpmTransposed) && (
-              <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-800">
+              <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-primary">
                 Transposed
               </span>
             )}
           </div>
         )}
         {song.notes && (
-          <p className="mt-2 whitespace-pre-wrap rounded-lg bg-amber-50 px-3 py-2 text-sm text-foreground">
+          <p className="mt-2 whitespace-pre-wrap rounded-lg bg-brand-soft px-3 py-2 text-sm text-foreground">
             {song.notes}
           </p>
         )}
@@ -281,7 +194,7 @@ export default function SongCard({ song }: { song: SongCardData }) {
                   onClick={() => setShowChords((v) => !v)}
                   className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium"
                 >
-                  <ChartIcon />
+                  <ChartIcon size={16} className="shrink-0" />
                   <span>Chord chart</span>
                   <span className="ml-auto text-muted">
                     {showChords ? "Hide" : "Show"}
@@ -302,7 +215,7 @@ export default function SongCard({ song }: { song: SongCardData }) {
                 rel="noreferrer"
                 className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary"
               >
-                <CameraIcon />
+                <CameraIcon size={16} className="shrink-0" />
                 <span>Chord photo</span>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -321,7 +234,7 @@ export default function SongCard({ song }: { song: SongCardData }) {
                 rel="noreferrer"
                 className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary"
               >
-                <LinkIcon />
+                <LinkIcon size={16} className="shrink-0" />
                 <span>Chord link</span>
                 <span className="ml-auto text-muted">↗</span>
               </a>

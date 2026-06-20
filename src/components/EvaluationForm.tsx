@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { saveEvaluation, type EvaluationState } from "@/app/schedule/[id]/actions";
 import { EVALUATION_SECTIONS, type Evaluation } from "@/lib/domain";
-import { Button } from "@/components/ui";
+import { Button, buttonStyles, FormMessage } from "@/components/ui";
+import { Textarea } from "@/components/form";
 import EvaluationFollowUps from "@/components/EvaluationFollowUps";
 
 const initial: EvaluationState = {};
@@ -53,32 +55,28 @@ export default function EvaluationForm({
       </div>
 
       {EVALUATION_SECTIONS.map(({ key, label }) => (
-        <div key={key}>
-          <label
-            htmlFor={key}
-            className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted"
-          >
-            {label}
-          </label>
-          <textarea
-            id={key}
-            name={key}
-            rows={5}
-            defaultValue={evaluation?.[key] ?? ""}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base outline-none focus:border-primary"
-          />
-        </div>
+        <Textarea
+          key={key}
+          id={key}
+          name={key}
+          label={label}
+          labelClassName="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted"
+          rows={5}
+          defaultValue={evaluation?.[key] ?? ""}
+        />
       ))}
 
-      {state.error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          {state.error}
-        </p>
-      )}
+      {state.error && <FormMessage>{state.error}</FormMessage>}
 
       <Button type="submit" full disabled={pending}>
         {pending ? "Saving…" : "Save minutes"}
       </Button>
+      <Link
+        href={`/schedule/${serviceId}`}
+        className={buttonStyles({ variant: "ghost", full: true })}
+      >
+        Cancel
+      </Link>
     </form>
   );
 }

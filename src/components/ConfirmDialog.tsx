@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 /**
  * Accessible confirmation modal. Renders nothing when `open` is false.
- * Escape and backdrop click cancel; focus moves into the panel on open.
+ * Escape and backdrop click cancel; focus is trapped inside the panel while open
+ * and restored to the trigger on close.
  */
 export default function ConfirmDialog({
   open,
@@ -28,10 +30,10 @@ export default function ConfirmDialog({
   onCancel: () => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(panelRef, open);
 
   useEffect(() => {
     if (!open) return;
-    panelRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !pending) onCancel();
     };
@@ -43,7 +45,7 @@ export default function ConfirmDialog({
 
   const confirmClasses =
     tone === "danger"
-      ? "bg-red-600 text-white"
+      ? "bg-danger text-danger-foreground"
       : "bg-primary text-primary-foreground";
 
   return (

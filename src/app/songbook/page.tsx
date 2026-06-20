@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Page, PageHeader, EmptyState } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import { MusicIcon } from "@/components/icons";
 import SongBookBrowser, { type BrowserSong } from "@/components/SongBookBrowser";
 import { listLibrarySongs, getPlayStatsForLibrarySongs } from "@/lib/library";
@@ -24,7 +25,11 @@ export default async function SongBookPage() {
 
   return (
     <>
-      <PageHeader title="Song Book" subtitle="Every song the team uses" />
+      <PageHeader
+        title="Song Book"
+        subtitle="Every song the team uses"
+        avatar={<HeaderAvatar />}
+      />
       <Page>
         {rows.length === 0 ? (
           <EmptyState

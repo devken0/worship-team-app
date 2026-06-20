@@ -12,16 +12,19 @@ export function PageHeader({
   title,
   subtitle,
   action,
+  avatar,
   back,
 }: {
   title: React.ReactNode;
   subtitle?: string;
   action?: React.ReactNode;
+  /** Account affordance shown at the far right of top-level screens. */
+  avatar?: React.ReactNode;
   back?: { href: string; label?: string };
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
-      <div className="mx-auto flex max-w-md items-start justify-between gap-3 px-4 py-3">
+      <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
         <div className="flex min-w-0 items-start gap-2.5">
           {back ? (
             <Link
@@ -35,20 +38,56 @@ export function PageHeader({
             <Logo size={28} className="shrink-0" />
           )}
           <div className="min-w-0">
-            <h1 className="truncate text-lg font-semibold leading-7">{title}</h1>
+            <h1 className="truncate text-title font-semibold">{title}</h1>
             {subtitle && (
               <p className="truncate text-sm text-muted">{subtitle}</p>
             )}
           </div>
         </div>
-        {action}
+        {(action || avatar) && (
+          <div className="flex shrink-0 items-center gap-1.5">
+            {action}
+            {avatar}
+          </div>
+        )}
       </div>
     </header>
   );
 }
 
+/** Derive up-to-two-letter initials from a name, falling back to email. */
+export function initials(name?: string | null, email?: string | null) {
+  const source = (name || "").trim();
+  if (source) {
+    const parts = source.split(/\s+/);
+    const first = parts[0]?.[0] ?? "";
+    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
+    return (first + last).toUpperCase();
+  }
+  return (email?.[0] ?? "?").toUpperCase();
+}
+
+/** Round initials avatar. Pass `as="link"` semantics by wrapping in a Link. */
+export function Avatar({
+  name,
+  email,
+  className = "",
+}: {
+  name?: string | null;
+  email?: string | null;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`flex h-9 w-9 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-primary ring-1 ring-border ${className}`}
+    >
+      {initials(name, email)}
+    </span>
+  );
+}
+
 export function Page({ children }: { children: React.ReactNode }) {
-  return <main className="mx-auto max-w-md px-4 py-4">{children}</main>;
+  return <main className="mx-auto max-w-2xl px-4 py-4">{children}</main>;
 }
 
 export function Card({
@@ -69,7 +108,10 @@ export function Card({
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-muted">
+    <h2 className="mb-2 mt-6 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
+      {/* Small gold tick ties each section back to the logo palette and breaks
+          up otherwise-monotonous stacks of cards. */}
+      <span aria-hidden="true" className="h-3.5 w-1 rounded-full bg-brand" />
       {children}
     </h2>
   );
@@ -95,14 +137,18 @@ export function ColorChip({
   );
 }
 
-type ButtonVariant = "primary" | "secondary" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 type ButtonSize = "sm" | "md";
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
   primary:
     "bg-primary text-primary-foreground shadow-sm focus-visible:ring-primary",
-  secondary: "bg-foreground text-background focus-visible:ring-foreground",
+  // Quiet, bordered neutral — lighter weight than a solid dark slab.
+  secondary:
+    "border border-border bg-card text-foreground hover:bg-brand-soft/60 focus-visible:ring-primary",
   ghost: "text-foreground hover:bg-brand-soft focus-visible:ring-primary",
+  danger:
+    "border border-danger/30 bg-card text-danger hover:bg-danger-soft focus-visible:ring-danger",
 };
 
 const BUTTON_SIZES: Record<ButtonSize, string> = {
@@ -171,8 +217,36 @@ export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={`animate-pulse rounded-md bg-border/70 ${className}`}
+      className={`animate-pulse rounded-lg bg-border/70 ${className}`}
     />
+  );
+}
+
+/**
+ * Inline form feedback — the single source of truth for the red/green message
+ * blocks scattered across forms. `tone` routes through semantic tokens so it
+ * adapts to dark mode.
+ */
+export function FormMessage({
+  tone = "error",
+  children,
+  className = "",
+}: {
+  tone?: "error" | "success";
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const tones = {
+    error: "bg-danger-soft text-danger",
+    success: "bg-success-soft text-success",
+  };
+  return (
+    <p
+      role={tone === "error" ? "alert" : "status"}
+      className={`rounded-lg px-3 py-2 text-sm ${tones[tone]} ${className}`}
+    >
+      {children}
+    </p>
   );
 }
 

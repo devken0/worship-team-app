@@ -53,8 +53,8 @@ export default function ToastProvider({
             key={t.id}
             className={`pointer-events-auto w-full max-w-sm rounded-xl px-4 py-3 text-sm font-medium shadow-lg ${
               t.tone === "success"
-                ? "bg-green-600 text-white"
-                : "bg-red-600 text-white"
+                ? "bg-success text-success-foreground"
+                : "bg-danger text-danger-foreground"
             }`}
           >
             {t.message}

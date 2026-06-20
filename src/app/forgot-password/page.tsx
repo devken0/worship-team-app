@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import Logo from "@/components/Logo";
-import { Button } from "@/components/ui";
+import { Input } from "@/components/form";
+import { Button, FormMessage } from "@/components/ui";
 import { requestPasswordReset, type ForgotPasswordState } from "./actions";
 
 const initial: ForgotPasswordState = {};
@@ -25,31 +26,21 @@ export default function ForgotPasswordPage() {
       </div>
 
       {state.sent ? (
-        <div className="rounded-xl bg-green-50 px-4 py-4 text-center text-sm text-green-800">
+        <div className="rounded-xl bg-success-soft px-4 py-4 text-center text-sm text-success">
           If an account exists for that email, a reset link is on its way. Check
           your inbox and follow the link to choose a new password.
         </div>
       ) : (
         <form action={formAction} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="w-full rounded-xl border border-border bg-card px-3 py-3 text-base outline-none focus:border-primary focus-visible:ring-1 focus-visible:ring-primary"
-            />
-          </div>
+          <Input
+            label="Email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+          />
 
-          {state.error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-              {state.error}
-            </p>
-          )}
+          {state.error && <FormMessage>{state.error}</FormMessage>}
 
           <Button type="submit" full disabled={pending}>
             {pending ? "Sending…" : "Send reset link"}

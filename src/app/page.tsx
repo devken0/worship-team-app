@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getCurrentOrNextService, getPreviousFollowUps } from "@/lib/services";
 import { Page, PageHeader, Card, EmptyState } from "@/components/ui";
+import HeaderAvatar from "@/components/HeaderAvatar";
 import { CalendarIcon } from "@/components/icons";
 import ServiceDetailView from "@/components/ServiceDetailView";
 import { formatServiceDate, todayInManila } from "@/lib/format";
@@ -21,7 +22,11 @@ export default async function HomePage() {
   if (!detail) {
     return (
       <>
-        <PageHeader title={`Hi, ${firstName} 👋`} subtitle="This Sunday" />
+        <PageHeader
+          title={`Hi, ${firstName} 👋`}
+          subtitle="This Sunday"
+          avatar={<HeaderAvatar />}
+        />
         <Page>
           <EmptyState
             icon={<CalendarIcon size={24} />}
@@ -56,13 +61,14 @@ export default async function HomePage() {
       <PageHeader
         title={`Hi, ${firstName} 👋`}
         subtitle={isUpcoming ? "This Sunday" : "Most recent service"}
+        avatar={<HeaderAvatar />}
       />
       <Page>
         <Card className="mb-3 border-transparent bg-gradient-to-br from-[#e8730f] via-primary to-[#bf520a] text-primary-foreground">
           <p className="text-sm font-medium uppercase tracking-wide opacity-90">
             {isUpcoming ? "Sunday service" : "Service"}
           </p>
-          <p className="text-2xl font-extrabold leading-tight tracking-tight">
+          <p className="text-display font-extrabold">
             {formatServiceDate(detail.service.service_date)}
           </p>
           <div className="mt-3 border-t border-white/20 pt-3">

@@ -30,7 +30,7 @@ export default function RecordingItem({ rec }: { rec: RecordingView }) {
             label="Delete"
             confirmTitle="Delete this recording?"
             confirmMessage={`"${rec.title}" will be permanently removed. This can't be undone.`}
-            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           />
         )}
       </div>

@@ -65,7 +65,7 @@ export default async function MembersPage() {
                     )}
                   </p>
                   {!m.onboarded ? (
-                    <p className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                    <p className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-primary">
                       Invited · hasn&apos;t set up yet
                     </p>
                   ) : (

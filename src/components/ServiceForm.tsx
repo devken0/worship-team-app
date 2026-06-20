@@ -19,7 +19,8 @@ import {
 import { XIcon } from "@/components/icons";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Button, buttonStyles } from "@/components/ui";
+import { Button, buttonStyles, FormMessage } from "@/components/ui";
+import { Input, Textarea, Select, controlClass } from "@/components/form";
 import { saveService, type SongInput } from "@/app/manage/service/actions";
 
 export interface MemberOption {
@@ -39,9 +40,6 @@ export interface ServiceFormInitial {
   backupSingers: string[];
   songs: SongInput[];
 }
-
-const inputClass =
-  "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-base outline-none focus:border-primary";
 
 function emptySong(category: SongCategory): SongInput {
   return {
@@ -164,7 +162,7 @@ export default function ServiceForm({
         id={id}
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value || null)}
-        className={inputClass}
+        className={controlClass}
       >
         <option value="">— Unassigned —</option>
         {members.map((m) => (
@@ -290,60 +288,40 @@ export default function ServiceForm({
     <div className="space-y-6">
       {/* Service basics */}
       <section className="space-y-3">
-        <div>
-          <label htmlFor="date" className="mb-1 block text-sm font-medium">
-            Sunday service date
-          </label>
-          <input
-            id="date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label htmlFor="reh" className="mb-1 block text-sm font-medium">
-            Rehearsal date &amp; time
-          </label>
-          <input
-            id="reh"
-            type="datetime-local"
-            value={rehearsal}
-            onChange={(e) => setRehearsal(e.target.value)}
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label htmlFor="loc" className="mb-1 block text-sm font-medium">
-            Rehearsal location
-          </label>
-          <input
-            id="loc"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g. Church sanctuary"
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label htmlFor="color" className="mb-1 block text-sm font-medium">
-            Color to wear
-          </label>
-          <select
-            id="color"
-            value={colorLabel}
-            onChange={(e) => setColorLabel(e.target.value)}
-            className={inputClass}
-          >
-            <option value="">— None —</option>
-            {WEAR_COLORS.map((c) => (
-              <option key={c.label} value={c.label}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Input
+          id="date"
+          label="Sunday service date"
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+        <Input
+          id="reh"
+          label="Rehearsal date & time"
+          type="datetime-local"
+          value={rehearsal}
+          onChange={(e) => setRehearsal(e.target.value)}
+        />
+        <Input
+          id="loc"
+          label="Rehearsal location"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="e.g. Church sanctuary"
+        />
+        <Select
+          id="color"
+          label="Color to wear"
+          value={colorLabel}
+          onChange={(e) => setColorLabel(e.target.value)}
+        >
+          <option value="">— None —</option>
+          {WEAR_COLORS.map((c) => (
+            <option key={c.label} value={c.label}>
+              {c.label}
+            </option>
+          ))}
+        </Select>
       </section>
 
       {/* Band & service roles */}
@@ -441,21 +419,14 @@ export default function ServiceForm({
                   Remove
                 </button>
               </div>
-              <div>
-                <label
-                  htmlFor={`song-${i}-title`}
-                  className="mb-1 block text-xs text-muted"
-                >
-                  Song title
-                </label>
-                <input
-                  id={`song-${i}-title`}
-                  value={song.title}
-                  onChange={(e) => updateSong(i, { title: e.target.value })}
-                  placeholder="e.g. 10,000 Reasons"
-                  className={inputClass}
-                />
-              </div>
+              <Input
+                id={`song-${i}-title`}
+                label="Song title"
+                labelClassName="mb-1 block text-xs text-muted"
+                value={song.title}
+                onChange={(e) => updateSong(i, { title: e.target.value })}
+                placeholder="e.g. 10,000 Reasons"
+              />
               <div>
                 <label className="mb-1 block text-xs text-muted">
                   Song leader
@@ -464,66 +435,43 @@ export default function ServiceForm({
                   updateSong(i, { song_leader_id: v }),
                 )}
               </div>
-              <div>
-                <label
-                  htmlFor={`song-${i}-author`}
-                  className="mb-1 block text-xs text-muted"
-                >
-                  Author / artist
-                </label>
-                <input
-                  id={`song-${i}-author`}
-                  list="song-authors"
-                  value={song.author}
-                  onChange={(e) => updateSong(i, { author: e.target.value })}
-                  placeholder="e.g. Matt Redman"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor={`song-${i}-youtube`}
-                  className="mb-1 block text-xs text-muted"
-                >
-                  YouTube link
-                </label>
-                <input
-                  id={`song-${i}-youtube`}
-                  value={song.youtube_url}
-                  onChange={(e) =>
-                    updateSong(i, { youtube_url: e.target.value })
-                  }
-                  placeholder="Paste from the pastor"
-                  className={inputClass}
-                />
-              </div>
+              <Input
+                id={`song-${i}-author`}
+                label="Author / artist"
+                labelClassName="mb-1 block text-xs text-muted"
+                list="song-authors"
+                value={song.author}
+                onChange={(e) => updateSong(i, { author: e.target.value })}
+                placeholder="e.g. Matt Redman"
+              />
+              <Input
+                id={`song-${i}-youtube`}
+                label="YouTube link"
+                labelClassName="mb-1 block text-xs text-muted"
+                value={song.youtube_url}
+                onChange={(e) =>
+                  updateSong(i, { youtube_url: e.target.value })
+                }
+                placeholder="Paste from the pastor"
+              />
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label
-                    htmlFor={`song-${i}-key`}
-                    className="mb-1 block text-xs text-muted"
-                  >
-                    Original key
-                  </label>
-                  <input
+                  <Input
                     id={`song-${i}-key`}
+                    label="Original key"
+                    labelClassName="mb-1 block text-xs text-muted"
                     value={song.song_key}
                     onChange={(e) =>
                       updateSong(i, { song_key: e.target.value })
                     }
                     placeholder="e.g. G"
-                    className={inputClass}
                   />
                 </div>
                 <div className="flex-1">
-                  <label
-                    htmlFor={`song-${i}-bpm`}
-                    className="mb-1 block text-xs text-muted"
-                  >
-                    Original BPM
-                  </label>
-                  <input
+                  <Input
                     id={`song-${i}-bpm`}
+                    label="Original BPM"
+                    labelClassName="mb-1 block text-xs text-muted"
                     type="number"
                     inputMode="numeric"
                     min={1}
@@ -536,28 +484,21 @@ export default function ServiceForm({
                       })
                     }
                     placeholder="e.g. 73"
-                    className={inputClass}
                   />
                 </div>
               </div>
-              <div>
-                <label
-                  htmlFor={`song-${i}-chords`}
-                  className="mb-1 block text-xs text-muted"
-                >
-                  Original chords
-                </label>
-                <textarea
-                  id={`song-${i}-chords`}
-                  value={song.chords_text}
-                  onChange={(e) =>
-                    updateSong(i, { chords_text: e.target.value })
-                  }
-                  placeholder="Paste the chord chart here (optional)"
-                  rows={3}
-                  className={`${inputClass} font-mono text-sm`}
-                />
-              </div>
+              <Textarea
+                id={`song-${i}-chords`}
+                label="Original chords"
+                labelClassName="mb-1 block text-xs text-muted"
+                value={song.chords_text}
+                onChange={(e) =>
+                  updateSong(i, { chords_text: e.target.value })
+                }
+                placeholder="Paste the chord chart here (optional)"
+                rows={3}
+                className="font-mono text-sm"
+              />
               <div>
                 <label className="mb-1 block text-xs text-muted">
                   Original chord photo
@@ -573,7 +514,7 @@ export default function ServiceForm({
                     <button
                       type="button"
                       onClick={() => updateSong(i, { chords_image_url: null })}
-                      className="text-sm font-medium text-red-600"
+                      className="text-sm font-medium text-danger"
                     >
                       Remove photo
                     </button>
@@ -597,23 +538,16 @@ export default function ServiceForm({
                   <p className="mt-1 text-xs text-muted">Uploading photo…</p>
                 )}
               </div>
-              <div>
-                <label
-                  htmlFor={`song-${i}-chords-url`}
-                  className="mb-1 block text-xs text-muted"
-                >
-                  Original chords link
-                </label>
-                <input
-                  id={`song-${i}-chords-url`}
-                  value={song.chords_url}
-                  onChange={(e) =>
-                    updateSong(i, { chords_url: e.target.value })
-                  }
-                  placeholder="e.g. published chords URL"
-                  className={inputClass}
-                />
-              </div>
+              <Input
+                id={`song-${i}-chords-url`}
+                label="Original chords link"
+                labelClassName="mb-1 block text-xs text-muted"
+                value={song.chords_url}
+                onChange={(e) =>
+                  updateSong(i, { chords_url: e.target.value })
+                }
+                placeholder="e.g. published chords URL"
+              />
               <div className="space-y-3 rounded-xl border border-border p-3">
                 <label className="flex items-start gap-2 text-sm">
                   <input
@@ -634,31 +568,22 @@ export default function ServiceForm({
                   <>
                     <div className="flex gap-3">
                       <div className="flex-1">
-                        <label
-                          htmlFor={`song-${i}-tkey`}
-                          className="mb-1 block text-xs text-muted"
-                        >
-                          Transposed key
-                        </label>
-                        <input
+                        <Input
                           id={`song-${i}-tkey`}
+                          label="Transposed key"
+                          labelClassName="mb-1 block text-xs text-muted"
                           value={song.transposed_key}
                           onChange={(e) =>
                             updateSong(i, { transposed_key: e.target.value })
                           }
                           placeholder="e.g. A"
-                          className={inputClass}
                         />
                       </div>
                       <div className="flex-1">
-                        <label
-                          htmlFor={`song-${i}-tbpm`}
-                          className="mb-1 block text-xs text-muted"
-                        >
-                          Transposed BPM
-                        </label>
-                        <input
+                        <Input
                           id={`song-${i}-tbpm`}
+                          label="Transposed BPM"
+                          labelClassName="mb-1 block text-xs text-muted"
                           type="number"
                           inputMode="numeric"
                           min={1}
@@ -671,30 +596,23 @@ export default function ServiceForm({
                             })
                           }
                           placeholder="e.g. 80"
-                          className={inputClass}
                         />
                       </div>
                     </div>
-                    <div>
-                      <label
-                        htmlFor={`song-${i}-tchords`}
-                        className="mb-1 block text-xs text-muted"
-                      >
-                        Transposed chords
-                      </label>
-                      <textarea
-                        id={`song-${i}-tchords`}
-                        value={song.transposed_chords_text}
-                        onChange={(e) =>
-                          updateSong(i, {
-                            transposed_chords_text: e.target.value,
-                          })
-                        }
-                        placeholder="Paste the transposed chord chart here"
-                        rows={3}
-                        className={`${inputClass} font-mono text-sm`}
-                      />
-                    </div>
+                    <Textarea
+                      id={`song-${i}-tchords`}
+                      label="Transposed chords"
+                      labelClassName="mb-1 block text-xs text-muted"
+                      value={song.transposed_chords_text}
+                      onChange={(e) =>
+                        updateSong(i, {
+                          transposed_chords_text: e.target.value,
+                        })
+                      }
+                      placeholder="Paste the transposed chord chart here"
+                      rows={3}
+                      className="font-mono text-sm"
+                    />
                     <div>
                       <label className="mb-1 block text-xs text-muted">
                         Transposed chord photo
@@ -718,7 +636,7 @@ export default function ServiceForm({
                                 transposed_chords_image_url: null,
                               })
                             }
-                            className="text-sm font-medium text-red-600"
+                            className="text-sm font-medium text-danger"
                           >
                             Remove photo
                           </button>
@@ -750,44 +668,30 @@ export default function ServiceForm({
                         </p>
                       )}
                     </div>
-                    <div>
-                      <label
-                        htmlFor={`song-${i}-tchords-url`}
-                        className="mb-1 block text-xs text-muted"
-                      >
-                        Transposed chords link
-                      </label>
-                      <input
-                        id={`song-${i}-tchords-url`}
-                        value={song.transposed_chords_url}
-                        onChange={(e) =>
-                          updateSong(i, {
-                            transposed_chords_url: e.target.value,
-                          })
-                        }
-                        placeholder="e.g. published chords URL"
-                        className={inputClass}
-                      />
-                    </div>
+                    <Input
+                      id={`song-${i}-tchords-url`}
+                      label="Transposed chords link"
+                      labelClassName="mb-1 block text-xs text-muted"
+                      value={song.transposed_chords_url}
+                      onChange={(e) =>
+                        updateSong(i, {
+                          transposed_chords_url: e.target.value,
+                        })
+                      }
+                      placeholder="e.g. published chords URL"
+                    />
                   </>
                 )}
               </div>
-              <div>
-                <label
-                  htmlFor={`song-${i}-notes`}
-                  className="mb-1 block text-xs text-muted"
-                >
-                  Notes
-                </label>
-                <textarea
-                  id={`song-${i}-notes`}
-                  value={song.notes}
-                  onChange={(e) => updateSong(i, { notes: e.target.value })}
-                  placeholder="Arrangement reminders, cues, capo, etc."
-                  rows={2}
-                  className={inputClass}
-                />
-              </div>
+              <Textarea
+                id={`song-${i}-notes`}
+                label="Notes"
+                labelClassName="mb-1 block text-xs text-muted"
+                value={song.notes}
+                onChange={(e) => updateSong(i, { notes: e.target.value })}
+                placeholder="Arrangement reminders, cues, capo, etc."
+                rows={2}
+              />
               <label className="flex items-start gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -815,7 +719,7 @@ export default function ServiceForm({
                 if (lib) setSongs((prev) => [...prev, songFromLibrary(lib)]);
                 e.target.value = "";
               }}
-              className={inputClass}
+              className={controlClass}
             >
               <option value="">+ Add from Song Book…</option>
               {librarySongs.map((l) => (
@@ -837,24 +741,17 @@ export default function ServiceForm({
 
       {/* Notes */}
       <section>
-        <label htmlFor="notes" className="mb-1 block text-sm font-medium">
-          Notes for the team
-        </label>
-        <textarea
+        <Textarea
           id="notes"
+          label="Notes for the team"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={3}
           placeholder="Anything else (call time, reminders, etc.)"
-          className={inputClass}
         />
       </section>
 
-      {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
-      )}
+      {error && <FormMessage>{error}</FormMessage>}
 
       <Button type="button" full onClick={submit} disabled={pending}>
         {pending ? "Saving…" : initial?.id ? "Save changes" : "Create schedule"}
