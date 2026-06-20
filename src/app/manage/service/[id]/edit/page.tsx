@@ -11,6 +11,8 @@ import DeleteButton from "@/components/DeleteButton";
 import { listLibrarySongs } from "@/lib/library";
 import type { Assignment, Service, Song, AssignmentRole } from "@/lib/domain";
 
+export const metadata = { title: "Edit Schedule" };
+
 export default async function EditServicePage({
   params,
 }: {

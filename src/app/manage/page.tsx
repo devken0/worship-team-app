@@ -2,12 +2,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Page, PageHeader, Card, SectionTitle, PrimaryLink } from "@/components/ui";
-import { PlusIcon } from "@/components/icons";
+import {
+  Page,
+  PageHeader,
+  Card,
+  SectionTitle,
+  PrimaryLink,
+  EmptyState,
+} from "@/components/ui";
+import { PlusIcon, CalendarIcon } from "@/components/icons";
 import { formatServiceDate } from "@/lib/format";
 import CleanupButton from "@/components/CleanupButton";
 import { RECORDING_RETENTION_DAYS } from "@/lib/cleanup";
 import type { Service } from "@/lib/domain";
+
+export const metadata = { title: "Manage" };
 
 export default async function ManagePage() {
   const user = await getCurrentUser();
@@ -53,9 +62,11 @@ export default async function ManagePage() {
 
         <SectionTitle>Schedules</SectionTitle>
         {services.length === 0 ? (
-          <p className="text-sm text-muted">
-            No schedules yet. Tap “+ New” to create the first one.
-          </p>
+          <EmptyState
+            icon={<CalendarIcon />}
+            title="No schedules yet"
+            hint="Tap “+ New” to create the first Sunday service."
+          />
         ) : (
           <div className="space-y-2">
             {services.map((s) => (

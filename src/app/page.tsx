@@ -7,6 +7,8 @@ import ServiceDetailView from "@/components/ServiceDetailView";
 import { formatServiceDate, todayInManila } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/domain";
 
+export const metadata = { title: "This Sunday" };
+
 export default async function HomePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

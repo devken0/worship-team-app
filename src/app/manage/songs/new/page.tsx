@@ -4,6 +4,8 @@ import { Page, PageHeader } from "@/components/ui";
 import LibrarySongForm from "@/components/LibrarySongForm";
 import { listSongAuthors } from "@/lib/library";
 
+export const metadata = { title: "New Song" };
+
 export default async function NewLibrarySongPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

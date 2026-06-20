@@ -5,6 +5,8 @@ import { Page, PageHeader } from "@/components/ui";
 import ServiceForm, { type MemberOption } from "@/components/ServiceForm";
 import { listLibrarySongs } from "@/lib/library";
 
+export const metadata = { title: "New Schedule" };
+
 export default async function NewServicePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

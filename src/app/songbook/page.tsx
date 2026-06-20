@@ -5,6 +5,8 @@ import { MusicIcon } from "@/components/icons";
 import SongBookBrowser, { type BrowserSong } from "@/components/SongBookBrowser";
 import { listLibrarySongs, getPlayStatsForLibrarySongs } from "@/lib/library";
 
+export const metadata = { title: "Song Book" };
+
 export default async function SongBookPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

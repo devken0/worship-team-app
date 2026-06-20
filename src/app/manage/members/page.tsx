@@ -8,6 +8,8 @@ import MemberRoleButton from "@/components/MemberRoleButton";
 import ResendInviteButton from "@/components/ResendInviteButton";
 import type { Profile } from "@/lib/domain";
 
+export const metadata = { title: "Members" };
+
 export default async function MembersPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

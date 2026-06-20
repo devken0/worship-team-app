@@ -12,7 +12,10 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Worship Team",
+  title: {
+    default: "Worship Team",
+    template: "%s · Worship Team",
+  },
   description:
     "Schedules, assignments, songs, and recordings for our worship team.",
   manifest: "/manifest.webmanifest",

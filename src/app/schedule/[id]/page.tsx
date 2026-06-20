@@ -6,6 +6,18 @@ import { Page, PageHeader } from "@/components/ui";
 import ServiceDetailView from "@/components/ServiceDetailView";
 import { formatServiceDate } from "@/lib/format";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const detail = await getServiceDetail(id);
+  return {
+    title: detail ? formatServiceDate(detail.service.service_date) : "Service",
+  };
+}
+
 export default async function ServiceDetailPage({
   params,
 }: {

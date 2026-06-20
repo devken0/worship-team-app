@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/ToastProvider";
+import { XIcon } from "@/components/icons";
 
 /** Chat-bubble glyph — reads as "message / send to group chat". */
 function ChatIcon() {
@@ -106,9 +107,9 @@ function ReminderSheet({
         type="button"
         onClick={onClose}
         aria-label="Close"
-        className="fixed right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-lg text-white backdrop-blur"
+        className="fixed right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur"
       >
-        ✕
+        <XIcon size={18} />
       </button>
 
       <div

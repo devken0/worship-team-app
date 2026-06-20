@@ -91,6 +91,14 @@ export function PlusIcon(p: IconProps) {
   );
 }
 
+export function XIcon(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M18 6 6 18M6 6l12 12" />
+    </Svg>
+  );
+}
+
 export function LogOutIcon(p: IconProps) {
   return (
     <Svg {...p}>

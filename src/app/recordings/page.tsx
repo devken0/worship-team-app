@@ -8,6 +8,8 @@ import Paginated from "@/components/Paginated";
 import { formatServiceDate } from "@/lib/format";
 import type { Service } from "@/lib/domain";
 
+export const metadata = { title: "Recordings" };
+
 export default async function RecordingsIndexPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

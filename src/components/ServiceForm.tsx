@@ -16,6 +16,7 @@ import {
   isoToManilaInput,
   manilaInputToISO,
 } from "@/lib/format";
+import { XIcon } from "@/components/icons";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonStyles } from "@/components/ui";
@@ -379,10 +380,10 @@ export default function ServiceForm({
                     onClick={() =>
                       setBackups((prev) => prev.filter((_, idx) => idx !== i))
                     }
-                    className="shrink-0 rounded-xl border border-border px-3 text-muted"
+                    className="flex shrink-0 items-center justify-center rounded-xl border border-border px-3 text-muted"
                     aria-label="Remove backup singer"
                   >
-                    ✕
+                    <XIcon size={16} />
                   </button>
                 </div>
               ))}

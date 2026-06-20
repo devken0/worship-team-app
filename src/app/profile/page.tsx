@@ -6,6 +6,8 @@ import ProfileForm from "@/components/ProfileForm";
 import ChangePasswordForm from "@/components/ChangePasswordForm";
 import { signOut } from "./actions";
 
+export const metadata = { title: "Profile" };
+
 export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

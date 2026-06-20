@@ -1,19 +1,12 @@
 "use client";
 
-import { useFormStatus } from "react-dom";
-import { saveEvaluation } from "@/app/schedule/[id]/actions";
+import { useActionState } from "react";
+import { saveEvaluation, type EvaluationState } from "@/app/schedule/[id]/actions";
 import { EVALUATION_SECTIONS, type Evaluation } from "@/lib/domain";
 import { Button } from "@/components/ui";
 import EvaluationFollowUps from "@/components/EvaluationFollowUps";
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" full disabled={pending}>
-      {pending ? "Saving…" : "Save minutes"}
-    </Button>
-  );
-}
+const initial: EvaluationState = {};
 
 export default function EvaluationForm({
   serviceId,
@@ -32,8 +25,9 @@ export default function EvaluationForm({
     problems: string;
   } | null;
 }) {
+  const [state, formAction, pending] = useActionState(saveEvaluation, initial);
   return (
-    <form action={saveEvaluation} className="space-y-4">
+    <form action={formAction} className="space-y-4">
       <input type="hidden" name="service_id" value={serviceId} />
 
       {previousFollowUps && (
@@ -76,7 +70,15 @@ export default function EvaluationForm({
         </div>
       ))}
 
-      <SubmitButton />
+      {state.error && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          {state.error}
+        </p>
+      )}
+
+      <Button type="submit" full disabled={pending}>
+        {pending ? "Saving…" : "Save minutes"}
+      </Button>
     </form>
   );
 }

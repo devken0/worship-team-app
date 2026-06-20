@@ -5,14 +5,21 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 
+export interface EvaluationState {
+  error?: string;
+}
+
 /**
  * Save (create or update) the evaluation minutes for a service. Allowed for an
  * admin or the member assigned the note_taker role. RLS is the real boundary;
  * this app-level check mirrors it and gives a clean failure.
  */
-export async function saveEvaluation(formData: FormData) {
+export async function saveEvaluation(
+  _prev: EvaluationState,
+  formData: FormData,
+): Promise<EvaluationState> {
   const serviceId = String(formData.get("service_id") ?? "");
-  if (!serviceId) throw new Error("Missing service");
+  if (!serviceId) return { error: "Missing service." };
 
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -28,7 +35,9 @@ export async function saveEvaluation(formData: FormData) {
       .eq("role_type", "note_taker")
       .eq("member_id", user.id)
       .maybeSingle();
-    if (!noteTaker) throw new Error("Not authorized");
+    if (!noteTaker) {
+      return { error: "Only the note-taker or an admin can save these minutes." };
+    }
   }
 
   const row = {
@@ -43,7 +52,7 @@ export async function saveEvaluation(formData: FormData) {
   const { error } = await supabase
     .from("evaluations")
     .upsert(row, { onConflict: "service_id" });
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
 
   revalidatePath("/");
   revalidatePath(`/schedule/${serviceId}`);

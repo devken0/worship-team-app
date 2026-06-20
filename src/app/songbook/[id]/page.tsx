@@ -7,6 +7,16 @@ import SongCard from "@/components/SongCard";
 import { getLibrarySong, getSongPlayHistory } from "@/lib/library";
 import { chordsImageUrl, formatServiceDate } from "@/lib/format";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const song = await getLibrarySong(id);
+  return { title: song ? song.title : "Song Book" };
+}
+
 export default async function SongBookEntryPage({
   params,
 }: {

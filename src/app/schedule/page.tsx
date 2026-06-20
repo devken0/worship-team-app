@@ -10,6 +10,8 @@ import { formatServiceDate, todayInManila } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/domain";
 import type { AssignmentRole, Service } from "@/lib/domain";
 
+export const metadata = { title: "Schedule" };
+
 export default async function SchedulePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

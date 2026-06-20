@@ -13,6 +13,8 @@ import { deleteLibrarySong } from "@/app/manage/songs/actions";
 import { todayInManila } from "@/lib/format";
 import DeleteButton from "@/components/DeleteButton";
 
+export const metadata = { title: "Edit Song" };
+
 export default async function EditLibrarySongPage({
   params,
 }: {
