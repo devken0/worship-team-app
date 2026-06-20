@@ -49,6 +49,16 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+
+  // API routes authenticate themselves (a Bearer secret for the cron endpoints,
+  // or per-request getUser in a handler) and return JSON. They must never be
+  // redirected to the HTML /login page — a cron/curl caller can't follow that,
+  // which is why an unauthenticated POST /api/* was 307-ing to /login. Let them
+  // through; the route handler decides who's allowed.
+  if (path.startsWith("/api/")) {
+    return supabaseResponse;
+  }
+
   const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));
 
   // Anchor redirects to the public origin, not request.nextUrl: behind a reverse
