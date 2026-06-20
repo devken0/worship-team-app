@@ -1,17 +1,19 @@
 # Run the app in a container. Pass the env file for the environment you're in:
 #
-#   local dev :  docker compose --env-file .env.local up --build
 #   homelab   :  docker compose --env-file .env.production up --build -d
+#   local dev :  ENV_FILE=.env.local docker compose --env-file .env.local up --build
 #
-# Compose only auto-loads a file literally named `.env`; --env-file points it at
-# whichever file you choose, and EVERYTHING below — both the build args and the
-# runtime environment — reads from that one file. So the homelab needs only
-# .env.production present; .env.local is just your local dev copy.
+# Two separate mechanisms, both reading your env file so you never list vars here:
+#   build.args -> NEXT_PUBLIC_* must be baked into the client bundle at BUILD time,
+#                 so they're interpolated from the file --env-file points at.
+#   env_file   -> the WHOLE file is handed to the running container at RUNTIME, so
+#                 every server-only secret (SERVICE_ROLE_KEY, CLEANUP_SECRET,
+#                 RESEND_API_KEY, EMAIL_FROM, …) flows through without enumeration.
+#                 Add a var to .env.production and it's available — no edit here.
 #
-# Split of responsibilities:
-#   build.args   -> NEXT_PUBLIC_* baked into the client bundle at build time.
-#   environment  -> all vars (incl. the server-only secrets) handed to the
-#                   running container, where Server Actions read them per request.
+# ENV_FILE selects which file env_file loads (defaults to .env.production, the
+# homelab case). For local Docker dev, prefix the command with ENV_FILE=.env.local
+# so the same file feeds both build args and the runtime environment.
 
 services:
   web:
@@ -21,14 +23,11 @@ services:
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
-    environment:
-      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
-      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
-      CLEANUP_SECRET: ${CLEANUP_SECRET}
-      RESEND_API_KEY: ${RESEND_API_KEY}
-      EMAIL_FROM: ${EMAIL_FROM}
+    env_file:
+      - ${ENV_FILE:-.env.production}
     ports:
-      - "3000:3000"
+      # Host port is configurable so a local override (e.g. 3026) lives in your
+      # gitignored env file, not here — no merge conflicts on pull. Container
+      # always listens on 3000.
+      - "${HOST_PORT:-3000}:3000"
     restart: unless-stopped

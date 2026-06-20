@@ -195,16 +195,21 @@ chord uploads go **browser → Supabase directly**, so even on a home connection
 those large transfers never pass through this server.
 
 **Build-time vs runtime env.** Next.js inlines `NEXT_PUBLIC_*` values into the
-build, so they're passed as **build args**; the secrets (`SUPABASE_SERVICE_ROLE_KEY`,
-`CLEANUP_SECRET`) are injected at **runtime** from the env file.
-[`docker-compose.yml`](docker-compose.yml) wires both.
+build, so they're passed as **build args** (interpolated from `--env-file`); every
+other var — the server-only secrets, `RESEND_API_KEY`, `EMAIL_FROM`, etc. — is
+handed to the container at **runtime** via `env_file`, so the whole file flows
+through and [`docker-compose.yml`](docker-compose.yml) never lists vars one by one.
+Add a var to your env file and it's available — no compose edit. The published
+**host port** is `HOST_PORT` (defaults to 3000), so a custom port lives in your
+gitignored env file instead of the tracked compose file.
 
 ### Run locally
 ```bash
-docker compose --env-file .env.local up --build
+ENV_FILE=.env.local docker compose --env-file .env.local up --build
 ```
-The `--env-file` flag is required — Compose only auto-loads a file named `.env`,
-but this project uses `.env.local`. Open http://localhost:3000.
+`--env-file` feeds the build args; `ENV_FILE` tells `env_file` which file to inject
+at runtime (it defaults to `.env.production`, so local dev sets it to `.env.local`).
+Open http://localhost:3000.
 
 ### Run on a homelab behind a Cloudflare Tunnel
 1. Copy [`.env.production.example`](.env.production.example) → `.env.production`
