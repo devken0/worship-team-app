@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import {
@@ -5,7 +6,7 @@ import {
   getServiceDetail,
   noteTakerId,
 } from "@/lib/services";
-import { Page, PageHeader, Card, EmptyState } from "@/components/ui";
+import { Page, PageHeader, Card, EmptyState, buttonStyles } from "@/components/ui";
 import HeaderAvatar from "@/components/HeaderAvatar";
 import { NoteIcon } from "@/components/icons";
 import EvaluationForm from "@/components/EvaluationForm";
@@ -15,10 +16,13 @@ import { EVALUATION_SECTIONS } from "@/lib/domain";
 
 export default async function EvaluationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ edit?: string }>;
 }) {
   const { id } = await params;
+  const { edit } = await searchParams;
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
@@ -29,6 +33,7 @@ export default async function EvaluationPage({
   const isAdmin = user.profile?.role === "admin";
   const takerId = noteTakerId(assignments);
   const canEdit = isAdmin || takerId === user.id;
+  const editing = canEdit && edit === "1";
 
   const prev = await getPreviousFollowUps(service.service_date);
   const previousFollowUps = prev
@@ -55,7 +60,7 @@ export default async function EvaluationPage({
         avatar={<HeaderAvatar />}
       />
       <Page>
-        {canEdit ? (
+        {editing ? (
           <EvaluationForm
             serviceId={service.id}
             dateLabel={dateLabel}
@@ -97,12 +102,34 @@ export default async function EvaluationPage({
                 </Card>
               </div>
             ))}
+            {canEdit && (
+              <Link
+                href={`/schedule/${service.id}/evaluation?edit=1`}
+                className={buttonStyles({ full: true })}
+              >
+                Edit minutes
+              </Link>
+            )}
           </div>
         ) : (
           <EmptyState
             icon={<NoteIcon size={24} />}
             title="No minutes yet"
-            hint="Only the assigned note-taker or an admin can add these."
+            hint={
+              canEdit
+                ? "Add the minutes for this service."
+                : "Only the assigned note-taker or an admin can add these."
+            }
+            action={
+              canEdit ? (
+                <Link
+                  href={`/schedule/${service.id}/evaluation?edit=1`}
+                  className={buttonStyles()}
+                >
+                  Add minutes
+                </Link>
+              ) : undefined
+            }
           />
         )}
       </Page>

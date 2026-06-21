@@ -72,7 +72,7 @@ export default function EvaluationForm({
         {pending ? "Saving…" : "Save minutes"}
       </Button>
       <Link
-        href={`/schedule/${serviceId}`}
+        href={`/schedule/${serviceId}/evaluation`}
         className={buttonStyles({ variant: "ghost", full: true })}
       >
         Cancel

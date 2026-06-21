@@ -64,5 +64,6 @@ export async function saveEvaluation(
 
   revalidatePath("/");
   revalidatePath(`/schedule/${serviceId}`);
-  redirect(`/schedule/${serviceId}`);
+  revalidatePath(`/schedule/${serviceId}/evaluation`);
+  redirect(`/schedule/${serviceId}/evaluation`);
 }

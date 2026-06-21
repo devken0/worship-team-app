@@ -254,10 +254,12 @@ export function EmptyState({
   title,
   hint,
   icon,
+  action,
 }: {
   title: string;
   hint?: string;
   icon?: React.ReactNode;
+  action?: React.ReactNode;
 }) {
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center">
@@ -268,6 +270,7 @@ export function EmptyState({
       )}
       <p className="font-medium">{title}</p>
       {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
+      {action && <div className="mt-4 flex justify-center">{action}</div>}
     </div>
   );
 }
