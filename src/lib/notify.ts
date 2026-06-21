@@ -16,7 +16,11 @@ import {
   renderEmail,
   subheading,
 } from "@/lib/email-template";
-import { ROLE_LABELS, type AssignmentRole } from "@/lib/domain";
+import {
+  EVALUATION_SECTIONS,
+  ROLE_LABELS,
+  type AssignmentRole,
+} from "@/lib/domain";
 import { formatServiceDate, formatRehearsal, todayInManila } from "@/lib/format";
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -187,8 +191,9 @@ export async function notifyAssignments(
 }
 
 /**
- * Email the assigned members the action items and problems once evaluation
- * minutes are saved, so follow-ups land with the people who need to act on them.
+ * Email the assigned members the evaluation minutes once they're posted. Sends
+ * whenever any of the four sections (comments, recommendations, action items,
+ * problems) has content, and includes every filled section in template order.
  */
 export async function notifyEvaluation(
   serviceId: string,
@@ -196,9 +201,12 @@ export async function notifyEvaluation(
   const detail = await getServiceDetail(serviceId);
   if (!detail?.evaluation) return { sent: 0 };
 
-  const actionItems = detail.evaluation.action_items?.trim();
-  const problems = detail.evaluation.problems?.trim();
-  if (!actionItems && !problems) return { sent: 0 };
+  // Filled sections, in the template order the app shows them.
+  const filled = EVALUATION_SECTIONS.map((s) => ({
+    label: s.label,
+    value: detail.evaluation![s.key]?.trim() ?? "",
+  })).filter((s) => s.value);
+  if (filled.length === 0) return { sent: 0 };
 
   const emails = await eligibleEmails(assignedMemberIds(detail.assignments));
   const to = [...emails.values()];
@@ -206,25 +214,22 @@ export async function notifyEvaluation(
 
   const dateLabel = formatServiceDate(detail.service.service_date);
   const link = `${siteUrl()}/schedule/${serviceId}`;
-  const lines = [`Evaluation follow-ups from ${dateLabel}:`, ""];
-  if (actionItems) lines.push("Assignments:", actionItems, "");
-  if (problems) lines.push("Problems to solve:", problems, "");
+
+  const lines = [`Evaluation notes from ${dateLabel}:`, ""];
+  for (const s of filled) lines.push(`${s.label}:`, s.value, "");
   lines.push(`Full minutes: ${link}`);
 
   let bodyHtml = paragraph(
-    `Follow-ups from the evaluation of <strong>${esc(dateLabel)}</strong>:`,
+    `The evaluation minutes for <strong>${esc(dateLabel)}</strong> are posted:`,
   );
-  if (actionItems) {
-    bodyHtml += subheading("Assignments") + paragraph(escMultiline(actionItems));
-  }
-  if (problems) {
-    bodyHtml += subheading("Problems to solve") + paragraph(escMultiline(problems));
+  for (const s of filled) {
+    bodyHtml += subheading(s.label) + paragraph(escMultiline(s.value));
   }
 
   const html = renderEmail(
     {
-      preheader: `Evaluation follow-ups from ${dateLabel}.`,
-      heading: "Evaluation follow-ups",
+      preheader: `Evaluation notes from ${dateLabel}.`,
+      heading: "Evaluation notes",
       bodyHtml,
       button: { label: "View minutes", href: link },
     },
@@ -232,7 +237,7 @@ export async function notifyEvaluation(
   );
 
   const sent = await sendToEach(to, {
-    subject: `Follow-ups from ${dateLabel}`,
+    subject: `Evaluation notes from ${dateLabel}`,
     text: lines.join("\n"),
     html,
   });

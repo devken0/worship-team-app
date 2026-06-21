@@ -50,16 +50,27 @@ export async function saveEvaluation(
     created_by: user.id,
   };
 
+  // First save vs. edit: capture whether minutes already exist before the
+  // upsert, so editing them later doesn't re-email the team.
+  const { data: priorEval } = await supabase
+    .from("evaluations")
+    .select("id")
+    .eq("service_id", serviceId)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("evaluations")
     .upsert(row, { onConflict: "service_id" });
   if (error) return { error: error.message };
 
-  // Email the assigned members the action items / problems. Best-effort.
-  try {
-    await notifyEvaluation(serviceId);
-  } catch (notifyError) {
-    console.error("[saveEvaluation] notify failed:", notifyError);
+  // Email the assigned members the freshly-posted minutes, but only the first
+  // time they're created (not on every edit). Best-effort.
+  if (!priorEval) {
+    try {
+      await notifyEvaluation(serviceId);
+    } catch (notifyError) {
+      console.error("[saveEvaluation] notify failed:", notifyError);
+    }
   }
 
   revalidatePath("/");
