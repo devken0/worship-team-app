@@ -63,9 +63,7 @@ export default async function RootLayout({
         />
         <ServiceWorkerRegister />
         <ToastProvider>
-          <div className={`flex-1 ${showNav ? "has-bottom-nav" : ""}`}>
-            {children}
-          </div>
+          <div className="flex-1">{children}</div>
           {showNav && <BottomNav isAdmin={isAdmin} />}
         </ToastProvider>
       </body>
