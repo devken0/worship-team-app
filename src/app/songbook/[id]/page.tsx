@@ -60,6 +60,7 @@ export default async function SongBookEntryPage({
             transposedKey: song.transposed_key,
             transposedBpm: song.transposed_bpm,
             notes: song.notes,
+            lyrics: song.lyrics,
           }}
         />
 

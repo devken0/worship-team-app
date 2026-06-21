@@ -45,6 +45,7 @@ export default function ServiceDetailView({
       transposedKey: s.transposed_key,
       transposedBpm: s.transposed_bpm,
       notes: s.notes,
+      lyrics: s.lyrics,
     },
   }));
   const reminderText = isAdmin

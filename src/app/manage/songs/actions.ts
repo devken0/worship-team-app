@@ -22,6 +22,8 @@ export interface LibrarySongPayload {
   transposed_bpm: number | null;
   /** Free-text notes for the team. */
   notes: string;
+  /** Song lyrics (key-independent, no transposed variant). */
+  lyrics: string;
   youtube_url: string;
   /** Original chord chart text. */
   chords_text: string;
@@ -83,6 +85,7 @@ const PROPAGATED_FIELDS = [
   "transposed_key",
   "transposed_bpm",
   "notes",
+  "lyrics",
   "youtube_url",
   "chords_text",
   "chords_image_url",
@@ -175,6 +178,7 @@ export async function saveLibrarySong(
     transposed_key: payload.transposed_key.trim() || null,
     transposed_bpm: payload.transposed_bpm,
     notes: payload.notes.trim() || null,
+    lyrics: payload.lyrics.trim() || null,
     youtube_url: payload.youtube_url.trim() || null,
     chords_text: payload.chords_text.trim() || null,
     chords_image_url: payload.chords_image_url || null,
@@ -190,7 +194,7 @@ export async function saveLibrarySong(
     const { data: existing } = await supabase
       .from("library_songs")
       .select(
-        "title, author, song_key, bpm, transposed_key, transposed_bpm, notes, youtube_url, chords_text, chords_image_url, chords_url, transposed_chords_text, transposed_chords_image_url, transposed_chords_url",
+        "title, author, song_key, bpm, transposed_key, transposed_bpm, notes, lyrics, youtube_url, chords_text, chords_image_url, chords_url, transposed_chords_text, transposed_chords_image_url, transposed_chords_url",
       )
       .eq("id", payload.id)
       .maybeSingle();

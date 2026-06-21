@@ -72,6 +72,7 @@ export default async function EditServicePage({
       transposed_key: s.transposed_key ?? "",
       transposed_bpm: s.transposed_bpm,
       notes: s.notes ?? "",
+      lyrics: s.lyrics ?? "",
       youtube_url: s.youtube_url ?? "",
       chords_text: s.chords_text ?? "",
       chords_image_url: s.chords_image_url,

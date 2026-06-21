@@ -14,6 +14,13 @@ const FONT_KEY = "rehearsalFontScale";
 const ACCENT_KEY = "rehearsalAccent";
 const BEATS_KEY = "rehearsalBeats";
 const BEATS_OPTIONS = [4, 3, 6, 2];
+const VIEW_KEY = "rehearsalView";
+const SCROLL_SPEED_KEY = "rehearsalScrollSpeed";
+/** Auto-scroll speeds in px/sec, slowest → fastest. */
+const SCROLL_SPEEDS = [15, 30, 50, 80];
+
+/** Which chart the viewer shows. Lyrics are key-independent (no transpose). */
+type RehearsalView = "chords" | "lyrics" | "both";
 
 const clampScale = (n: number) =>
   Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round(n * 100) / 100));
@@ -151,6 +158,21 @@ export default function RehearsalMode({
     const saved = Number(localStorage.getItem(BEATS_KEY));
     return BEATS_OPTIONS.includes(saved) ? saved : 4;
   });
+  const [view, setView] = useState<RehearsalView>(() => {
+    if (typeof window === "undefined") return "chords";
+    const saved = localStorage.getItem(VIEW_KEY);
+    return saved === "lyrics" || saved === "both" ? saved : "chords";
+  });
+  const [scrollIdx, setScrollIdx] = useState(() => {
+    if (typeof window === "undefined") return 1;
+    const saved = Number(localStorage.getItem(SCROLL_SPEED_KEY));
+    return Number.isInteger(saved) && saved >= 0 && saved < SCROLL_SPEEDS.length
+      ? saved
+      : 1;
+  });
+  // Auto-scroll runs only while the viewer is active — never persisted, so it
+  // always starts paused (like the metronome).
+  const [autoScroll, setAutoScroll] = useState(false);
 
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -160,11 +182,23 @@ export default function RehearsalMode({
   const count = songs.length;
   const song = songs[index];
   const perf = resolvePerformed(song);
+  const lyrics = song.lyrics?.trim() || null;
   const { running, toggle, stop } = useMetronome(
     perf.performedBpm,
     accent,
     beatsPerBar,
   );
+
+  const changeView = (v: RehearsalView) => {
+    setView(v);
+    localStorage.setItem(VIEW_KEY, v);
+  };
+  const changeScrollSpeed = (delta: number) =>
+    setScrollIdx((i) => {
+      const next = Math.min(SCROLL_SPEEDS.length - 1, Math.max(0, i + delta));
+      localStorage.setItem(SCROLL_SPEED_KEY, String(next));
+      return next;
+    });
 
   const toggleAccent = () =>
     setAccent((a) => {
@@ -182,6 +216,7 @@ export default function RehearsalMode({
   const go = useCallback(
     (next: number) => {
       stop();
+      setAutoScroll(false); // navigating pauses the teleprompter
       setIndex((i) => {
         const target = Math.min(count - 1, Math.max(0, next));
         return target === i ? i : target;
@@ -190,10 +225,43 @@ export default function RehearsalMode({
     [count, stop],
   );
 
-  // Jump back to the top of the chart when the song changes.
+  // Jump back to the top of the chart when the song changes. (Auto-scroll is
+  // stopped in go() at navigation time, so each song starts paused at the top.)
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0 });
   }, [index]);
+
+  // Teleprompter auto-scroll: advance the chart on the rAF clock at the chosen
+  // px/sec, accumulating fractional pixels so slow speeds still move. Stops at
+  // the bottom. Programmatic scrolling fires no pointer/touch/wheel events, so
+  // this never pauses itself — only genuine user input does (handlers below).
+  useEffect(() => {
+    if (!autoScroll) return;
+    const el = contentRef.current;
+    if (!el) return;
+    const speed = SCROLL_SPEEDS[scrollIdx];
+    let raf = 0;
+    let last = 0;
+    let acc = 0;
+    const step = (ts: number) => {
+      if (last) {
+        acc += speed * ((ts - last) / 1000);
+        const whole = Math.floor(acc);
+        if (whole > 0) {
+          acc -= whole;
+          el.scrollTop += whole;
+          if (el.scrollTop + el.clientHeight >= el.scrollHeight - 1) {
+            setAutoScroll(false);
+            return;
+          }
+        }
+      }
+      last = ts;
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [autoScroll, scrollIdx, view]);
 
   // Lock background scroll while open.
   useEffect(() => {
@@ -224,6 +292,7 @@ export default function RehearsalMode({
   // Horizontal swipe to move between songs.
   const touch = useRef<{ x: number; y: number } | null>(null);
   const onTouchStart = (e: React.TouchEvent) => {
+    setAutoScroll(false); // a touch pauses the teleprompter
     touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   };
   const onTouchEnd = (e: React.TouchEvent) => {
@@ -274,6 +343,7 @@ export default function RehearsalMode({
         ref={contentRef}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
+        onWheel={() => setAutoScroll(false)}
         className="flex-1 overflow-y-auto px-4 py-5"
       >
         <div className="mx-auto max-w-2xl">
@@ -307,33 +377,50 @@ export default function RehearsalMode({
             </div>
           )}
 
-          <div className="mt-5">
-            {perf.chordsText ? (
-              <pre
-                className="whitespace-pre-wrap break-words font-mono leading-relaxed"
-                style={{ fontSize: `${scale}rem` }}
-              >
-                {perf.chordsText}
-              </pre>
-            ) : perf.chordsImageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={perf.chordsImageUrl}
-                alt={`Chord chart for ${song.title}`}
-                className="w-full rounded-xl border border-border"
-              />
-            ) : perf.chordsUrl ? (
-              <a
-                href={perf.chordsUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="font-medium text-primary"
-              >
-                Open chord link ↗
-              </a>
-            ) : (
-              <p className="text-muted">No chords for this song.</p>
-            )}
+          <div className="mt-5" style={{ fontSize: `${scale}rem` }}>
+            {(() => {
+              const chordsBlock = perf.chordsText ? (
+                <pre className="whitespace-pre-wrap break-words font-mono leading-relaxed">
+                  {perf.chordsText}
+                </pre>
+              ) : perf.chordsImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={perf.chordsImageUrl}
+                  alt={`Chord chart for ${song.title}`}
+                  className="w-full rounded-xl border border-border"
+                />
+              ) : perf.chordsUrl ? (
+                <a
+                  href={perf.chordsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-primary"
+                >
+                  Open chord link ↗
+                </a>
+              ) : (
+                <p className="text-muted">No chords for this song.</p>
+              );
+              const lyricsBlock = lyrics ? (
+                <div className="whitespace-pre-wrap break-words leading-relaxed">
+                  {lyrics}
+                </div>
+              ) : (
+                <p className="text-muted">No lyrics for this song.</p>
+              );
+
+              if (view === "lyrics") return lyricsBlock;
+              if (view === "both") {
+                return (
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div>{chordsBlock}</div>
+                    <div>{lyricsBlock}</div>
+                  </div>
+                );
+              }
+              return chordsBlock;
+            })()}
           </div>
         </div>
       </div>
@@ -344,12 +431,35 @@ export default function RehearsalMode({
         style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
       >
         <div className="mx-auto max-w-2xl space-y-2">
+          <div className="flex justify-center">
+            <div
+              role="group"
+              aria-label="Chart view"
+              className="inline-flex rounded-lg border border-border bg-card p-0.5"
+            >
+              {(["chords", "lyrics", "both"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => changeView(v)}
+                  aria-pressed={view === v}
+                  className={`rounded-md px-3 py-1.5 text-sm font-semibold transition ${
+                    view === v
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted"
+                  }`}
+                >
+                  {v === "chords" ? "Chords" : v === "lyrics" ? "Lyrics" : "Both"}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex flex-wrap items-center justify-center gap-1.5">
             <button
               type="button"
               onClick={() => changeScale(-STEP)}
               disabled={scale <= MIN_SCALE}
-              aria-label="Smaller chords"
+              aria-label="Smaller text"
               className={ctrlBtn}
             >
               A−
@@ -358,10 +468,45 @@ export default function RehearsalMode({
               type="button"
               onClick={() => changeScale(STEP)}
               disabled={scale >= MAX_SCALE}
-              aria-label="Larger chords"
+              aria-label="Larger text"
               className={`${ctrlBtn} text-base`}
             >
               A+
+            </button>
+            <button
+              type="button"
+              onClick={() => setAutoScroll((a) => !a)}
+              aria-pressed={autoScroll}
+              aria-label={autoScroll ? "Stop auto-scroll" : "Start auto-scroll"}
+              className={`${ctrlBtn} gap-1.5 ${
+                autoScroll ? "border-primary bg-primary text-primary-foreground" : ""
+              }`}
+            >
+              {autoScroll ? "⏸" : "▶"} Scroll
+            </button>
+            <button
+              type="button"
+              onClick={() => changeScrollSpeed(-1)}
+              disabled={scrollIdx <= 0}
+              aria-label="Slower auto-scroll"
+              className={ctrlBtn}
+            >
+              ▼
+            </button>
+            <span
+              className="min-w-5 text-center text-sm font-semibold tabular-nums text-muted"
+              aria-hidden="true"
+            >
+              {scrollIdx + 1}
+            </span>
+            <button
+              type="button"
+              onClick={() => changeScrollSpeed(1)}
+              disabled={scrollIdx >= SCROLL_SPEEDS.length - 1}
+              aria-label="Faster auto-scroll"
+              className={ctrlBtn}
+            >
+              ▲
             </button>
             {perf.performedBpm != null && (
               <>

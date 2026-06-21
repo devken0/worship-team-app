@@ -92,6 +92,7 @@ export default function PublicServiceView({
                 transposedKey: s.transposed_key,
                 transposedBpm: s.transposed_bpm,
                 notes: s.notes,
+                lyrics: s.lyrics,
               }}
             />
           ))}

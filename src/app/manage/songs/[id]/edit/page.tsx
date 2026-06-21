@@ -43,6 +43,7 @@ export default async function EditLibrarySongPage({
     transposed_key: song.transposed_key,
     transposed_bpm: song.transposed_bpm,
     notes: song.notes,
+    lyrics: song.lyrics,
     youtube_url: song.youtube_url,
     chords_text: song.chords_text,
     chords_image_url: song.chords_image_url,

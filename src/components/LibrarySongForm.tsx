@@ -32,6 +32,7 @@ const PROPAGATED_FIELD_LABELS: Record<string, string> = {
   transposed_key: "transposed key",
   transposed_bpm: "transposed BPM",
   notes: "notes",
+  lyrics: "lyrics",
   youtube_url: "YouTube link",
   chords_text: "original chords",
   chords_image_url: "original chord photo",
@@ -51,6 +52,7 @@ export interface LibrarySongFormInitial {
   transposed_key: string | null;
   transposed_bpm: number | null;
   notes: string | null;
+  lyrics: string | null;
   youtube_url: string | null;
   chords_text: string | null;
   chords_image_url: string | null;
@@ -103,6 +105,7 @@ export default function LibrarySongForm({
     initial?.transposed_bpm != null ? String(initial.transposed_bpm) : "",
   );
   const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [lyrics, setLyrics] = useState(initial?.lyrics ?? "");
   const [youtube, setYoutube] = useState(initial?.youtube_url ?? "");
   const [chordsText, setChordsText] = useState(initial?.chords_text ?? "");
   const [chordsImage, setChordsImage] = useState<string | null>(
@@ -154,6 +157,7 @@ export default function LibrarySongForm({
       transposed_bpm:
         transposed && trimmedTransposedBpm ? Number(trimmedTransposedBpm) : null,
       notes: notes.trim() || null,
+      lyrics: lyrics.trim() || null,
       youtube_url: youtube.trim() || null,
       chords_text: chordsText.trim() || null,
       chords_image_url: chordsImage || null,
@@ -174,6 +178,7 @@ export default function LibrarySongForm({
       transposed_key: initial.transposed_key?.trim() || null,
       transposed_bpm: initial.transposed_bpm ?? null,
       notes: initial.notes?.trim() || null,
+      lyrics: initial.lyrics?.trim() || null,
       youtube_url: initial.youtube_url?.trim() || null,
       chords_text: initial.chords_text?.trim() || null,
       chords_image_url: initial.chords_image_url || null,
@@ -241,6 +246,7 @@ export default function LibrarySongForm({
       transposed_key: transposed ? transposedKey : "",
       transposed_bpm: trimmedTransposedBpm ? Number(trimmedTransposedBpm) : null,
       notes,
+      lyrics,
       youtube_url: youtube,
       chords_text: chordsText,
       chords_image_url: chordsImage,
@@ -531,6 +537,18 @@ export default function LibrarySongForm({
           </>
         )}
       </div>
+
+      <Textarea
+        label={
+          <>
+            Lyrics <span className="text-muted">(optional)</span>
+          </>
+        }
+        value={lyrics}
+        onChange={(e) => setLyrics(e.target.value)}
+        placeholder="Paste the song lyrics here"
+        rows={4}
+      />
 
       <Textarea
         label={

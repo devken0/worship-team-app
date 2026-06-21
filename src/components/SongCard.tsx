@@ -13,6 +13,7 @@ import {
   CameraIcon,
   LinkIcon,
   FrameIcon,
+  NoteIcon,
 } from "@/components/icons";
 import SongShareSheet from "@/components/SongShareSheet";
 import { resolvePerformed } from "@/lib/song";
@@ -47,13 +48,18 @@ export interface SongCardData {
   transposedBpm?: number | null;
   /** Free-text notes for the team; shown as a block when present. */
   notes?: string | null;
+  /** Song lyrics; key-independent, shown in its own collapsible section. */
+  lyrics?: string | null;
 }
 
 export default function SongCard({ song }: { song: SongCardData }) {
   const [playing, setPlaying] = useState(false);
   const [showChords, setShowChords] = useState(false);
+  const [showLyrics, setShowLyrics] = useState(false);
+  const [showLyricsChords, setShowLyricsChords] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const ytId = youTubeId(song.youtube_url);
+  const lyrics = song.lyrics?.trim() || null;
 
   // Performed key/tempo/chords (transposed override vs. original) — shared with
   // the rehearsal viewer so the two stay in sync. Show the "(orig. …)" note +
@@ -243,6 +249,60 @@ export default function SongCard({ song }: { song: SongCardData }) {
         </div>
       )}
 
+      {lyrics && (
+        <div className="border-t border-border">
+          <p className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted">
+            Lyrics
+          </p>
+          <div className="divide-y divide-border">
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowLyrics((v) => !v)}
+                className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium"
+              >
+                <NoteIcon size={16} className="shrink-0" />
+                <span>Lyrics</span>
+                <span className="ml-auto text-muted">
+                  {showLyrics ? "Hide" : "Show"}
+                </span>
+              </button>
+              {showLyrics && (
+                <div className="whitespace-pre-wrap break-words bg-background px-4 py-3 text-sm leading-relaxed">
+                  {lyrics}
+                </div>
+              )}
+            </div>
+
+            {chordsText && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowLyricsChords((v) => !v)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium"
+                >
+                  <ChartIcon size={16} className="shrink-0" />
+                  <span>Lyrics + chords</span>
+                  <span className="ml-auto text-muted">
+                    {showLyricsChords ? "Hide" : "Show"}
+                  </span>
+                </button>
+                {showLyricsChords && (
+                  <div className="grid gap-4 bg-background px-4 py-3 sm:grid-cols-2">
+                    <pre className="overflow-x-auto whitespace-pre-wrap break-words font-mono text-sm leading-relaxed">
+                      {chordsText}
+                    </pre>
+                    <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                      {lyrics}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {showShare && (
         <SongShareSheet
           song={{
@@ -254,6 +314,7 @@ export default function SongCard({ song }: { song: SongCardData }) {
             bpm: performedBpm,
             notes: song.notes ?? null,
             chordsText: chordsText,
+            lyrics: lyrics,
           }}
           onClose={() => setShowShare(false)}
         />

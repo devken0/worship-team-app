@@ -151,6 +151,8 @@ export interface Song {
   transposed_bpm: number | null;
   /** Free-text notes for the team (arrangement reminders, cues, etc.). */
   notes: string | null;
+  /** Song lyrics. Key-independent — one field, no transposed variant. */
+  lyrics: string | null;
   youtube_url: string | null;
   /** Original chord chart (chords for the original key). */
   chords_text: string | null;
@@ -186,6 +188,8 @@ export interface LibrarySong {
   transposed_bpm: number | null;
   /** Free-text notes for the team (arrangement reminders, cues, etc.). */
   notes: string | null;
+  /** Song lyrics. Key-independent — one field, no transposed variant. */
+  lyrics: string | null;
   youtube_url: string | null;
   /** Original chord chart (chords for the original key). */
   chords_text: string | null;

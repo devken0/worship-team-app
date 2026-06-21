@@ -52,6 +52,7 @@ function emptySong(category: SongCategory): SongInput {
     transposed_key: "",
     transposed_bpm: null,
     notes: "",
+    lyrics: "",
     youtube_url: "",
     chords_text: "",
     chords_image_url: null,
@@ -76,6 +77,7 @@ function songFromLibrary(lib: LibrarySong): SongInput {
     transposed_key: lib.transposed_key ?? "",
     transposed_bpm: lib.transposed_bpm,
     notes: lib.notes ?? "",
+    lyrics: lib.lyrics ?? "",
     youtube_url: lib.youtube_url ?? "",
     chords_text: lib.chords_text ?? "",
     chords_image_url: lib.chords_image_url,
@@ -683,6 +685,15 @@ export default function ServiceForm({
                   </>
                 )}
               </div>
+              <Textarea
+                id={`song-${i}-lyrics`}
+                label="Lyrics"
+                labelClassName="mb-1 block text-xs text-muted"
+                value={song.lyrics}
+                onChange={(e) => updateSong(i, { lyrics: e.target.value })}
+                placeholder="Paste the song lyrics here (optional)"
+                rows={4}
+              />
               <Textarea
                 id={`song-${i}-notes`}
                 label="Notes"

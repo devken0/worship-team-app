@@ -23,6 +23,8 @@ export interface SongInput {
   transposed_bpm: number | null;
   /** Free-text notes for the team. */
   notes: string;
+  /** Song lyrics (key-independent, no transposed variant). */
+  lyrics: string;
   youtube_url: string;
   /** Original chord chart text. */
   chords_text: string;
@@ -145,6 +147,7 @@ async function syncSongsToBook(
       transposed_key: s.transposed_key.trim() || null,
       transposed_bpm: s.transposed_bpm,
       notes: s.notes.trim() || null,
+      lyrics: s.lyrics.trim() || null,
       youtube_url: s.youtube_url.trim() || null,
       chords_text: s.chords_text.trim() || null,
       chords_image_url: s.chords_image_url || null,
@@ -283,6 +286,7 @@ export async function saveService(payload: ServicePayload): Promise<void> {
       transposed_key: s.transposed_key.trim() || null,
       transposed_bpm: s.transposed_bpm,
       notes: s.notes.trim() || null,
+      lyrics: s.lyrics.trim() || null,
       youtube_url: s.youtube_url.trim() || null,
       chords_text: s.chords_text.trim() || null,
       chords_image_url: s.chords_image_url || null,

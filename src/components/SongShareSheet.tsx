@@ -23,6 +23,7 @@ export interface SongShareData {
   bpm: number | null;
   notes: string | null;
   chordsText: string | null;
+  lyrics: string | null;
 }
 
 /**
@@ -111,6 +112,12 @@ export default function SongShareSheet({
           <p className="mt-4 whitespace-pre-wrap rounded-lg bg-amber-50 px-3 py-2 text-sm text-gray-900">
             {song.notes}
           </p>
+        )}
+
+        {song.lyrics && (
+          <div className="mt-4 whitespace-pre-wrap break-words border-t border-gray-200 pt-4 text-sm leading-relaxed text-gray-900">
+            {song.lyrics}
+          </div>
         )}
 
         {song.chordsText && (
