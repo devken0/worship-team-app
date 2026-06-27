@@ -1,6 +1,11 @@
 import Link from "next/link";
 import Logo from "./Logo";
 import { ChevronLeftIcon } from "./icons";
+import {
+  SONG_CATEGORY_CHIP,
+  SONG_CATEGORY_LABELS,
+  type SongCategory,
+} from "@/lib/domain";
 
 /**
  * Sticky top header for each screen, with an optional right-side action.
@@ -133,6 +138,27 @@ export function ColorChip({
         style={{ backgroundColor: hex ?? "transparent" }}
       />
       {label ?? hex}
+    </span>
+  );
+}
+
+/**
+ * Colored category pill, backed by the `.cat-*` tokens (light/dark aware).
+ * Single source of truth for the chip shown on the song-book tiles, the song
+ * detail card, and rehearsal mode.
+ */
+export function CategoryBadge({
+  category,
+  className = "",
+}: {
+  category: SongCategory;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${SONG_CATEGORY_CHIP[category]} ${className}`}
+    >
+      {SONG_CATEGORY_LABELS[category]}
     </span>
   );
 }

@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 import { youTubeId } from "@/lib/format";
-import {
-  SONG_CATEGORY_LABELS,
-  SONG_CATEGORY_CHIP,
-  type SongCategory,
-} from "@/lib/domain";
+import { type SongCategory } from "@/lib/domain";
 import {
   PlayIcon,
   ChartIcon,
@@ -15,6 +11,7 @@ import {
   FrameIcon,
   NoteIcon,
 } from "@/components/icons";
+import { CategoryBadge } from "@/components/ui";
 import SongShareSheet from "@/components/SongShareSheet";
 import { resolvePerformed } from "@/lib/song";
 
@@ -89,13 +86,7 @@ export default function SongCard({ song }: { song: SongCardData }) {
       </button>
 
       <div className="p-4 pr-12">
-        {song.category && (
-          <span
-            className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${SONG_CATEGORY_CHIP[song.category]}`}
-          >
-            {SONG_CATEGORY_LABELS[song.category]}
-          </span>
-        )}
+        {song.category && <CategoryBadge category={song.category} />}
         <h3 className="mt-1.5 text-base font-semibold leading-tight">
           {song.title}
         </h3>

@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Card, EmptyState } from "@/components/ui";
-import { SearchIcon, MusicIcon } from "@/components/icons";
-import { formatServiceDateShort } from "@/lib/format";
+import { CategoryBadge, EmptyState } from "@/components/ui";
+import { SearchIcon, MusicIcon, PlayIcon } from "@/components/icons";
 import {
   SONG_CATEGORIES,
   SONG_CATEGORY_LABELS,
+  SONG_CATEGORY_CHIP,
   type SongCategory,
 } from "@/lib/domain";
 
@@ -21,6 +21,8 @@ export interface BrowserSong {
   count: number;
   /** Last-played service date (YYYY-MM-DD), or null if never played. */
   lastPlayed: string | null;
+  /** YouTube video id, for the tile thumbnail; null falls back to a color band. */
+  youtubeId: string | null;
 }
 
 type SortKey = "title" | "recent" | "least" | "most";
@@ -50,20 +52,9 @@ function cmpLeast(a: string | null, b: string | null): number {
   return a < b ? -1 : 1;
 }
 
-function metaLine(s: BrowserSong): string {
-  const parts: string[] = [];
-  if (s.category) parts.push(SONG_CATEGORY_LABELS[s.category]);
-  if (s.count === 0) {
-    parts.push("Not played yet");
-  } else {
-    const times = `${s.count}×`;
-    parts.push(
-      s.lastPlayed
-        ? `${times} · last ${formatServiceDateShort(s.lastPlayed)}`
-        : times,
-    );
-  }
-  return parts.join(" · ");
+/** Short, quiet play stat shown top-right of each tile. */
+function statLabel(s: BrowserSong): string {
+  return s.count === 0 ? "New" : `${s.count}×`;
 }
 
 export default function SongBookBrowser({
@@ -184,31 +175,86 @@ export default function SongBookBrowser({
           hint="Try a different search or clear the category filter."
         />
       ) : (
-        <div className="space-y-2">
-          {visible.map((s) => (
-            <Link
-              key={s.id}
-              href={mode === "edit" ? `/manage/songs/${s.id}/edit` : `/songbook/${s.id}`}
-              className="block transition hover:-translate-y-0.5 active:scale-[0.98]"
-            >
-              <Card className="flex items-center justify-between gap-3">
-                <span className="min-w-0">
-                  <span className="block truncate font-medium">{s.title}</span>
-                  <span className="block truncate text-xs text-muted">
-                    {metaLine(s)}
-                  </span>
-                </span>
-                <span className="shrink-0 text-muted">
-                  {mode === "edit" ? "Edit ›" : "›"}
-                </span>
-              </Card>
-            </Link>
-          ))}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {visible.map((s) => {
+            const newSong = s.count === 0;
+            return (
+              <Link
+                key={s.id}
+                href={mode === "edit" ? `/manage/songs/${s.id}/edit` : `/songbook/${s.id}`}
+                className="block transition hover:-translate-y-0.5 active:scale-[0.98]"
+              >
+                <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+                  <div className="relative aspect-video">
+                    {s.youtubeId ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`https://i.ytimg.com/vi/${s.youtubeId}/mqdefault.jpg`}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full object-cover"
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm">
+                            <PlayIcon size={18} />
+                          </span>
+                        </span>
+                      </>
+                    ) : (
+                      <div
+                        className={`flex h-full w-full items-center justify-center ${
+                          s.category ? SONG_CATEGORY_CHIP[s.category] : "bg-brand-soft text-primary"
+                        }`}
+                      >
+                        <MusicIcon size={26} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-1 flex-col gap-1 p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      {s.category ? (
+                        <CategoryBadge category={s.category} />
+                      ) : (
+                        <span />
+                      )}
+                      <span
+                        title={
+                          s.lastPlayed
+                            ? `${s.count}× · last played ${s.lastPlayed}`
+                            : "Not played yet"
+                        }
+                        className={`shrink-0 text-[11px] font-semibold ${
+                          newSong
+                            ? "rounded-full bg-brand-soft px-2 py-0.5 text-primary"
+                            : "text-muted"
+                        }`}
+                      >
+                        {statLabel(s)}
+                      </span>
+                    </div>
+                    <span className="line-clamp-2 font-medium">{s.title}</span>
+                    {s.author && (
+                      <span className="line-clamp-1 text-xs text-muted">
+                        {s.author}
+                      </span>
+                    )}
+                    {mode === "edit" && (
+                      <span className="mt-auto pt-1 text-xs font-medium text-primary">
+                        Edit ›
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
           {remaining > 0 && (
             <button
               type="button"
               onClick={() => setLimit((l) => l + PAGE)}
-              className="w-full rounded-xl border border-border bg-card py-3 text-sm font-semibold text-primary transition hover:bg-brand-soft active:scale-[0.99]"
+              className="col-span-full w-full rounded-xl border border-border bg-card py-3 text-sm font-semibold text-primary transition hover:bg-brand-soft active:scale-[0.99]"
             >
               Load {Math.min(PAGE, remaining)} more · {remaining} left
             </button>

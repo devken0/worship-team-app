@@ -5,6 +5,7 @@ import HeaderAvatar from "@/components/HeaderAvatar";
 import { MusicIcon } from "@/components/icons";
 import SongBookBrowser, { type BrowserSong } from "@/components/SongBookBrowser";
 import { listLibrarySongs, getPlayStatsForLibrarySongs } from "@/lib/library";
+import { youTubeId } from "@/lib/format";
 
 export const metadata = { title: "Song Book" };
 
@@ -21,6 +22,7 @@ export default async function SongBookPage() {
     category: s.default_category,
     count: stats.get(s.id)?.count ?? 0,
     lastPlayed: stats.get(s.id)?.lastPlayed ?? null,
+    youtubeId: youTubeId(s.youtube_url),
   }));
 
   return (
