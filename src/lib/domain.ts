@@ -100,6 +100,7 @@ export const WEAR_COLORS: { label: string; hex: string }[] = [
   { label: "Pink", hex: "#ec4899" },
   { label: "Purple", hex: "#7c3aed" },
   { label: "Gray", hex: "#6b7280" },
+  { label: "Brown", hex: "#7b4b2a" },
   { label: "Beige", hex: "#d6c7a1" },
 ];
 
