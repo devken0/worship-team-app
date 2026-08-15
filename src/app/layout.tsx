@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import BottomNav from "@/components/BottomNav";
 import ToastProvider from "@/components/ToastProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
-import { THEME_COLORS, themeInitScript } from "@/lib/theme";
+import { themeInitScript } from "@/lib/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,11 +28,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  // A single, unconditional theme-color. The pre-paint script below rewrites it
-  // to match the user's saved Light/Dark/Auto choice — a media-query pair here
-  // would follow the OS instead, so Dark-in-app on a light phone would leave a
-  // light status bar. See `src/lib/theme.ts`.
-  themeColor: THEME_COLORS.light,
+  // No `themeColor` here on purpose. The status bar has to follow the user's
+  // saved Light/Dark/Auto choice rather than the OS, so the pre-paint script
+  // below owns the <meta> tag entirely — see `src/lib/theme.ts`. Declaring it
+  // here as well produces two conflicting tags after hydration.
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

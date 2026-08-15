@@ -69,6 +69,7 @@ export default function BottomNav({ isAdmin }: { isAdmin: boolean }) {
           Rendered with the nav so both appear and disappear together. */}
       <div className="has-bottom-nav" aria-hidden />
       <nav
+        aria-label="Primary"
         className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
