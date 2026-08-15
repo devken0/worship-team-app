@@ -35,7 +35,9 @@ export function PageHeader({
             <Link
               href={back.href}
               aria-label={back.label ?? "Go back"}
-              className="-ml-1 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-foreground transition hover:bg-brand-soft active:scale-90"
+              // Same 44px-target trick as IconButton — this is a Link, so it
+              // can't reuse that component directly.
+              className="relative -ml-1 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-foreground transition hover:bg-brand-soft active:scale-90 before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']"
             >
               <ChevronLeftIcon size={22} />
             </Link>
@@ -92,7 +94,13 @@ export function Avatar({
 }
 
 export function Page({ children }: { children: React.ReactNode }) {
-  return <main className="mx-auto max-w-2xl px-4 py-4">{children}</main>;
+  // `id`/`tabIndex` are the target of the skip link in the root layout — without
+  // them a keyboard user tabs through the sticky header on every screen.
+  return (
+    <main id="main" tabIndex={-1} className="mx-auto max-w-2xl px-4 py-4 outline-none">
+      {children}
+    </main>
+  );
 }
 
 export function Card({
@@ -224,6 +232,49 @@ export function Button({
   );
 }
 
+/**
+ * A round, icon-only control. Exists mainly to guarantee the touch target: the
+ * visual circle stays whatever `size` says, but the button always fills at least
+ * 44px so it satisfies WCAG 2.5.5 and Apple's HIG. Hand-rolled icon buttons in
+ * this app were 28–36px.
+ *
+ * `label` is required — an icon with no accessible name is invisible to screen
+ * readers.
+ */
+export function IconButton({
+  label,
+  size = 36,
+  variant = "ghost",
+  className = "",
+  children,
+  ...props
+}: Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "aria-label"> & {
+  label: string;
+  /** Diameter of the visible circle, in px. The hit area stays >= 44px. */
+  size?: number;
+  variant?: "ghost" | "scrim";
+}) {
+  const tones = {
+    ghost: "text-foreground hover:bg-brand-soft",
+    // For use on a dim overlay, where the page tokens don't apply.
+    scrim: "bg-white/15 text-white backdrop-blur",
+  };
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      style={{ width: size, height: size }}
+      // The `before:` block is an invisible 44px square centred on the icon. It
+      // enlarges the touch target without taking up layout space, so the visible
+      // circle keeps whatever size the surrounding design already used.
+      className={`relative inline-flex shrink-0 items-center justify-center rounded-full transition active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] ${tones[variant]} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function PrimaryLink({
   href,
   children,
@@ -238,12 +289,16 @@ export function PrimaryLink({
   );
 }
 
-/** A pulsing placeholder block for loading skeletons. Pass sizing via className. */
+/**
+ * A shimmering placeholder block for loading skeletons. Pass sizing via
+ * className. Uses the shared `shimmer` keyframe rather than Tailwind's
+ * `animate-pulse` so every skeleton in the app breathes at the same rate.
+ */
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={`animate-pulse rounded-lg bg-border/70 ${className}`}
+      className={`animate-shimmer rounded-lg bg-border/70 ${className}`}
     />
   );
 }

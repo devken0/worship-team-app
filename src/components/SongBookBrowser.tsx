@@ -97,9 +97,15 @@ export default function SongBookBrowser({
     return list.sort((a, b) => {
       switch (sort) {
         case "recent":
-          return cmpRecent(a.lastPlayed, b.lastPlayed) || a.title.localeCompare(b.title);
+          return (
+            cmpRecent(a.lastPlayed, b.lastPlayed) ||
+            a.title.localeCompare(b.title)
+          );
         case "least":
-          return cmpLeast(a.lastPlayed, b.lastPlayed) || a.title.localeCompare(b.title);
+          return (
+            cmpLeast(a.lastPlayed, b.lastPlayed) ||
+            a.title.localeCompare(b.title)
+          );
         case "most":
           return b.count - a.count || a.title.localeCompare(b.title);
         default:
@@ -181,7 +187,11 @@ export default function SongBookBrowser({
             return (
               <Link
                 key={s.id}
-                href={mode === "edit" ? `/manage/songs/${s.id}/edit` : `/songbook/${s.id}`}
+                href={
+                  mode === "edit"
+                    ? `/manage/songs/${s.id}/edit`
+                    : `/songbook/${s.id}`
+                }
                 className="block transition hover:-translate-y-0.5 active:scale-[0.98]"
               >
                 <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card">
@@ -205,7 +215,9 @@ export default function SongBookBrowser({
                     ) : (
                       <div
                         className={`flex h-full w-full items-center justify-center ${
-                          s.category ? SONG_CATEGORY_CHIP[s.category] : "bg-brand-soft text-primary"
+                          s.category
+                            ? SONG_CATEGORY_CHIP[s.category]
+                            : "bg-brand-soft text-primary"
                         }`}
                       >
                         <MusicIcon size={26} />

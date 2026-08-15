@@ -46,6 +46,10 @@ export default function ServiceDetailView({
       transposedBpm: s.transposed_bpm,
       notes: s.notes,
       lyrics: s.lyrics,
+      // Links the title through to the song book entry (history, lyrics, when
+      // it was last played). Null for one-off songs typed straight into the
+      // service, which have no entry to open.
+      librarySongId: s.library_song_id,
     },
   }));
   const reminderText = isAdmin

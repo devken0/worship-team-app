@@ -93,6 +93,9 @@ export default function PublicServiceView({
                 transposedBpm: s.transposed_bpm,
                 notes: s.notes,
                 lyrics: s.lyrics,
+                // Deliberately no `librarySongId`: this page is public and
+                // sign-in-free, and /songbook/[id] is behind auth. Passing it
+                // would render a link that bounces visitors to /login.
               }}
             />
           ))}

@@ -18,6 +18,18 @@ export function noteTakerId(assignments: Assignment[]): string | null {
   );
 }
 
+/**
+ * The whole roster as id → display name.
+ *
+ * Deliberately unbounded, unlike {@link getPublicServiceDetail} which resolves
+ * only the ids one service references. `profiles` is the team roster — bounded
+ * by how many people are on the team, not by how long the app has been running
+ * — and this runs inside the same `Promise.all` as everything else. Narrowing it
+ * to the referenced ids would mean fetching assignments first and then names,
+ * turning one parallel round trip into two sequential ones to save reading a
+ * couple of dozen rows. That trade only becomes worthwhile at a roster size this
+ * app will never reach.
+ */
 async function buildNames(): Promise<Record<string, string>> {
   const supabase = await createClient();
   const { data } = await supabase.from("profiles").select("id, full_name");

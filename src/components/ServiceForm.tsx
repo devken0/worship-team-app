@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import {
   SINGLE_ROLES,
   ROLE_LABELS,
@@ -21,6 +21,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonStyles, FormMessage } from "@/components/ui";
 import { Input, Textarea, Select, controlClass } from "@/components/form";
+import SongPicker from "@/components/SongPicker";
 import { saveService, type SongInput } from "@/app/manage/service/actions";
 
 export interface MemberOption {
@@ -107,9 +108,7 @@ export default function ServiceForm({
     isoToManilaInput(initial?.rehearsal_at ?? null),
   );
   const [location, setLocation] = useState(initial?.rehearsal_location ?? "");
-  const [colorLabel, setColorLabel] = useState(
-    initial?.wear_color_label ?? "",
-  );
+  const [colorLabel, setColorLabel] = useState(initial?.wear_color_label ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [singleRoles, setSingleRoles] = useState<
     Partial<Record<AssignmentRole, string | null>>
@@ -142,15 +141,75 @@ export default function ServiceForm({
           .filter((i) => i >= 0),
       ),
   );
+  /**
+   * Which song blocks are expanded. Each song is ~14 fields, so a five-song
+   * service is five screens of form if they're all open at once. Songs already
+   * on the service start collapsed to a summary row; a song you just added
+   * opens, because you're about to fill it in.
+   *
+   * Indices, like `transposeOpen` — `removeSong` shifts both the same way.
+   */
+  const [openSongs, setOpenSongs] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  /**
+   * Whether anything has been edited, by comparing a snapshot of every field
+   * against the values this form opened with. Cheaper to reason about than
+   * threading a setDirty() call through two dozen onChange handlers, and it
+   * correctly reports "clean" if you undo your own edit.
+   */
+  const snapshot = JSON.stringify({
+    date,
+    rehearsal,
+    location,
+    colorLabel,
+    notes,
+    singleRoles,
+    backups,
+    songs,
+  });
+  const [openedWith] = useState(() => snapshot);
+  const dirty = snapshot !== openedWith;
+
+  // Guard against losing a half-built service to a refresh, a closed tab or a
+  // back gesture out of the app. This only covers real page unloads — Next's
+  // client-side navigations don't fire it — so it's a safety net, not a lock.
+  useEffect(() => {
+    if (!dirty || pending) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty, pending]);
+
+  /** Append a song and expand it. */
+  function addSong(song: SongInput) {
+    // Index read from the render closure, not from inside the setSongs updater:
+    // updaters must stay pure, and React may run them more than once.
+    const index = songs.length;
+    setSongs((prev) => [...prev, song]);
+    setOpenSongs((open) => new Set(open).add(index));
+  }
+
+  function toggleSong(i: number) {
+    setOpenSongs((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  }
+
+  // Song-book entries already on this service, so the picker can show them as
+  // "Added" instead of letting an admin add the same song twice.
+  const pickedLibraryIds = new Set(
+    songs.map((s) => s.library_song_id).filter((id): id is string => !!id),
+  );
 
   // Distinct authors already in the song book, for the author autocomplete.
   const authorOptions = Array.from(
     new Set(
-      librarySongs
-        .map((l) => l.author?.trim())
-        .filter((a): a is string => !!a),
+      librarySongs.map((l) => l.author?.trim()).filter((a): a is string => !!a),
     ),
   ).sort((a, b) => a.localeCompare(b));
 
@@ -185,14 +244,18 @@ export default function ServiceForm({
   // Remove a song and shift the index-keyed transpose-open set down to match.
   function removeSong(i: number) {
     setSongs((prev) => prev.filter((_, idx) => idx !== i));
-    setTransposeOpen((prev) => {
+    // Both sets are keyed by position, so removing a song shifts everything
+    // above it down one.
+    const shift = (prev: Set<number>) => {
       const next = new Set<number>();
       for (const idx of prev) {
         if (idx < i) next.add(idx);
         else if (idx > i) next.add(idx - 1);
       }
       return next;
-    });
+    };
+    setTransposeOpen(shift);
+    setOpenSongs(shift);
   }
 
   // Reveal/hide a song's transpose inputs; hiding clears the transposed values
@@ -255,8 +318,7 @@ export default function ServiceForm({
       setError("BPM must be a positive number.");
       return;
     }
-    const hex =
-      WEAR_COLORS.find((c) => c.label === colorLabel)?.hex ?? "";
+    const hex = WEAR_COLORS.find((c) => c.label === colorLabel)?.hex ?? "";
     startTransition(async () => {
       try {
         await saveService({
@@ -392,361 +454,407 @@ export default function ServiceForm({
               ))}
             </datalist>
           )}
+
+          {/*
+            Both add-controls live at the TOP of the section. They used to sit
+            below every expanded song block, so adding a fifth song meant
+            scrolling past ~70 fields to reach them. Reusing a song-book entry is
+            the common case, so it gets the prominent control; typing a new song
+            from scratch is the exception and gets a quiet link.
+          */}
+          <SongPicker
+            songs={librarySongs}
+            disabledIds={pickedLibraryIds}
+            onPick={(lib) => addSong(songFromLibrary(lib))}
+          />
+          <p className="text-sm text-muted">
+            Not in the book?{" "}
+            <button
+              type="button"
+              onClick={() => addSong(emptySong("praise"))}
+              className="font-semibold text-primary underline underline-offset-2"
+            >
+              Add a blank song
+            </button>
+          </p>
+
           {songs.map((song, i) => (
             <div
               key={i}
               className="space-y-3 rounded-2xl border border-border bg-card p-4"
             >
-              <div className="flex items-center justify-between">
-                <select
-                  value={song.category}
-                  onChange={(e) =>
-                    updateSong(i, {
-                      category: e.target.value as SongCategory,
-                    })
-                  }
-                  className="rounded-lg border border-border bg-background px-2 py-1 text-sm font-medium"
-                >
-                  {SONG_CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {SONG_CATEGORY_LABELS[c]}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => removeSong(i)}
-                  className="text-sm text-muted"
-                >
-                  Remove
-                </button>
-              </div>
-              <Input
-                id={`song-${i}-title`}
-                label="Song title"
-                labelClassName="mb-1 block text-xs text-muted"
-                value={song.title}
-                onChange={(e) => updateSong(i, { title: e.target.value })}
-                placeholder="e.g. 10,000 Reasons"
-              />
-              <div>
-                <label className="mb-1 block text-xs text-muted">
-                  Song leader
-                </label>
-                {memberSelect(song.song_leader_id, (v) =>
-                  updateSong(i, { song_leader_id: v }),
-                )}
-              </div>
-              <Input
-                id={`song-${i}-author`}
-                label="Author / artist"
-                labelClassName="mb-1 block text-xs text-muted"
-                list="song-authors"
-                value={song.author}
-                onChange={(e) => updateSong(i, { author: e.target.value })}
-                placeholder="e.g. Matt Redman"
-              />
-              <Input
-                id={`song-${i}-youtube`}
-                label="YouTube link"
-                labelClassName="mb-1 block text-xs text-muted"
-                value={song.youtube_url}
-                onChange={(e) =>
-                  updateSong(i, { youtube_url: e.target.value })
-                }
-                placeholder="Paste from the pastor"
-              />
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <Input
-                    id={`song-${i}-key`}
-                    label="Original key"
-                    labelClassName="mb-1 block text-xs text-muted"
-                    value={song.song_key}
-                    onChange={(e) =>
-                      updateSong(i, { song_key: e.target.value })
-                    }
-                    placeholder="e.g. G"
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    id={`song-${i}-bpm`}
-                    label="Original BPM"
-                    labelClassName="mb-1 block text-xs text-muted"
-                    type="number"
-                    inputMode="numeric"
-                    min={1}
-                    value={song.bpm ?? ""}
-                    onChange={(e) =>
-                      updateSong(i, {
-                        bpm: e.target.value.trim()
-                          ? Number(e.target.value)
-                          : null,
-                      })
-                    }
-                    placeholder="e.g. 73"
-                  />
-                </div>
-              </div>
-              <Textarea
-                id={`song-${i}-chords`}
-                label="Original chords"
-                labelClassName="mb-1 block text-xs text-muted"
-                value={song.chords_text}
-                onChange={(e) =>
-                  updateSong(i, { chords_text: e.target.value })
-                }
-                placeholder="Paste the chord chart here (optional)"
-                rows={3}
-                className="font-mono text-sm"
-              />
-              <div>
-                <label className="mb-1 block text-xs text-muted">
-                  Original chord photo
-                </label>
-                {song.chords_image_url ? (
-                  <div className="flex items-center gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={chordsImageUrl(song.chords_image_url) ?? ""}
-                      alt="Chord chart"
-                      className="h-20 w-20 rounded-lg border border-border object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => updateSong(i, { chords_image_url: null })}
-                      className="text-sm font-medium text-danger"
-                    >
-                      Remove photo
-                    </button>
-                  </div>
-                ) : (
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    disabled={uploading[`${i}:chords_image_url`]}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file)
-                        uploadChordPhoto(i, file, "chords_image_url");
-                      e.target.value = "";
-                    }}
-                    className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground disabled:opacity-60"
-                  />
-                )}
-                {uploading[`${i}:chords_image_url`] && (
-                  <p className="mt-1 text-xs text-muted">Uploading photo…</p>
-                )}
-              </div>
-              <Input
-                id={`song-${i}-chords-url`}
-                label="Original chords link"
-                labelClassName="mb-1 block text-xs text-muted"
-                value={song.chords_url}
-                onChange={(e) =>
-                  updateSong(i, { chords_url: e.target.value })
-                }
-                placeholder="e.g. published chords URL"
-              />
-              <div className="space-y-3 rounded-xl border border-border p-3">
-                <label className="flex items-start gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={transposeOpen.has(i)}
-                    onChange={(e) => toggleTranspose(i, e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-border"
-                  />
-                  <span>
-                    Transpose for this service
-                    <span className="block text-xs text-muted">
-                      Played in a different key/tempo and chord chart than the
-                      original.
-                    </span>
+              {/* Collapsed summary: enough to identify the song at a glance and
+                  reorder your thinking, without 14 fields on screen. */}
+              <button
+                type="button"
+                onClick={() => toggleSong(i)}
+                aria-expanded={openSongs.has(i)}
+                className="flex w-full items-center gap-2 text-left"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">
+                    {song.title.trim() || "Untitled song"}
                   </span>
-                </label>
-                {transposeOpen.has(i) && (
-                  <>
-                    <div className="flex gap-3">
-                      <div className="flex-1">
-                        <Input
-                          id={`song-${i}-tkey`}
-                          label="Transposed key"
-                          labelClassName="mb-1 block text-xs text-muted"
-                          value={song.transposed_key}
-                          onChange={(e) =>
-                            updateSong(i, { transposed_key: e.target.value })
-                          }
-                          placeholder="e.g. A"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <Input
-                          id={`song-${i}-tbpm`}
-                          label="Transposed BPM"
-                          labelClassName="mb-1 block text-xs text-muted"
-                          type="number"
-                          inputMode="numeric"
-                          min={1}
-                          value={song.transposed_bpm ?? ""}
-                          onChange={(e) =>
-                            updateSong(i, {
-                              transposed_bpm: e.target.value.trim()
-                                ? Number(e.target.value)
-                                : null,
-                            })
-                          }
-                          placeholder="e.g. 80"
-                        />
-                      </div>
-                    </div>
-                    <Textarea
-                      id={`song-${i}-tchords`}
-                      label="Transposed chords"
-                      labelClassName="mb-1 block text-xs text-muted"
-                      value={song.transposed_chords_text}
-                      onChange={(e) =>
-                        updateSong(i, {
-                          transposed_chords_text: e.target.value,
-                        })
-                      }
-                      placeholder="Paste the transposed chord chart here"
-                      rows={3}
-                      className="font-mono text-sm"
-                    />
-                    <div>
-                      <label className="mb-1 block text-xs text-muted">
-                        Transposed chord photo
-                      </label>
-                      {song.transposed_chords_image_url ? (
-                        <div className="flex items-center gap-3">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={
-                              chordsImageUrl(
-                                song.transposed_chords_image_url,
-                              ) ?? ""
-                            }
-                            alt="Transposed chord chart"
-                            className="h-20 w-20 rounded-lg border border-border object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateSong(i, {
-                                transposed_chords_image_url: null,
-                              })
-                            }
-                            className="text-sm font-medium text-danger"
-                          >
-                            Remove photo
-                          </button>
-                        </div>
-                      ) : (
-                        <input
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          disabled={
-                            uploading[`${i}:transposed_chords_image_url`]
-                          }
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file)
-                              uploadChordPhoto(
-                                i,
-                                file,
-                                "transposed_chords_image_url",
-                              );
-                            e.target.value = "";
-                          }}
-                          className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground disabled:opacity-60"
-                        />
-                      )}
-                      {uploading[`${i}:transposed_chords_image_url`] && (
-                        <p className="mt-1 text-xs text-muted">
-                          Uploading photo…
-                        </p>
-                      )}
-                    </div>
-                    <Input
-                      id={`song-${i}-tchords-url`}
-                      label="Transposed chords link"
-                      labelClassName="mb-1 block text-xs text-muted"
-                      value={song.transposed_chords_url}
-                      onChange={(e) =>
-                        updateSong(i, {
-                          transposed_chords_url: e.target.value,
-                        })
-                      }
-                      placeholder="e.g. published chords URL"
-                    />
-                  </>
-                )}
-              </div>
-              <Textarea
-                id={`song-${i}-lyrics`}
-                label="Lyrics"
-                labelClassName="mb-1 block text-xs text-muted"
-                value={song.lyrics}
-                onChange={(e) => updateSong(i, { lyrics: e.target.value })}
-                placeholder="Paste the song lyrics here (optional)"
-                rows={4}
-              />
-              <Textarea
-                id={`song-${i}-notes`}
-                label="Notes"
-                labelClassName="mb-1 block text-xs text-muted"
-                value={song.notes}
-                onChange={(e) => updateSong(i, { notes: e.target.value })}
-                placeholder="Arrangement reminders, cues, capo, etc."
-                rows={2}
-              />
-              <label className="flex items-start gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={song.save_to_book}
-                  onChange={(e) =>
-                    updateSong(i, { save_to_book: e.target.checked })
-                  }
-                  className="mt-0.5 h-4 w-4 rounded border-border"
-                />
-                <span>
-                  Save to song book
-                  <span className="block text-xs text-muted">
-                    Keeps the shared song-book entry in sync. Uncheck to keep
-                    changes only on this service.
+                  <span className="block truncate text-xs text-muted">
+                    {[
+                      SONG_CATEGORY_LABELS[song.category],
+                      song.song_leader_id
+                        ? members.find((m) => m.id === song.song_leader_id)
+                            ?.full_name
+                        : null,
+                      song.transposed_key.trim() || song.song_key.trim()
+                        ? `Key ${song.transposed_key.trim() || song.song_key.trim()}`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </span>
                 </span>
-              </label>
+                <span
+                  aria-hidden="true"
+                  className={`shrink-0 text-muted transition-transform ${
+                    openSongs.has(i) ? "rotate-90" : ""
+                  }`}
+                >
+                  ›
+                </span>
+              </button>
+
+              {openSongs.has(i) && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <select
+                      value={song.category}
+                      onChange={(e) =>
+                        updateSong(i, {
+                          category: e.target.value as SongCategory,
+                        })
+                      }
+                      className="rounded-lg border border-border bg-background px-2 py-1 text-sm font-medium"
+                    >
+                      {SONG_CATEGORIES.map((c) => (
+                        <option key={c} value={c}>
+                          {SONG_CATEGORY_LABELS[c]}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => removeSong(i)}
+                      className="text-sm text-muted"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <Input
+                    id={`song-${i}-title`}
+                    label="Song title"
+                    labelClassName="mb-1 block text-xs text-muted"
+                    value={song.title}
+                    onChange={(e) => updateSong(i, { title: e.target.value })}
+                    placeholder="e.g. 10,000 Reasons"
+                  />
+                  <div>
+                    <label className="mb-1 block text-xs text-muted">
+                      Song leader
+                    </label>
+                    {memberSelect(song.song_leader_id, (v) =>
+                      updateSong(i, { song_leader_id: v }),
+                    )}
+                  </div>
+                  <Input
+                    id={`song-${i}-author`}
+                    label="Author / artist"
+                    labelClassName="mb-1 block text-xs text-muted"
+                    list="song-authors"
+                    value={song.author}
+                    onChange={(e) => updateSong(i, { author: e.target.value })}
+                    placeholder="e.g. Matt Redman"
+                  />
+                  <Input
+                    id={`song-${i}-youtube`}
+                    label="YouTube link"
+                    labelClassName="mb-1 block text-xs text-muted"
+                    value={song.youtube_url}
+                    onChange={(e) =>
+                      updateSong(i, { youtube_url: e.target.value })
+                    }
+                    placeholder="Paste from the pastor"
+                  />
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <Input
+                        id={`song-${i}-key`}
+                        label="Original key"
+                        labelClassName="mb-1 block text-xs text-muted"
+                        value={song.song_key}
+                        onChange={(e) =>
+                          updateSong(i, { song_key: e.target.value })
+                        }
+                        placeholder="e.g. G"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        id={`song-${i}-bpm`}
+                        label="Original BPM"
+                        labelClassName="mb-1 block text-xs text-muted"
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        value={song.bpm ?? ""}
+                        onChange={(e) =>
+                          updateSong(i, {
+                            bpm: e.target.value.trim()
+                              ? Number(e.target.value)
+                              : null,
+                          })
+                        }
+                        placeholder="e.g. 73"
+                      />
+                    </div>
+                  </div>
+                  <Textarea
+                    id={`song-${i}-chords`}
+                    label="Original chords"
+                    labelClassName="mb-1 block text-xs text-muted"
+                    value={song.chords_text}
+                    onChange={(e) =>
+                      updateSong(i, { chords_text: e.target.value })
+                    }
+                    placeholder="Paste the chord chart here (optional)"
+                    rows={3}
+                    className="font-mono text-sm"
+                  />
+                  <div>
+                    <label className="mb-1 block text-xs text-muted">
+                      Original chord photo
+                    </label>
+                    {song.chords_image_url ? (
+                      <div className="flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={chordsImageUrl(song.chords_image_url) ?? ""}
+                          alt="Chord chart"
+                          className="h-20 w-20 rounded-lg border border-border object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateSong(i, { chords_image_url: null })
+                          }
+                          className="text-sm font-medium text-danger"
+                        >
+                          Remove photo
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        disabled={uploading[`${i}:chords_image_url`]}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file)
+                            uploadChordPhoto(i, file, "chords_image_url");
+                          e.target.value = "";
+                        }}
+                        className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground disabled:opacity-60"
+                      />
+                    )}
+                    {uploading[`${i}:chords_image_url`] && (
+                      <p className="mt-1 text-xs text-muted">
+                        Uploading photo…
+                      </p>
+                    )}
+                  </div>
+                  <Input
+                    id={`song-${i}-chords-url`}
+                    label="Original chords link"
+                    labelClassName="mb-1 block text-xs text-muted"
+                    value={song.chords_url}
+                    onChange={(e) =>
+                      updateSong(i, { chords_url: e.target.value })
+                    }
+                    placeholder="e.g. published chords URL"
+                  />
+                  <div className="space-y-3 rounded-xl border border-border p-3">
+                    <label className="flex items-start gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={transposeOpen.has(i)}
+                        onChange={(e) => toggleTranspose(i, e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-border"
+                      />
+                      <span>
+                        Transpose for this service
+                        <span className="block text-xs text-muted">
+                          Played in a different key/tempo and chord chart than
+                          the original.
+                        </span>
+                      </span>
+                    </label>
+                    {transposeOpen.has(i) && (
+                      <>
+                        <div className="flex gap-3">
+                          <div className="flex-1">
+                            <Input
+                              id={`song-${i}-tkey`}
+                              label="Transposed key"
+                              labelClassName="mb-1 block text-xs text-muted"
+                              value={song.transposed_key}
+                              onChange={(e) =>
+                                updateSong(i, {
+                                  transposed_key: e.target.value,
+                                })
+                              }
+                              placeholder="e.g. A"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <Input
+                              id={`song-${i}-tbpm`}
+                              label="Transposed BPM"
+                              labelClassName="mb-1 block text-xs text-muted"
+                              type="number"
+                              inputMode="numeric"
+                              min={1}
+                              value={song.transposed_bpm ?? ""}
+                              onChange={(e) =>
+                                updateSong(i, {
+                                  transposed_bpm: e.target.value.trim()
+                                    ? Number(e.target.value)
+                                    : null,
+                                })
+                              }
+                              placeholder="e.g. 80"
+                            />
+                          </div>
+                        </div>
+                        <Textarea
+                          id={`song-${i}-tchords`}
+                          label="Transposed chords"
+                          labelClassName="mb-1 block text-xs text-muted"
+                          value={song.transposed_chords_text}
+                          onChange={(e) =>
+                            updateSong(i, {
+                              transposed_chords_text: e.target.value,
+                            })
+                          }
+                          placeholder="Paste the transposed chord chart here"
+                          rows={3}
+                          className="font-mono text-sm"
+                        />
+                        <div>
+                          <label className="mb-1 block text-xs text-muted">
+                            Transposed chord photo
+                          </label>
+                          {song.transposed_chords_image_url ? (
+                            <div className="flex items-center gap-3">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={
+                                  chordsImageUrl(
+                                    song.transposed_chords_image_url,
+                                  ) ?? ""
+                                }
+                                alt="Transposed chord chart"
+                                className="h-20 w-20 rounded-lg border border-border object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateSong(i, {
+                                    transposed_chords_image_url: null,
+                                  })
+                                }
+                                className="text-sm font-medium text-danger"
+                              >
+                                Remove photo
+                              </button>
+                            </div>
+                          ) : (
+                            <input
+                              type="file"
+                              accept="image/*"
+                              capture="environment"
+                              disabled={
+                                uploading[`${i}:transposed_chords_image_url`]
+                              }
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file)
+                                  uploadChordPhoto(
+                                    i,
+                                    file,
+                                    "transposed_chords_image_url",
+                                  );
+                                e.target.value = "";
+                              }}
+                              className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground disabled:opacity-60"
+                            />
+                          )}
+                          {uploading[`${i}:transposed_chords_image_url`] && (
+                            <p className="mt-1 text-xs text-muted">
+                              Uploading photo…
+                            </p>
+                          )}
+                        </div>
+                        <Input
+                          id={`song-${i}-tchords-url`}
+                          label="Transposed chords link"
+                          labelClassName="mb-1 block text-xs text-muted"
+                          value={song.transposed_chords_url}
+                          onChange={(e) =>
+                            updateSong(i, {
+                              transposed_chords_url: e.target.value,
+                            })
+                          }
+                          placeholder="e.g. published chords URL"
+                        />
+                      </>
+                    )}
+                  </div>
+                  <Textarea
+                    id={`song-${i}-lyrics`}
+                    label="Lyrics"
+                    labelClassName="mb-1 block text-xs text-muted"
+                    value={song.lyrics}
+                    onChange={(e) => updateSong(i, { lyrics: e.target.value })}
+                    placeholder="Paste the song lyrics here (optional)"
+                    rows={4}
+                  />
+                  <Textarea
+                    id={`song-${i}-notes`}
+                    label="Notes"
+                    labelClassName="mb-1 block text-xs text-muted"
+                    value={song.notes}
+                    onChange={(e) => updateSong(i, { notes: e.target.value })}
+                    placeholder="Arrangement reminders, cues, capo, etc."
+                    rows={2}
+                  />
+                  <label className="flex items-start gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={song.save_to_book}
+                      onChange={(e) =>
+                        updateSong(i, { save_to_book: e.target.checked })
+                      }
+                      className="mt-0.5 h-4 w-4 rounded border-border"
+                    />
+                    <span>
+                      Save to song book
+                      <span className="block text-xs text-muted">
+                        Keeps the shared song-book entry in sync. Uncheck to
+                        keep changes only on this service.
+                      </span>
+                    </span>
+                  </label>
+                </>
+              )}
             </div>
           ))}
-          {librarySongs.length > 0 && (
-            <select
-              value=""
-              onChange={(e) => {
-                const lib = librarySongs.find((l) => l.id === e.target.value);
-                if (lib) setSongs((prev) => [...prev, songFromLibrary(lib)]);
-                e.target.value = "";
-              }}
-              className={controlClass}
-            >
-              <option value="">+ Add from Song Book…</option>
-              {librarySongs.map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.title}
-                </option>
-              ))}
-            </select>
-          )}
-          <button
-            type="button"
-            onClick={() => setSongs((prev) => [...prev, emptySong("praise")])}
-            className="w-full rounded-xl border border-dashed border-border py-3 text-sm font-medium text-primary"
-          >
-            + Add blank song
-          </button>
         </div>
       </section>
 
@@ -764,9 +872,30 @@ export default function ServiceForm({
 
       {error && <FormMessage>{error}</FormMessage>}
 
-      <Button type="button" full onClick={submit} disabled={pending}>
-        {pending ? "Saving…" : initial?.id ? "Save changes" : "Create schedule"}
-      </Button>
+      {/*
+        Sticky save. This form runs to several screens, and the only way to
+        commit was a button at the very bottom — so a change to the first field
+        meant scrolling the whole way down to keep it. Sits above the bottom nav
+        and the iOS home indicator.
+      */}
+      <div
+        className="sticky z-20 -mx-4 border-t border-border bg-background/90 px-4 py-3 backdrop-blur"
+        style={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom))" }}
+      >
+        <Button type="button" full onClick={submit} disabled={pending}>
+          {pending
+            ? "Saving…"
+            : initial?.id
+              ? "Save changes"
+              : "Create schedule"}
+        </Button>
+        {dirty && !pending && (
+          <p className="mt-1.5 text-center text-xs text-muted">
+            You have unsaved changes
+          </p>
+        )}
+      </div>
+
       {cancelHref && (
         <Link
           href={cancelHref}

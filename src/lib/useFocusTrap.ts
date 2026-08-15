@@ -27,9 +27,12 @@ export function useFocusTrap(
 
     const previouslyFocused = document.activeElement as HTMLElement | null;
 
+    // `getClientRects()` rather than `offsetParent`: offsetParent is always null
+    // for position:fixed elements, which would silently drop a fixed close
+    // button out of the tab cycle — exactly the shape these dialogs use.
     const focusable = () =>
       Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => el.offsetParent !== null,
+        (el) => el.getClientRects().length > 0,
       );
 
     // Move focus into the dialog on open.

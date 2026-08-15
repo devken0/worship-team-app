@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { getCurrentOrNextService, getPreviousFollowUps } from "@/lib/services";
@@ -61,17 +62,30 @@ export default async function HomePage() {
       <PageHeader
         title={`Hi, ${firstName} 👋`}
         subtitle={isUpcoming ? "This Sunday" : "Most recent service"}
+        // Admins land here, so a wrong assignment should be one tap from being
+        // fixed — not a detour through Manage to find this same date again.
+        // Mirrors the Edit action on /schedule/[id].
+        action={
+          isAdmin ? (
+            <Link
+              href={`/manage/service/${detail.service.id}/edit`}
+              className="text-sm font-semibold text-primary"
+            >
+              Edit
+            </Link>
+          ) : undefined
+        }
         avatar={<HeaderAvatar />}
       />
       <Page>
-        <Card className="mb-3 border-transparent bg-gradient-to-br from-[#e8730f] via-primary to-[#bf520a] text-primary-foreground">
+        <Card className="mb-3 border-transparent bg-gradient-to-br from-hero-start via-primary to-hero-end text-primary-foreground">
           <p className="text-sm font-medium uppercase tracking-wide opacity-90">
             {isUpcoming ? "Sunday service" : "Service"}
           </p>
           <p className="text-display font-extrabold">
             {formatServiceDate(detail.service.service_date)}
           </p>
-          <div className="mt-3 border-t border-white/20 pt-3">
+          <div className="mt-3 border-t border-primary-foreground/20 pt-3">
             <p className="text-sm opacity-90">Your role</p>
             {myRoles.length ? (
               <p className="font-semibold">{myRoles.join(" • ")}</p>

@@ -36,6 +36,10 @@
   --cat-worship-fg: #5b4a86;
   --cat-closing-bg: #dceed3;
   --cat-closing-fg: #3f6b27;
+  /* Hero gradient (the "This Sunday" card) — tokenized so it shifts with the
+     theme instead of pinning two literal oranges. */
+  --hero-start: #e8730f;
+  --hero-end: #bf520a;
   /* Warm-tinted card elevation — softer and cozier than a neutral gray shadow. */
   --shadow-card: 0 1px 2px rgba(60, 45, 25, 0.06),
     0 4px 12px -4px rgba(60, 45, 25, 0.1);
@@ -78,6 +82,9 @@
   --cat-worship-fg: #b3a3e0;
   --cat-closing-bg: #1f2e16;
   --cat-closing-fg: #9ed07f;
+  /* Deeper, less blinding gradient for the dark hero card. */
+  --hero-start: #b85f13;
+  --hero-end: #7d3c07;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4),
     0 4px 12px -4px rgba(0, 0, 0, 0.55);
 }
@@ -100,6 +107,8 @@
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-success-soft: var(--success-soft);
+  --color-hero-start: var(--hero-start);
+  --color-hero-end: var(--hero-end);
   --shadow-card: var(--shadow-card);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -112,6 +121,57 @@
   --text-title: 1.25rem;
   --text-title--line-height: 1.4;
   --text-title--letter-spacing: -0.015em;
+
+  /* ---------------------------------------------------------------------
+     Motion. Tokenized like color so durations stop being ad-hoc.
+
+     The budget: 150–250ms, ease-out, and only `opacity` and `transform`.
+     Those two are the properties the compositor can animate without
+     re-running layout or paint; animating width/height/top/left is what
+     makes an app feel sluggish on a mid-range phone. Nothing here blocks
+     input, and none of it costs a byte of JavaScript.
+     --------------------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+
+  --animate-fade-in: fade-in var(--duration-base) var(--ease-out);
+  --animate-scale-in: scale-in var(--duration-base) var(--ease-out);
+  --animate-slide-up: slide-up var(--duration-base) var(--ease-out);
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+  }
+  @keyframes shimmer {
+    50% {
+      opacity: 0.45;
+    }
+  }
+}
+
+/*
+ * Focus rings. Tailwind defaults `--tw-ring-offset-color` to white, so every
+ * `focus-visible:ring-offset-*` in the app would paint a white halo against the
+ * dark theme. Pin the offset to the page background instead — one rule keeps
+ * every current and future focus ring correct in both themes.
+ */
+* {
+  --tw-ring-offset-color: var(--background);
 }
 
 html {
@@ -152,6 +212,17 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Standing guard. View transitions animate on their own pseudo-element layer,
+     which the universal selector above does not reach, so enabling them without
+     this would silently break reduced-motion. Nothing uses them today — React's
+     <ViewTransition> isn't in the stable react release this app pins — but the
+     rule is inert until something does, and cheaper than remembering later. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
 

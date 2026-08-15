@@ -7,6 +7,12 @@ import { useState } from "react";
  * button. The parent (a Server Component) does the data fetching and passes the
  * already-rendered rows as `items`, so this stays a thin client wrapper — only
  * the slice point lives in client state.
+ *
+ * Note this is presentation, NOT pagination: the server has already fetched and
+ * rendered every row, and this only controls how many are shown at once. That's
+ * a deliberate trade at this app's scale (tens of services, tens of songs) —
+ * real cursor pagination would cost a round trip per page to save reading a few
+ * dozen rows. Revisit if any list reaches the low thousands.
  */
 export default function Paginated({
   items,

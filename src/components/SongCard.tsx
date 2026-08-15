@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { youTubeId } from "@/lib/format";
 import { type SongCategory } from "@/lib/domain";
 import {
@@ -47,6 +48,13 @@ export interface SongCardData {
   notes?: string | null;
   /** Song lyrics; key-independent, shown in its own collapsible section. */
   lyrics?: string | null;
+  /**
+   * The song-book entry this song came from, when it was picked from the book
+   * rather than typed in one-off. Turns the title into a link through to the
+   * entry's history and lyrics — without it a song on Sunday is a dead end.
+   * Omit on the song-book page itself, which is already that destination.
+   */
+  librarySongId?: string | null;
 }
 
 export default function SongCard({ song }: { song: SongCardData }) {
@@ -88,7 +96,20 @@ export default function SongCard({ song }: { song: SongCardData }) {
       <div className="p-4 pr-12">
         {song.category && <CategoryBadge category={song.category} />}
         <h3 className="mt-1.5 text-base font-semibold leading-tight">
-          {song.title}
+          {song.librarySongId ? (
+            <Link
+              href={`/songbook/${song.librarySongId}`}
+              className="transition hover:text-primary"
+            >
+              {song.title}
+              <span aria-hidden="true" className="ml-1 font-normal text-muted">
+                ›
+              </span>
+              <span className="sr-only"> — open in the song book</span>
+            </Link>
+          ) : (
+            song.title
+          )}
         </h3>
         {song.author && (
           <p className="mt-0.5 text-sm text-muted">by {song.author}</p>
@@ -158,6 +179,9 @@ export default function SongCard({ song }: { song: SongCardData }) {
                 className="h-full w-full object-cover opacity-90"
               />
               <span className="absolute inset-0 flex items-center justify-center">
+                {/* YouTube brand red — a product mark sitting on a video
+                    thumbnail, not a theme color. Stays fixed in both themes. */}
+                {/* eslint-disable-next-line no-restricted-syntax -- YouTube brand red, not a themeable color */}
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600 text-white shadow-lg transition group-hover:scale-105 group-active:scale-95">
                   <PlayIcon size={26} className="translate-x-0.5" />
                 </span>
