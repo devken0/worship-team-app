@@ -3,10 +3,22 @@
 
 const TZ = "Asia/Manila";
 
+/**
+ * A plain date (YYYY-MM-DD) as an instant at Manila noon.
+ *
+ * The `+08:00` suffix is load-bearing. Without it the string parses as noon in
+ * the *device's* timezone, and rendering that instant back in Manila rolls the
+ * date forward for anyone west of about UTC-4 — a Sunday service displays as
+ * Monday on a US phone. Anchoring the offset makes the instant absolute, so
+ * every device shows the same day. Noon (rather than midnight) keeps it clear
+ * of the date boundary in both directions.
+ */
+function manilaNoon(dateStr: string): Date {
+  return new Date(`${dateStr}T12:00:00+08:00`);
+}
+
 export function formatServiceDate(dateStr: string): string {
-  // dateStr is a plain date (YYYY-MM-DD); parse as Manila noon to avoid
-  // off-by-one from UTC interpretation.
-  const d = new Date(`${dateStr}T12:00:00`);
+  const d = manilaNoon(dateStr);
   return d.toLocaleDateString("en-PH", {
     timeZone: TZ,
     weekday: "long",
@@ -17,7 +29,7 @@ export function formatServiceDate(dateStr: string): string {
 }
 
 export function formatServiceDateShort(dateStr: string): string {
-  const d = new Date(`${dateStr}T12:00:00`);
+  const d = manilaNoon(dateStr);
   return d.toLocaleDateString("en-PH", {
     timeZone: TZ,
     month: "short",
