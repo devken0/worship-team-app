@@ -289,12 +289,16 @@ export function PrimaryLink({
   );
 }
 
-/** A pulsing placeholder block for loading skeletons. Pass sizing via className. */
+/**
+ * A shimmering placeholder block for loading skeletons. Pass sizing via
+ * className. Uses the shared `shimmer` keyframe rather than Tailwind's
+ * `animate-pulse` so every skeleton in the app breathes at the same rate.
+ */
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={`animate-pulse rounded-lg bg-border/70 ${className}`}
+      className={`animate-shimmer rounded-lg bg-border/70 ${className}`}
     />
   );
 }

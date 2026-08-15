@@ -68,11 +68,11 @@ export default function Modal({
   return (
     <div
       onClick={() => dismissible && onClose()}
-      className={
+      className={`animate-fade-in ${
         isSheet
           ? "fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4"
           : "fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
-      }
+      }`}
     >
       {closeVisible && (
         <IconButton
@@ -93,10 +93,12 @@ export default function Modal({
         aria-label={title ? undefined : label}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
+        // The panel rises; the backdrop only fades. Two different movements
+        // reading as one gesture — see the motion tokens in globals.css.
         className={
           isSheet
-            ? "mx-auto my-10 w-full max-w-md rounded-2xl bg-card p-6 shadow-xl outline-none"
-            : "w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-lg outline-none"
+            ? "animate-slide-up mx-auto my-10 w-full max-w-md rounded-2xl bg-card p-6 shadow-xl outline-none"
+            : "animate-scale-in w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-lg outline-none"
         }
       >
         {title && (

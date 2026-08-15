@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { Page, PageHeader, Card, SectionTitle, EmptyState } from "@/components/ui";
+import {
+  Page,
+  PageHeader,
+  Card,
+  SectionTitle,
+  EmptyState,
+} from "@/components/ui";
 import HeaderAvatar from "@/components/HeaderAvatar";
 import { MicIcon } from "@/components/icons";
 import SongCard from "@/components/SongCard";

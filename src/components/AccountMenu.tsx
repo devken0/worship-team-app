@@ -84,7 +84,7 @@ export default function AccountMenu({
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl border border-border bg-card shadow-card"
+          className="animate-scale-in absolute right-0 top-12 z-50 w-64 origin-top-right overflow-hidden rounded-2xl border border-border bg-card shadow-card"
         >
           <div className="border-b border-border px-3 py-2.5">
             <p className="truncate text-sm font-semibold">{name || "Member"}</p>

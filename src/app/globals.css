@@ -121,6 +121,47 @@
   --text-title: 1.25rem;
   --text-title--line-height: 1.4;
   --text-title--letter-spacing: -0.015em;
+
+  /* ---------------------------------------------------------------------
+     Motion. Tokenized like color so durations stop being ad-hoc.
+
+     The budget: 150–250ms, ease-out, and only `opacity` and `transform`.
+     Those two are the properties the compositor can animate without
+     re-running layout or paint; animating width/height/top/left is what
+     makes an app feel sluggish on a mid-range phone. Nothing here blocks
+     input, and none of it costs a byte of JavaScript.
+     --------------------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+
+  --animate-fade-in: fade-in var(--duration-base) var(--ease-out);
+  --animate-scale-in: scale-in var(--duration-base) var(--ease-out);
+  --animate-slide-up: slide-up var(--duration-base) var(--ease-out);
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+  }
+  @keyframes shimmer {
+    50% {
+      opacity: 0.45;
+    }
+  }
 }
 
 /*
@@ -171,6 +212,17 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Standing guard. View transitions animate on their own pseudo-element layer,
+     which the universal selector above does not reach, so enabling them without
+     this would silently break reduced-motion. Nothing uses them today — React's
+     <ViewTransition> isn't in the stable react release this app pins — but the
+     rule is inert until something does, and cheaper than remembering later. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
 

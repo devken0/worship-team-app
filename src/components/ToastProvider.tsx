@@ -80,7 +80,7 @@ export default function ToastProvider({
                   type="button"
                   onClick={() => dismiss(t.id)}
                   aria-label={`Dismiss: ${t.message}`}
-                  className={`pointer-events-auto w-full max-w-sm rounded-xl px-4 py-3 text-left text-sm font-medium shadow-lg transition active:scale-[0.98] ${
+                  className={`animate-slide-up pointer-events-auto w-full max-w-sm rounded-xl px-4 py-3 text-left text-sm font-medium shadow-lg transition active:scale-[0.98] ${
                     t.tone === "success"
                       ? "bg-success text-success-foreground"
                       : "bg-danger text-danger-foreground"
