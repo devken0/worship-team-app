@@ -16,6 +16,7 @@ import {
 import { Input, Select, Textarea } from "@/components/form";
 import { CalendarIcon, MusicIcon } from "@/components/icons";
 import { SONG_CATEGORY_LABELS, type SongCategory } from "@/lib/domain";
+import ModalDemo from "./ModalDemo";
 
 /**
  * Every design-system primitive on one screen, so a token change can be checked
@@ -199,6 +200,11 @@ export default function DesignSystemPage() {
           <Skeleton className="h-4 w-2/3" />
           <Skeleton className="h-4 w-1/2" />
           <Skeleton className="h-24 w-full" />
+        </Card>
+
+        <SectionTitle>Overlays &amp; icon buttons</SectionTitle>
+        <Card>
+          <ModalDemo />
         </Card>
 
         <SectionTitle>Focus rings</SectionTitle>

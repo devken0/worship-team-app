@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useToast } from "@/components/ToastProvider";
-import { XIcon } from "@/components/icons";
+import Modal from "@/components/Modal";
 
 /** Chat-bubble glyph — reads as "message / send to group chat". */
 function ChatIcon() {
@@ -63,18 +63,6 @@ function ReminderSheet({
     () => typeof navigator !== "undefined" && !!navigator.share,
   );
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [onClose]);
-
   async function copy() {
     try {
       await navigator.clipboard.writeText(text);
@@ -96,27 +84,8 @@ function ReminderSheet({
   }
 
   return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Send reminder"
-    >
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Close"
-        className="fixed right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur"
-      >
-        <XIcon size={18} />
-      </button>
-
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="mx-auto my-10 w-full max-w-md rounded-2xl bg-card p-5 shadow-xl"
-      >
-        <h2 className="text-lg font-bold">Group chat reminder</h2>
+    <Modal open onClose={onClose} variant="sheet" title="Group chat reminder">
+      <>
         <p className="mt-1 text-sm text-muted">
           Edit if you like, then Share to Messenger or copy and paste it into the
           group chat.
@@ -151,7 +120,7 @@ function ReminderSheet({
             Copy
           </button>
         </div>
-      </div>
-    </div>
+      </>
+    </Modal>
   );
 }

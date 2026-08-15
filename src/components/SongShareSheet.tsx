@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { type SongCategory } from "@/lib/domain";
-import { XIcon } from "@/components/icons";
+import Modal from "@/components/Modal";
 import { CategoryBadge } from "@/components/ui";
-import { useFocusTrap } from "@/lib/useFocusTrap";
 
 export interface SongShareData {
   title: string;
@@ -30,44 +28,14 @@ export default function SongShareSheet({
   song: SongShareData;
   onClose: () => void;
 }) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(dialogRef, true);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [onClose]);
-
   return (
-    <div
-      ref={dialogRef}
-      onClick={onClose}
-      tabIndex={-1}
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4 outline-none"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`${song.title} — chords`}
+    <Modal
+      open
+      onClose={onClose}
+      variant="sheet"
+      label={`${song.title} — chords`}
     >
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Close"
-        className="fixed right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur"
-      >
-        <XIcon size={18} />
-      </button>
-
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="mx-auto my-10 w-full max-w-md rounded-2xl bg-card p-6 shadow-xl"
-      >
+      <>
         {song.category && <CategoryBadge category={song.category} />}
         <h2 className="mt-2 text-2xl font-bold leading-tight">{song.title}</h2>
         {song.author && (
@@ -109,7 +77,7 @@ export default function SongShareSheet({
             {song.chordsText}
           </pre>
         )}
-      </div>
-    </div>
+      </>
+    </Modal>
   );
 }
