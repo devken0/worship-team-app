@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import BottomNav from "@/components/BottomNav";
 import ToastProvider from "@/components/ToastProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { THEME_COLORS, themeInitScript } from "@/lib/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,10 +28,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#faf8f4" },
-    { media: "(prefers-color-scheme: dark)", color: "#17150f" },
-  ],
+  // A single, unconditional theme-color. The pre-paint script below rewrites it
+  // to match the user's saved Light/Dark/Auto choice — a media-query pair here
+  // would follow the OS instead, so Dark-in-app on a light phone would leave a
+  // light status bar. See `src/lib/theme.ts`.
+  themeColor: THEME_COLORS.light,
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -56,11 +58,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         {/* Resolve the saved Light/Dark/System theme before first paint so there
             is no flash of the wrong theme. Mirrors the logic in ThemeToggle. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||((!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light';}catch(e){}})();`,
-          }}
-        />
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <ServiceWorkerRegister />
         <ToastProvider>
           <div className="flex-1">{children}</div>

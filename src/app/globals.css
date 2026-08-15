@@ -36,6 +36,10 @@
   --cat-worship-fg: #5b4a86;
   --cat-closing-bg: #dceed3;
   --cat-closing-fg: #3f6b27;
+  /* Hero gradient (the "This Sunday" card) — tokenized so it shifts with the
+     theme instead of pinning two literal oranges. */
+  --hero-start: #e8730f;
+  --hero-end: #bf520a;
   /* Warm-tinted card elevation — softer and cozier than a neutral gray shadow. */
   --shadow-card: 0 1px 2px rgba(60, 45, 25, 0.06),
     0 4px 12px -4px rgba(60, 45, 25, 0.1);
@@ -78,6 +82,9 @@
   --cat-worship-fg: #b3a3e0;
   --cat-closing-bg: #1f2e16;
   --cat-closing-fg: #9ed07f;
+  /* Deeper, less blinding gradient for the dark hero card. */
+  --hero-start: #b85f13;
+  --hero-end: #7d3c07;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4),
     0 4px 12px -4px rgba(0, 0, 0, 0.55);
 }
@@ -100,6 +107,8 @@
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-success-soft: var(--success-soft);
+  --color-hero-start: var(--hero-start);
+  --color-hero-end: var(--hero-end);
   --shadow-card: var(--shadow-card);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -112,6 +121,16 @@
   --text-title: 1.25rem;
   --text-title--line-height: 1.4;
   --text-title--letter-spacing: -0.015em;
+}
+
+/*
+ * Focus rings. Tailwind defaults `--tw-ring-offset-color` to white, so every
+ * `focus-visible:ring-offset-*` in the app would paint a white halo against the
+ * dark theme. Pin the offset to the page background instead — one rule keeps
+ * every current and future focus ring correct in both themes.
+ */
+* {
+  --tw-ring-offset-color: var(--background);
 }
 
 html {

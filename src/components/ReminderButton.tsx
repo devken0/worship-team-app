@@ -114,10 +114,10 @@ function ReminderSheet({
 
       <div
         onClick={(e) => e.stopPropagation()}
-        className="mx-auto my-10 w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+        className="mx-auto my-10 w-full max-w-md rounded-2xl bg-card p-5 shadow-xl"
       >
-        <h2 className="text-lg font-bold text-gray-900">Group chat reminder</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-lg font-bold">Group chat reminder</h2>
+        <p className="mt-1 text-sm text-muted">
           Edit if you like, then Share to Messenger or copy and paste it into the
           group chat.
         </p>
@@ -126,7 +126,7 @@ function ReminderSheet({
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={14}
-          className="mt-3 w-full resize-none rounded-xl border border-gray-200 bg-gray-50 p-3 font-mono text-sm leading-relaxed text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="mt-3 w-full resize-none rounded-xl border border-border bg-background p-3 font-mono text-sm leading-relaxed focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
         />
 
         <div className="mt-3 flex gap-2">

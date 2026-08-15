@@ -1,18 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { SONG_CATEGORY_LABELS, type SongCategory } from "@/lib/domain";
+import { type SongCategory } from "@/lib/domain";
 import { XIcon } from "@/components/icons";
+import { CategoryBadge } from "@/components/ui";
 import { useFocusTrap } from "@/lib/useFocusTrap";
-
-// Kept in sync with the chip colors in SongCard.tsx.
-const categoryColor: Record<SongCategory, string> = {
-  warm_up: "bg-orange-100 text-orange-800",
-  welcoming: "bg-amber-100 text-amber-800",
-  praise: "bg-sky-100 text-sky-800",
-  worship: "bg-violet-100 text-violet-800",
-  closing: "bg-emerald-100 text-emerald-800",
-};
 
 export interface SongShareData {
   title: string;
@@ -74,34 +66,26 @@ export default function SongShareSheet({
 
       <div
         onClick={(e) => e.stopPropagation()}
-        className="mx-auto my-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        className="mx-auto my-10 w-full max-w-md rounded-2xl bg-card p-6 shadow-xl"
       >
-        {song.category && (
-          <span
-            className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${categoryColor[song.category]}`}
-          >
-            {SONG_CATEGORY_LABELS[song.category]}
-          </span>
-        )}
-        <h2 className="mt-2 text-2xl font-bold leading-tight text-gray-900">
-          {song.title}
-        </h2>
+        {song.category && <CategoryBadge category={song.category} />}
+        <h2 className="mt-2 text-2xl font-bold leading-tight">{song.title}</h2>
         {song.author && (
-          <p className="mt-1 text-sm text-gray-500">by {song.author}</p>
+          <p className="mt-1 text-sm text-muted">by {song.author}</p>
         )}
         {song.leaderName && (
-          <p className="mt-0.5 text-sm text-gray-500">Led by {song.leaderName}</p>
+          <p className="mt-0.5 text-sm text-muted">Led by {song.leaderName}</p>
         )}
 
         {(song.songKey || song.bpm != null) && (
           <div className="mt-3 flex flex-wrap gap-2">
             {song.songKey && (
-              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-600">
+              <span className="rounded-full bg-background px-2.5 py-0.5 text-xs font-semibold text-muted">
                 Key {song.songKey}
               </span>
             )}
             {song.bpm != null && (
-              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-600">
+              <span className="rounded-full bg-background px-2.5 py-0.5 text-xs font-semibold text-muted">
                 {song.bpm} BPM
               </span>
             )}
@@ -109,19 +93,19 @@ export default function SongShareSheet({
         )}
 
         {song.notes && (
-          <p className="mt-4 whitespace-pre-wrap rounded-lg bg-amber-50 px-3 py-2 text-sm text-gray-900">
+          <p className="mt-4 whitespace-pre-wrap rounded-lg bg-brand-soft px-3 py-2 text-sm">
             {song.notes}
           </p>
         )}
 
         {song.lyrics && (
-          <div className="mt-4 whitespace-pre-wrap break-words border-t border-gray-200 pt-4 text-sm leading-relaxed text-gray-900">
+          <div className="mt-4 whitespace-pre-wrap break-words border-t border-border pt-4 text-sm leading-relaxed">
             {song.lyrics}
           </div>
         )}
 
         {song.chordsText && (
-          <pre className="mt-4 whitespace-pre-wrap break-words border-t border-gray-200 pt-4 font-mono text-sm leading-relaxed text-gray-900">
+          <pre className="mt-4 whitespace-pre-wrap break-words border-t border-border pt-4 font-mono text-sm leading-relaxed">
             {song.chordsText}
           </pre>
         )}

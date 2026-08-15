@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatDuration } from "@/lib/format";
@@ -20,6 +20,19 @@ function pickMimeType(): string {
   return candidates.find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
 }
 
+/**
+ * Whether this browser can record at all. Read through `useSyncExternalStore`
+ * rather than an effect: the answer is a fixed property of the environment, and
+ * the server snapshot (optimistically `true`) keeps SSR markup stable while the
+ * real check runs on hydration.
+ */
+const neverChanges = () => () => {};
+const isRecordingSupported = () =>
+  typeof navigator !== "undefined" &&
+  !!navigator.mediaDevices?.getUserMedia &&
+  typeof MediaRecorder !== "undefined" &&
+  !!pickMimeType();
+
 export default function Recorder({
   serviceId,
   userId,
@@ -28,7 +41,15 @@ export default function Recorder({
   userId: string;
 }) {
   const router = useRouter();
-  const [supported, setSupported] = useState(true);
+  const browserSupports = useSyncExternalStore(
+    neverChanges,
+    isRecordingSupported,
+    () => true,
+  );
+  // Distinct from browser support: the mic exists but the user denied access (or
+  // it failed at runtime). Either way we fall back to the "add a link" path.
+  const [micBlocked, setMicBlocked] = useState(false);
+  const supported = browserSupports && !micBlocked;
   const [phase, setPhase] = useState<Phase>("idle");
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -46,14 +67,6 @@ export default function Recorder({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (
-      typeof navigator === "undefined" ||
-      !navigator.mediaDevices?.getUserMedia ||
-      typeof MediaRecorder === "undefined" ||
-      !pickMimeType()
-    ) {
-      setSupported(false);
-    }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -92,7 +105,7 @@ export default function Recorder({
       setPhase("recording");
       timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
     } catch {
-      setSupported(false);
+      setMicBlocked(true);
       setError("Couldn't access the microphone. Use the link option below.");
     }
   }
@@ -192,6 +205,9 @@ export default function Recorder({
       {supported && (
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
           {phase === "idle" && (
+            // Record red is a universal convention, not a theme color — it stays
+            // the same in light and dark on purpose. Same for the pulsing dot
+            // below. (Exempt from the palette lint rule for this reason.)
             <button
               type="button"
               onClick={startRecording}

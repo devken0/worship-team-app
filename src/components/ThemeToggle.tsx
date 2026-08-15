@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { SunIcon, MoonIcon, MonitorIcon } from "./icons";
+import { applyResolvedTheme, THEME_STORAGE_KEY } from "@/lib/theme";
 
 type Theme = "light" | "dark" | "system";
 
@@ -11,7 +12,7 @@ function applyTheme(theme: Theme) {
     theme === "dark" ||
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  applyResolvedTheme(dark);
 }
 
 const OPTIONS: { value: Theme; label: string; icon: React.ReactNode }[] = [
@@ -30,7 +31,7 @@ export default function ThemeToggle() {
   // (inside the account dropdown), so there's no SSR hydration mismatch.
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "system";
-    const saved = localStorage.getItem("theme");
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
     return saved === "light" || saved === "dark" ? saved : "system";
   });
 
@@ -44,7 +45,7 @@ export default function ThemeToggle() {
 
   const choose = (next: Theme) => {
     setTheme(next);
-    localStorage.setItem("theme", next);
+    localStorage.setItem(THEME_STORAGE_KEY, next);
     applyTheme(next);
   };
 

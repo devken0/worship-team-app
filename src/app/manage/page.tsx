@@ -95,14 +95,10 @@ export default async function ManagePage() {
             plus any orphaned files, to keep storage within the free tier. Run
             it now to reclaim space immediately.
           </p>
+          {/* Cleanup is manual for now; automating it weekly is documented in
+              the README under "Storage cleanup". Deliberately not surfaced in
+              the UI — end users can't act on it. */}
           <CleanupButton />
-          <p className="rounded-lg bg-background px-3 py-2 text-xs text-muted">
-            <span className="font-semibold">TODO — automate this:</span> cleanup
-            is manual for now. Once the app is deployed (e.g. Vercel), set it to
-            run weekly on its own so nobody has to remember. Steps are in the
-            README under “Storage cleanup” (add <code>vercel.json</code> + a{" "}
-            <code>CLEANUP_SECRET</code>).
-          </p>
         </Card>
       </Page>
     </>
