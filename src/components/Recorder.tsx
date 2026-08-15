@@ -207,10 +207,11 @@ export default function Recorder({
           {phase === "idle" && (
             // Record red is a universal convention, not a theme color — it stays
             // the same in light and dark on purpose. Same for the pulsing dot
-            // below. (Exempt from the palette lint rule for this reason.)
+            // below.
             <button
               type="button"
               onClick={startRecording}
+              // eslint-disable-next-line no-restricted-syntax -- record red is a fixed convention, not a themeable color
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 font-semibold text-white active:opacity-90"
             >
               <span className="h-3 w-3 rounded-full bg-white" />
@@ -221,6 +222,7 @@ export default function Recorder({
           {phase === "recording" && (
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-2 font-medium">
+                {/* eslint-disable-next-line no-restricted-syntax -- record red is a fixed convention, not a themeable color */}
                 <span className="h-3 w-3 animate-pulse rounded-full bg-red-600" />
                 Recording… {formatDuration(seconds)}
               </span>
