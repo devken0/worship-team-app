@@ -94,7 +94,13 @@ export function Avatar({
 }
 
 export function Page({ children }: { children: React.ReactNode }) {
-  return <main className="mx-auto max-w-2xl px-4 py-4">{children}</main>;
+  // `id`/`tabIndex` are the target of the skip link in the root layout — without
+  // them a keyboard user tabs through the sticky header on every screen.
+  return (
+    <main id="main" tabIndex={-1} className="mx-auto max-w-2xl px-4 py-4 outline-none">
+      {children}
+    </main>
+  );
 }
 
 export function Card({

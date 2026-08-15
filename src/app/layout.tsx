@@ -58,6 +58,15 @@ export default async function RootLayout({
         {/* Resolve the saved Light/Dark/System theme before first paint so there
             is no flash of the wrong theme. Mirrors the logic in ThemeToggle. */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* Visible only when focused. Lets keyboard users jump past the sticky
+            header and straight to the page content. Targets the `id="main"` on
+            the shared `Page` wrapper. */}
+        <a
+          href="#main"
+          className="sr-only rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50"
+        >
+          Skip to content
+        </a>
         <ServiceWorkerRegister />
         <ToastProvider>
           <div className="flex-1">{children}</div>

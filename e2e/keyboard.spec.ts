@@ -11,6 +11,23 @@ test.use({ storageState: STORAGE_STATE });
  * to implement that separately and inconsistently.
  */
 
+test.describe("skip link", () => {
+  test("is the first tab stop and jumps to the main content", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Hidden until focused, so the first Tab from the top of the page reveals it.
+    await page.keyboard.press("Tab");
+    const skip = page.getByRole("link", { name: "Skip to content" });
+    await expect(skip).toBeFocused();
+    await expect(skip).toBeVisible();
+
+    await page.keyboard.press("Enter");
+    await expect(page.locator("main#main")).toBeFocused();
+  });
+});
+
 test.describe("account menu", () => {
   test("opens, closes on Escape, and restores focus", async ({ page }) => {
     await page.goto("/");
